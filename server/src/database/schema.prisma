@@ -1,0 +1,105 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// ============================= user module ============================= 
+model User {
+  id    String  @id @default(uuid())
+  email String  @unique
+  name  String?
+
+  // timestamps
+  createdAt DateTime @default(now())
+
+  // realtions
+  subscription UserSubscription?
+  chats        Chat[]
+}
+
+// ============================= payments module ============================= 
+model UserSubscription {
+  id Int @id @default(autoincrement())
+  subscriptionId String // from provider
+  variantId String
+  orderId String
+  provider String // PaymentProviders;
+  status String // SubscriptionStatus;
+  renewsAt DateTime
+  endsAt DateTime?
+  trialEndsAt DateTime?
+  pauseMode String? // 'void' | 'free' | null;
+  pauseResumesAt DateTime?
+  cancelled Boolean
+  billingAnchor Int
+  testMode Boolean
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations  
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model WebhookEvent {
+  id        Int   @id @default(autoincrement())
+  eventName String
+  processed Boolean @default(false)
+  body      String
+  processingError String?
+
+  // timestamps
+  createdAt DateTime @default(now())
+}
+
+// ============================= chat module ============================= 
+enum MessageAgent {
+  USER
+  AI
+}
+
+model Chat {
+  id String @id @default(uuid())
+  filename String
+  filesize Int
+  mimetype String
+  embeddingsIds String[]
+
+  // timestamps
+  createdAt DateTime @default(now())
+
+  // relations
+  owner     User      @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  messages Message[] 
+}
+
+model Message {
+  id      String       @id @default(uuid())
+  message String
+  agent   MessageAgent
+
+  // timestamps
+  createdAt DateTime @default(now())
+
+  // relations
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId String
+}
+
+
+// ============================= embeddings module =============================
+model Documents {
+  id Int @id @default(autoincrement())
+  embedding Unsupported("vector(1536)")?
+  content String
+  metadata Json
+}

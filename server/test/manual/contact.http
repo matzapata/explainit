@@ -1,0 +1,10 @@
+
+### POST /api/contact
+POST http://{{host}}/api/contact
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "message": "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "subject": "lorem ipsum"
+}

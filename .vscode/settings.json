@@ -1,0 +1,26 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always"
+    },
+    "cSpell.words": [
+        "chatwith",
+        "filesize",
+        "Squeezy"
+    ],
+    "eslint.workingDirectories": [
+        "./client",
+        "./server",
+    ],
+    "rest-client.environmentVariables": {
+        "$shared": {
+            "version": "v1",
+            "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjRiOjI1Ojc2OmNjOmFhOjYwOjBmOjU2OmE0OmNhOjk1OmE4OmFiOjhiOjVmOjIwIiwidHlwIjoiSldUIn0.eyJhdWQiOltdLCJhenAiOiIyNmQyYmZmODdmMGE0ODY4ODExNDU1MTM4NTM0MjYxYyIsImV4cCI6MTcxMTY1OTMxMSwiaWF0IjoxNzExNTcyOTEwLCJpc3MiOiJodHRwczovL2NoYXR3aXRoLmtpbmRlLmNvbSIsImp0aSI6IjZiZDExNjVkLWRlZTYtNDBkMC04MDlmLTQ5NGEwOTk1NzcxMCIsInBlcm1pc3Npb25zIjpbXSwic2NwIjpbIm9wZW5pZCIsInByb2ZpbGUiLCJlbWFpbCIsIm9mZmxpbmUiXSwic3ViIjoia3BfNTEwNWZmNTNkZDQzNGJlMmI2MmY3ZTc1ZGIxOWI1Y2YiLCJ4LWhhc3VyYS1lbWFpbCI6Im1hdHV6YXBhdGFAZ21haWwuY29tIiwieC1oYXN1cmEtb3JnYW5pemF0aW9uX3Byb3BlcnRpZXMiOnsia3BfdXNyX21pZGRsZV9uYW1lIjp7fX0sIngtaGFzdXJhLXBlcm1pc3Npb25zIjpbXSwieC1oYXN1cmEtdXNlcl9wcm9wZXJ0aWVzIjp7ImtwX3Vzcl9taWRkbGVfbmFtZSI6e319fQ.mUtlTvtHB-CLULTNlIoFq2N3YxQ2vEjT5Z2QzFAIZNG_91QPOC8TqbwcgrtCCK4ei7uRk9oxoucQp9ZbHI08YXwZRQ3JrswCcgHxz06oUQhiQy9RKUXoEVeuSFcyD3dFez7jhVaa4zUzZ7OshDw_k-LPJ6WmSQV4woFC61i1efL3zYlQOHwP1o-gyhIN9RomkJd-VnQ09qG9iTwiVdFOdIGmvTWVr8yZa4qpwMEdoROIhiVV0aCPWUsLnMokp-lXbTQb7ztXLPFZGxhaR9Jbxpd-vOwoxFwCc0BL9TuD94YUHWXR6gHkdCMqZndn_rcrSm7n1yyC25q3zUPW6CVL-w"
+        },
+        "local": {
+            "host": "localhost:4000",
+        },
+        "production": {
+            "host": "https://chatwith-server.vercel.app/",
+        }
+    }
+}

@@ -1,0 +1,437 @@
+
+# Manual testing http requests with extension REST Client
+
+### GET /api/payments/plans gets the plans details
+GET http://{{host}}/api/payments/plans
+
+
+### POST /api/payments/subscription creates a subscription link for the user
+POST http://{{host}}/api/payments/subscription
+Authorization: Bearer {{token}}
+
+
+### GET /api/payments/subscription gets the subscription for the logged in user
+GET http://{{host}}/api/payments/subscription
+Authorization: Bearer {{token}}
+
+### GET /api/payments/subscription/portal
+GET http://{{host}}/api/payments/subscription/portal
+Authorization: Bearer {{token}}
+
+### POST /api/payments/webhook - subscription_created. Webhook flow is subcsription_created -> subscription_payment_success -> subscription_updated
+POST http://{{host}}/api/payments/webhook
+Content-Type: application/json
+
+{
+  "data": {
+    "id": "306621",
+    "type": "subscriptions",
+    "links": {
+      "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621"
+    },
+    "attributes": {
+      "urls": {
+        "customer_portal": "https://matzapata.lemonsqueezy.com/billing?expires=1710611799&test_mode=1&user=2142010&signature=3dab351deb52bee9b59c46503b8c232cf648a5db79d42a39083ae0ef252abe5a",
+        "update_payment_method": "https://matzapata.lemonsqueezy.com/subscription/306621/payment-details?expires=1710676599&signature=a3c47c988a90ab993f6b2df81f527eff4f13630d80f66f2717f033ab549049c4",
+        "customer_portal_update_subscription": "https://matzapata.lemonsqueezy.com/billing/306621/update?expires=1710676599&user=2142010&signature=43ad92754973bae38e9606dc522bbcafc1b5375f4ca59409c992a5c9dfc044ae"
+      },
+      "pause": null,
+      "status": "active",
+      "ends_at": null,
+      "order_id": 2304744,
+      "store_id": 20568,
+      "cancelled": false,
+      "renews_at": "2024-04-16T11:56:34.000000Z",
+      "test_mode": true,
+      "user_name": "Matías Zapata",
+      "card_brand": "visa",
+      "created_at": "2024-03-16T11:56:34.000000Z",
+      "product_id": 92548,
+      "updated_at": "2024-03-16T11:56:39.000000Z",
+      "user_email": "matias@sphereone.xyz",
+      "variant_id": 99201,
+      "customer_id": 2504844,
+      "product_name": "Chatwith",
+      "variant_name": "PRO",
+      "order_item_id": 2265600,
+      "trial_ends_at": null,
+      "billing_anchor": 16,
+      "card_last_four": "4242",
+      "status_formatted": "Active",
+      "first_subscription_item": {
+        "id": 254556,
+        "price_id": 388629,
+        "quantity": 1,
+        "created_at": "2024-03-16T11:56:39.000000Z",
+        "updated_at": "2024-03-16T11:56:39.000000Z",
+        "is_usage_based": false,
+        "subscription_id": 306621
+      }
+    },
+    "relationships": {
+      "order": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/order",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/order"
+        }
+      },
+      "store": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/store",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/store"
+        }
+      },
+      "product": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/product",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/product"
+        }
+      },
+      "variant": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/variant",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/variant"
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/customer",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/customer"
+        }
+      },
+      "order-item": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/order-item",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/order-item"
+        }
+      },
+      "subscription-items": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/subscription-items",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/subscription-items"
+        }
+      },
+      "subscription-invoices": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/subscription-invoices",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/subscription-invoices"
+        }
+      }
+    }
+  },
+  "meta": {
+    "test_mode": true,
+    "event_name": "subscription_created",
+    "webhook_id": "78bafbb6-48d7-4e65-985d-8b4932275159",
+    "custom_data": {
+      "user_id": "kp_b84de3466192450f91f00fa838950fd0"
+    }
+  }
+}
+
+### POST /api/payments/webhook - subscription_payment_success -> Igonered for now. TODO:
+POST http://{{host}}/api/payments/webhook
+Content-Type: application/json
+
+{
+  "data": {
+    "id": "759356",
+    "type": "subscription-invoices",
+    "links": {
+      "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356"
+    },
+    "attributes": {
+      "tax": 0,
+      "urls": {
+        "invoice_url": "https://app.lemonsqueezy.com/my-orders/b586aa59-4c1c-44cc-ac18-f001e063fb30/subscription-invoice/759356?signature=d5f35be0db1eed0b471baf31c017f62f17f8efccd01c0d4a0a439ebae9c48b50"
+      },
+      "total": 1000,
+      "status": "paid",
+      "tax_usd": 0,
+      "currency": "USD",
+      "refunded": false,
+      "store_id": 20568,
+      "subtotal": 1000,
+      "test_mode": true,
+      "total_usd": 1000,
+      "user_name": "Matías Zapata",
+      "card_brand": "visa",
+      "created_at": "2024-03-16T11:56:35.000000Z",
+      "updated_at": "2024-03-16T11:56:40.000000Z",
+      "user_email": "matias@sphereone.xyz",
+      "customer_id": 2504844,
+      "refunded_at": null,
+      "subtotal_usd": 1000,
+      "currency_rate": "1.00000000",
+      "tax_formatted": "$0.00",
+      "tax_inclusive": false,
+      "billing_reason": "initial",
+      "card_last_four": "4242",
+      "discount_total": 0,
+      "subscription_id": 306621,
+      "total_formatted": "$10.00",
+      "status_formatted": "Paid",
+      "discount_total_usd": 0,
+      "subtotal_formatted": "$10.00",
+      "discount_total_formatted": "$0.00"
+    },
+    "relationships": {
+      "store": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/relationships/store",
+          "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/store"
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/relationships/customer",
+          "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/customer"
+        }
+      },
+      "subscription": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/relationships/subscription",
+          "related": "https://api.lemonsqueezy.com/v1/subscription-invoices/759356/subscription"
+        }
+      }
+    }
+  },
+  "meta": {
+    "test_mode": true,
+    "event_name": "subscription_payment_success",
+    "webhook_id": "3f791ea6-27a6-47fc-9d6b-f331208a2150",
+    "custom_data": {
+      "user_id": "kp_b84de3466192450f91f00fa838950fd0"
+    }
+  }
+}
+
+### POST /api/payments/webhook - subscription_updated
+POST http://{{host}}/api/payments/webhook
+Content-Type: application/json
+
+{
+  "data": {
+    "id": "306621",
+    "type": "subscriptions",
+    "links": {
+      "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621"
+    },
+    "attributes": {
+      "urls": {
+        "customer_portal": "https://matzapata.lemonsqueezy.com/billing?expires=1710613007&test_mode=1&user=2142010&signature=87258e2978142201ee96ec2d069a67a7a50e4209ea5512eb1e0aebef24dfa281",
+        "update_payment_method": "https://matzapata.lemonsqueezy.com/subscription/306621/payment-details?expires=1710677807&signature=04756acfe33e68d5992aed94a721e3b04467ddbfa757ee034184b7ed111ab006",
+        "customer_portal_update_subscription": "https://matzapata.lemonsqueezy.com/billing/306621/update?expires=1710677807&user=2142010&signature=2684a6d76965880e6372fd76ff6aceb05b0d12a139064ca8dc9fba05c52ead8a"
+      },
+      "pause": null,
+      "status": "cancelled",
+      "ends_at": "2024-04-16T11:56:34.000000Z",
+      "order_id": 2304744,
+      "store_id": 20568,
+      "cancelled": true,
+      "renews_at": "2024-04-16T11:56:34.000000Z",
+      "test_mode": true,
+      "user_name": "Matías Zapata",
+      "card_brand": "visa",
+      "created_at": "2024-03-16T11:56:34.000000Z",
+      "product_id": 92548,
+      "updated_at": "2024-03-16T12:16:45.000000Z",
+      "user_email": "matias@sphereone.xyz",
+      "variant_id": 99201,
+      "customer_id": 2504844,
+      "product_name": "Chatwith",
+      "variant_name": "PRO",
+      "order_item_id": 2265600,
+      "trial_ends_at": null,
+      "billing_anchor": 16,
+      "card_last_four": "4242",
+      "status_formatted": "Cancelled",
+      "first_subscription_item": {
+        "id": 254556,
+        "price_id": 388629,
+        "quantity": 1,
+        "created_at": "2024-03-16T11:56:39.000000Z",
+        "updated_at": "2024-03-16T11:56:39.000000Z",
+        "is_usage_based": false,
+        "subscription_id": 306621
+      }
+    },
+    "relationships": {
+      "order": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/order",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/order"
+        }
+      },
+      "store": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/store",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/store"
+        }
+      },
+      "product": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/product",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/product"
+        }
+      },
+      "variant": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/variant",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/variant"
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/customer",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/customer"
+        }
+      },
+      "order-item": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/order-item",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/order-item"
+        }
+      },
+      "subscription-items": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/subscription-items",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/subscription-items"
+        }
+      },
+      "subscription-invoices": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/306621/relationships/subscription-invoices",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/306621/subscription-invoices"
+        }
+      }
+    }
+  },
+  "meta": {
+    "test_mode": true,
+    "event_name": "subscription_updated",
+    "webhook_id": "186ab60d-2265-44cf-acf0-7bd204b2dfd3",
+    "custom_data": {
+      "user_id": "kp_b84de3466192450f91f00fa838950fd0"
+    }
+  }
+}
+
+
+
+
+
+
+### POST /api/payments/webhook - subscription_cancelled -> No need for this one, already covered in the subscription_updated
+POST http://{{host}}/api/payments/webhook
+Content-Type: application/json
+
+{
+  "data": {
+    "id": "303492",
+    "type": "subscriptions",
+    "links": {
+      "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492"
+    },
+    "attributes": {
+      "urls": {
+        "customer_portal": "https://matzapata.lemonsqueezy.com/billing?expires=1710356115&test_mode=1&user=528864&signature=2f2e2f0b7d59e435a990bab316591997c3e80081f60a93f00ecdf21c2ad6513a",
+        "update_payment_method": "https://matzapata.lemonsqueezy.com/subscription/303492/payment-details?expires=1710420915&signature=a5e63f3c9ad74ef93946769d3fb3a2c594ceae1f17a29b5e2465b889d5f17744",
+        "customer_portal_update_subscription": "https://matzapata.lemonsqueezy.com/billing/303492/update?expires=1710420915&user=528864&signature=98f1981c580d1fca14c672776292fef3e0cf06ec8de5b871ac987008a84067ca"
+      },
+      "pause": null,
+      "status": "cancelled",
+      "ends_at": "2025-03-13T12:55:06.000000Z",
+      "order_id": 2284656,
+      "store_id": 20568,
+      "cancelled": true,
+      "renews_at": "2025-03-13T12:55:06.000000Z",
+      "test_mode": true,
+      "user_name": "Matías Zapata",
+      "card_brand": "visa",
+      "created_at": "2024-03-13T12:35:28.000000Z",
+      "product_id": 92548,
+      "updated_at": "2024-03-13T12:55:15.000000Z",
+      "user_email": "matuzapata@gmail.com",
+      "variant_id": 290380,
+      "customer_id": 2312870,
+      "product_name": "Chatwith",
+      "variant_name": "PRO Year",
+      "order_item_id": 2245534,
+      "trial_ends_at": null,
+      "billing_anchor": 13,
+      "card_last_four": "4242",
+      "status_formatted": "Cancelled",
+      "first_subscription_item": {
+        "id": 251686,
+        "price_id": 388630,
+        "quantity": 1,
+        "created_at": "2024-03-13T12:35:33.000000Z",
+        "updated_at": "2024-03-13T12:55:09.000000Z",
+        "is_usage_based": false,
+        "subscription_id": 303492
+      }
+    },
+    "relationships": {
+      "order": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/order",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/order"
+        }
+      },
+      "store": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/store",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/store"
+        }
+      },
+      "product": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/product",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/product"
+        }
+      },
+      "variant": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/variant",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/variant"
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/customer",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/customer"
+        }
+      },
+      "order-item": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/order-item",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/order-item"
+        }
+      },
+      "subscription-items": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/subscription-items",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/subscription-items"
+        }
+      },
+      "subscription-invoices": {
+        "links": {
+          "self": "https://api.lemonsqueezy.com/v1/subscriptions/303492/relationships/subscription-invoices",
+          "related": "https://api.lemonsqueezy.com/v1/subscriptions/303492/subscription-invoices"
+        }
+      }
+    }
+  },
+  "meta": {
+    "test_mode": true,
+    "event_name": "subscription_cancelled",
+    "webhook_id": "12b8d378-36f0-4e50-9d43-3e0a871f9cbd",
+    "custom_data": {
+      "user_id": "kp_5105ff53dd434be2b62f7e75db19b5cf"
+    }
+  }
+}
+
+
+# TODO: payment failed

@@ -1,0 +1,27 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Vary: Origin
+Content-Type: application/json; charset=utf-8
+Content-Length: 218
+ETag: W/"da-WSA2wQ/xaJ1FOEbR1WZA7mBfvcE"
+Date: Fri, 15 Mar 2024 16:40:05 GMT
+Connection: close
+
+{
+  "subscription": null,
+  "plan": {
+    "name": "Free",
+    "interval": "lifetime",
+    "variant_id": null,
+    "price": 0,
+    "description": "Free plan",
+    "features": [
+      "1 documents",
+      "100 messages per day"
+    ],
+    "limits": {
+      "max_documents": 1,
+      "max_messages": 100
+    }
+  }
+}

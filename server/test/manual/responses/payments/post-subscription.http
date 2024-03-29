@@ -1,0 +1,12 @@
+HTTP/1.1 201 Created
+X-Powered-By: Express
+Vary: Origin
+Content-Type: application/json; charset=utf-8
+Content-Length: 172
+ETag: W/"ac-7T3wWQcywR61CpGFK+hdsSYgZYY"
+Date: Fri, 15 Mar 2024 16:38:25 GMT
+Connection: close
+
+{
+  "url": "https://matzapata.lemonsqueezy.com/checkout/custom/57310467-5465-4914-be24-2564ccb74fd0?signature=f5eac29135de20876a07bb793bb484299f479d0e206d24ec98196dbaa87a5740"
+}
