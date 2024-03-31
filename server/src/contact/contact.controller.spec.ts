@@ -1,8 +1,8 @@
 import { TestBed } from '@automock/jest';
 import { ContactController } from './contact.controller';
-import { EmailService } from 'src/infrastructure/emails/email.service';
+import { EmailService } from '@src/infrastructure/emails/email.service';
 import { ConfigService } from '@nestjs/config';
-import { AuthGuard } from 'src/users/guards/auth.guard';
+import { AuthGuard } from '@src/users/guards/auth.guard';
 
 describe('ContactController', () => {
   // Declare the unit under test
@@ -36,7 +36,7 @@ describe('ContactController', () => {
     const user = { id: 'id', email: 'email' };
     const createContactDto = { message: 'message', subject: 'subject' };
     emailService.sendEmail.mockResolvedValue();
-    configService.get.mockReturnValue(contactEmail);
+    configService.getOrThrow.mockReturnValue(contactEmail);
 
     // Act
     await contactController.create(user, createContactDto);
@@ -83,7 +83,9 @@ describe('ContactController', () => {
   it('should throw an error if the contact email is not found', async () => {
     // Arrange
     emailService.sendEmail.mockResolvedValue();
-    configService.get.mockReturnValue(undefined);
+    configService.getOrThrow.mockImplementation(() => {
+      throw new Error('CONTACT_EMAIL not found');
+    });
 
     // Act
     const result = contactController.create(

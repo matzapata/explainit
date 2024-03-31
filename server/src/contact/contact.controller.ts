@@ -1,10 +1,10 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { EmailService } from 'src/infrastructure/emails/email.service';
+import { EmailService } from '@src/infrastructure/emails/email.service';
 import { CreateContactDto } from './dtos/contact-dto';
 import { ConfigService } from '@nestjs/config';
-import { AuthGuard } from 'src/users/guards/auth.guard';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { AuthUser } from 'src/users/middlewares/current-user.middleware';
+import { AuthGuard } from '@src/users/guards/auth.guard';
+import { CurrentUser } from '@src/users/decorators/current-user.decorator';
+import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 
 @Controller('api/contact')
 @UseGuards(AuthGuard)

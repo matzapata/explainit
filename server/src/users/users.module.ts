@@ -4,7 +4,7 @@ import { UsersService } from './services/users.service';
 import { AuthService } from '../infrastructure/auth/auth.service';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 import { UsersRepository } from './repositories/users.repository';
-import { PrismaModule } from 'src/database/prisma.module';
+import { PrismaModule } from '@src/database/prisma.module';
 
 @Module({
   providers: [UsersService, AuthService, UsersRepository],

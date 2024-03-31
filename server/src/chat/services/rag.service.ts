@@ -13,7 +13,7 @@ import { formatDocumentsAsString } from 'langchain/util/document';
 import { AIMessage, HumanMessage } from 'langchain/schema';
 import { VectorStoreService } from '../../infrastructure/vectorstore/vectorstore.service';
 import { LlmService } from '../../infrastructure/llm/llm.service';
-import { MimeType } from 'src/infrastructure/vectorstore/vectorstore.service';
+import { MimeType } from '@src/infrastructure/vectorstore/vectorstore.service';
 import { pull } from 'langchain/hub';
 
 enum MessageAgent {

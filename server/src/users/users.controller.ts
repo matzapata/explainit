@@ -1,11 +1,10 @@
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { AuthGuard } from 'src/users/guards/auth.guard';
+import { CurrentUser } from '@src/users/decorators/current-user.decorator';
+import { AuthGuard } from '@src/users/guards/auth.guard';
 import { UsersService } from './services/users.service';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from '@src/interceptors/serialize.interceptor';
 import { UserDto } from './dto/user-dto';
-import { User } from '@prisma/client';
 import { AuthUser } from './middlewares/current-user.middleware';
 
 @Controller('api/users')

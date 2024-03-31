@@ -8,20 +8,20 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { AuthGuard } from 'src/users/guards/auth.guard';
-import { UsersService } from 'src/users/services/users.service';
+import { CurrentUser } from '@src/users/decorators/current-user.decorator';
+import { AuthGuard } from '@src/users/guards/auth.guard';
+import { UsersService } from '@src/users/services/users.service';
 import { UserSubscriptionService } from './services/user-subscription.service';
 import { WebhookEventsService } from './services/webhook-events.service';
 import { PaymentsService } from '../infrastructure/payments/payments.service';
-import { EmailService } from 'src/infrastructure/emails/email.service';
+import { EmailService } from '@src/infrastructure/emails/email.service';
 import {
   SubscriptionStatus,
   WebhookEventName,
-} from 'src/infrastructure/payments/providers/payment.provider';
+} from '@src/infrastructure/payments/providers/payment.provider';
 import { plans } from './config/plans';
 import { User } from '@prisma/client';
-import { AuthUser } from 'src/users/middlewares/current-user.middleware';
+import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 
 @Controller('api/payments')
 export class PaymentsController {

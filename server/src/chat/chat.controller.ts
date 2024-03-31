@@ -17,15 +17,15 @@ import { PostMessageDto } from './dtos/post-message.dto';
 import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatsService } from './services/chat.service';
-import { AuthGuard } from 'src/users/guards/auth.guard';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { StorageService } from 'src/infrastructure/storage/storage.service';
-import { PlanCheckerService } from 'src/payments/services/plan-checker.service';
+import { AuthGuard } from '@src/users/guards/auth.guard';
+import { CurrentUser } from '@src/users/decorators/current-user.decorator';
+import { Serialize } from '@src/interceptors/serialize.interceptor';
+import { StorageService } from '@src/infrastructure/storage/storage.service';
+import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
 import { ChatMetadataDto } from './dtos/chat-metadata.dto';
 import { UpdateChatMetadataDto } from './dtos/update-chat-metadata.dto';
 import { User } from '@prisma/client';
-import { AuthUser } from 'src/users/middlewares/current-user.middleware';
+import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 import { PostResourceDto } from './dtos/post-resource.dto';
 import { DeleteResourceDto } from './dtos/delete-resource.dto';
 import { ResourcesService } from './services/resources.service';
@@ -112,6 +112,7 @@ export class ChatController {
     @Body() resource: PostResourceDto,
   ) {
     // create embeddings for the resource
+    // const embeddings = await this.ragService.load
   }
 
   @Delete('/resources')
