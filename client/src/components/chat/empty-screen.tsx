@@ -11,9 +11,9 @@ export function EmptyScreen({
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="rounded-lg border dark:border-gray-800 bg-white dark:bg-gray-950 p-8">
-        <h1 className="mb-2 text-lg font-semibold dark:text-white">Welcome to Chatwith!</h1>
+        <h1 className="mb-2 text-lg font-semibold dark:text-white">Chat with {"{{company_name}}"}</h1>
         <p className="leading-normal text-gray-900 dark:text-gray-300">
-          Make questions about your file and get exactly what you need.
+          Ask me anything about our products, services, or anything else you need help with. I'm here to help!
         </p>
 
         {exampleMessages.length ? (

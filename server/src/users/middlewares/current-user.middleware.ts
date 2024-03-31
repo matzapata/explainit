@@ -2,11 +2,15 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { UsersService } from '../services/users.service';
 import { AuthService } from '../../infrastructure/auth/auth.service';
-import { User } from '@prisma/client';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+}
 
 declare module 'express' {
   interface Request {
-    currentUser: User | null;
+    currentUser: AuthUser | null;
   }
 }
 
@@ -22,12 +26,7 @@ export class CurrentUserMiddleware implements NestMiddleware {
     const payload = await this.authService.verifyToken(token);
 
     if (payload) {
-      let user = await this.usersService.findById(payload.id);
-      if (!user) {
-        user = await this.usersService.create(payload.id, payload.email);
-      }
-
-      req.currentUser = user;
+      req.currentUser = { id: payload.id, email: payload.email };
     } else req.currentUser = null;
 
     next();

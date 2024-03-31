@@ -1,6 +1,6 @@
 "use client";
 
-import FileCard from "@/components/chat-panel/file-card";
+import FileCard from "@/components/generate/file-card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { MimeType, chatService } from "@/lib/services/chat-service";

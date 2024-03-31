@@ -12,7 +12,7 @@ const buttonVariants = cva(
         primary: "text-white bg-brand-600 hover:bg-brand-700",
         "secondary-gray": "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50",
         "secondary-color": "text-brand-700 dark:text-brand-500 bg-white dark:bg-gray-900 border border-brand-300 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900",
-        "tertiary-gray": "text-gray-700 dark:text-gray-300 bg-white hover:bg-gray-50",
+        "tertiary-gray": "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-950 hover:bg-zinc-700 border border-gray-300 dark:border-gray-800",
         "tertiary-color": "text-brand-700 bg-white  hover:bg-brand-50",
         "link-gray": "text-slate-900 dark:text-gray-300 dark:hover:text-gray-100 hover:text-gray-950 p-0",
         "link-color": "text-brand-700 dark:text-brand-600 hover:text-brand-800 p-0",
@@ -23,6 +23,7 @@ const buttonVariants = cva(
         
       },
       size: {
+        xs: "py-[2px] px-[8px] text-sm",
         sm: "py-[8px] px-[12px] text-sm",
         md: "py-[10px] px-[14px]",
         lg: "py-[12px] px-[16px]",

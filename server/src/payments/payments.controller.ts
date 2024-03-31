@@ -21,6 +21,7 @@ import {
 } from 'src/infrastructure/payments/providers/payment.provider';
 import { plans } from './config/plans';
 import { User } from '@prisma/client';
+import { AuthUser } from 'src/users/middlewares/current-user.middleware';
 
 @Controller('api/payments')
 export class PaymentsController {
@@ -39,7 +40,7 @@ export class PaymentsController {
 
   @Get('/subscription')
   @UseGuards(AuthGuard)
-  async getSubscription(@CurrentUser() user: User) {
+  async getSubscription(@CurrentUser() user: AuthUser) {
     const userSubscription = await this.userSubscriptionService.findByUserId(
       user.id,
     );
@@ -47,7 +48,7 @@ export class PaymentsController {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      // name: user.name, // TODO: Add name to user
       isPro: userSubscription.plan.variantId !== null,
       plan: userSubscription.plan,
       subscription: userSubscription.sub,
@@ -56,7 +57,7 @@ export class PaymentsController {
 
   @Post('/subscription')
   @UseGuards(AuthGuard)
-  async createSubscriptionCheckout(@CurrentUser() user: User) {
+  async createSubscriptionCheckout(@CurrentUser() user: AuthUser) {
     const { sub } = await this.userSubscriptionService.findByUserId(user.id);
     if (sub && sub.status === SubscriptionStatus.active) {
       throw new BadRequestException('User already has an active subscription');
@@ -73,7 +74,7 @@ export class PaymentsController {
 
   @Get('/subscription/portal')
   @UseGuards(AuthGuard)
-  async getSubscriptionPortal(@CurrentUser() user: User) {
+  async getSubscriptionPortal(@CurrentUser() user: AuthUser) {
     const userSubscription = await this.userSubscriptionService.findByUserId(
       user.id,
     );

@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Chatwith',
-  description: 'Chat with any file using ai',
+  title: 'ExplainIt',
+  description: 'Create interactive chats for your documentation website',
 };
 
 export default async function RootLayout({
@@ -17,8 +17,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="">
-      {/* className dark for dark theme */}
+    <html lang="en" className="dark">
       <body
         className={`${inter.className} dark:bg-gray-950 min-h-screen`}
         suppressHydrationWarning={true}

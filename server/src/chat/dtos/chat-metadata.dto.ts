@@ -1,21 +1,16 @@
-import { Expose, Transform } from 'class-transformer';
+import { Expose } from 'class-transformer';
 
 export class ChatMetadataDto {
   @Expose()
   id: string;
-
   @Expose()
-  filename: string;
-
+  organizationName: string;
   @Expose()
-  filesize: number;
-
+  organizationLogo: string;
   @Expose()
-  createdAt: Date;
-
+  organizationUrl: string;
   @Expose()
-  mimetype: string;
-
-  @Transform(({ obj }) => obj.user.id)
-  owner: string;
+  conversationStarters: string[];
+  @Expose()
+  published: boolean;
 }

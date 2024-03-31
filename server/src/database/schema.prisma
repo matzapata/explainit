@@ -7,6 +7,7 @@ datasource db {
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "darwin-arm64"]
 }
 
 // ============================= user module ============================= 
@@ -20,25 +21,25 @@ model User {
 
   // realtions
   subscription UserSubscription?
-  chats        Chat[]
+  chats        Chat?
 }
 
 // ============================= payments module ============================= 
 model UserSubscription {
-  id Int @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   subscriptionId String // from provider
-  variantId String
-  orderId String
-  provider String // PaymentProviders;
-  status String // SubscriptionStatus;
-  renewsAt DateTime
-  endsAt DateTime?
-  trialEndsAt DateTime?
-  pauseMode String? // 'void' | 'free' | null;
+  variantId      String
+  orderId        String
+  provider       String // PaymentProviders;
+  status         String // SubscriptionStatus;
+  renewsAt       DateTime
+  endsAt         DateTime?
+  trialEndsAt    DateTime?
+  pauseMode      String? // 'void' | 'free' | null;
   pauseResumesAt DateTime?
-  cancelled Boolean
-  billingAnchor Int
-  testMode Boolean
+  cancelled      Boolean
+  billingAnchor  Int
+  testMode       Boolean
 
   // timestamps
   createdAt DateTime @default(now())
@@ -50,10 +51,10 @@ model UserSubscription {
 }
 
 model WebhookEvent {
-  id        Int   @id @default(autoincrement())
-  eventName String
-  processed Boolean @default(false)
-  body      String
+  id              Int     @id @default(autoincrement())
+  eventName       String
+  processed       Boolean @default(false)
+  body            String
   processingError String?
 
   // timestamps
@@ -61,45 +62,43 @@ model WebhookEvent {
 }
 
 // ============================= chat module ============================= 
-enum MessageAgent {
-  USER
-  AI
-}
-
 model Chat {
-  id String @id @default(uuid())
-  filename String
-  filesize Int
-  mimetype String
-  embeddingsIds String[]
+  id               String   @id @default(uuid())
+  organizationName String
+  organizationLogo String
+  organizationUrl  String
+  conversationStarters String[]
+  published        Boolean
 
   // timestamps
   createdAt DateTime @default(now())
 
   // relations
-  owner     User      @relation(fields: [ownerId], references: [id])
-  ownerId   String
-  messages Message[] 
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @unique
+
+  resources ChatResource[]
 }
 
-model Message {
-  id      String       @id @default(uuid())
-  message String
-  agent   MessageAgent
+model ChatResource {
+  id          Int      @id @default(autoincrement())
+  type       String
+  data       String
+  embeddingIds String[]
+
 
   // timestamps
   createdAt DateTime @default(now())
 
   // relations
-  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  chatId String
+  chat        Chat     @relation(fields: [chatId], references: [id])
+  chatId      String
 }
-
 
 // ============================= embeddings module =============================
 model Documents {
-  id Int @id @default(autoincrement())
+  id        Int                          @id @default(autoincrement())
   embedding Unsupported("vector(1536)")?
-  content String
-  metadata Json
+  content   String
+  metadata  Json
 }

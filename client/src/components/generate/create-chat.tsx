@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import FileCard from "@/components/chat-panel/file-card";
-import FileIcon from "@/components/chat-panel/file-icon";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import FileCard from '@/components/generate/file-card';
+import FileIcon from '@/components/generate/file-icon';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -11,31 +11,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { toast } from "@/components/ui/use-toast";
+} from '@/components/ui/table';
+import { toast } from '@/components/ui/use-toast';
 import {
   ChatMetadataDto,
   MimeType,
   chatService,
-} from "@/lib/services/chat-service";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import Dropzone from "react-dropzone";
-import { IconUploadCloud } from "@/components/ui/icons";
+} from '@/lib/services/chat-service';
+import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import Dropzone from 'react-dropzone';
+import { IconUploadCloud } from '@/components/ui/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+} from '../ui/dropdown-menu';
+import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 
-export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
+export default function CreateChat(props: { initialResources: any[] }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [chats, setChats] = useState<ChatMetadataDto[]>(props.initialChats);
+  const [search, setSearch] = useState('');
+  const [chats, setChats] = useState<ChatMetadataDto[]>(props.initialResources);
   const [uploadingFile, setUploadingFile] = useState<{
     filename: string;
     size: string;
@@ -49,38 +49,42 @@ export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
     // check if type is supported
     if (Object.values(MimeType).indexOf(file.type) === -1) {
       return toast({
-        variant: "destructive",
-        description: "File type not supported",
+        variant: 'destructive',
+        description: 'File type not supported',
       });
     }
 
     // check if size is supported
     if (file.size > 1000000) {
       return toast({
-        variant: "destructive",
-        description: "File size too large",
+        variant: 'destructive',
+        description: 'File size too large',
       });
     }
 
     setUploadingFile({
       filename: file.name,
-      size: Math.floor(file.size / 1000) + " KB",
+      size: Math.floor(file.size / 1000) + ' KB',
       type: file.type,
       percentage: 0,
     });
 
     try {
-      if (!accessTokenRaw) throw new Error("No access token");
-      
-      const newChat = await chatService.createChat(accessTokenRaw, file, (progress: number) => {
-        setUploadingFile((prev: any) => ({ ...prev, percentage: progress }));
-      });
+      if (!accessTokenRaw) throw new Error('No access token');
+
+      const newChat = await chatService.createChat(
+        accessTokenRaw,
+        file,
+        (progress: number) => {
+          setUploadingFile((prev: any) => ({ ...prev, percentage: progress }));
+        },
+      );
       setChats((c) => [...c, newChat]);
     } catch (error: any) {
       return toast({
-        variant: "destructive",
+        variant: 'destructive',
         description:
-          "Something went wrong. Please try again. " +
+          'Something went wrong. Please try again. ' +
           error?.response.data.message,
       });
     } finally {
@@ -90,38 +94,65 @@ export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
 
   const deleteFile = async (id: string) => {
     try {
-      if (!accessTokenRaw) throw new Error("No access token");
-      
+      if (!accessTokenRaw) throw new Error('No access token');
+
       await chatService.deleteChat(accessTokenRaw, id);
       setChats((c) => c.filter((chat) => chat.id !== id));
     } catch (error: any) {
       return toast({
-        variant: "destructive",
+        variant: 'destructive',
         description:
-          "Something went wrong. Please try again. " +
+          'Something went wrong. Please try again. ' +
           error?.response.data.message,
       });
     }
-  }
+  };
 
   return (
     <main>
       <div className="pt-12 pb-24 max-w-6xl mx-auto space-y-6">
         {/* Heading */}
         <div className="px-4 md:px-8 space-y-8 ">
-          <h1 className="font-semibold text-2xl md:3xl text-gray-900 dark:text-white">Chats</h1>
+          <h1 className="font-semibold text-2xl md:3xl text-gray-900 dark:text-white">
+            Resources
+          </h1>
 
           <div className=" space-y-1 pb-5 border-b dark:border-b-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              One document one chat
+              Add data sources to your chat
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">Upload documents to create chats</p>
+            <p className="text-gray-600 dark:text-gray-300">
+              Your chatbot will respond only with the information you provide,
+              the better the information the better the response
+            </p>
           </div>
         </div>
 
         <div className="px-4 md:px-8 space-y-8">
+          <div className="bg-gray-950 border border-gray-800 rounded p-4 space-y-4">
+            <div className="flex space-x-2">
+              <Input
+                className="py-2"
+                placeholder="https://github.com/langchain-ai/langchain"
+              />
+              <button className="border rounded-md border-gray-800 w-11 flex items-center justify-center">
+                <PlusIcon className="h-6 w-6 dark:text-gray-300" />
+              </button>
+            </div>
+            <Button
+              className='w-full'
+              variant={"tertiary-gray"}
+              size={'sm'}
+            >
+              Add resource
+            </Button>
+            <Button variant={'secondary-gray'} size={'sm'} className="w-full">
+              Generate chat
+            </Button>
+          </div>
+
           {/* Upload file */}
-          <Dropzone onDrop={uploadFile}>
+          {/* <Dropzone onDrop={uploadFile}>
             {({ getRootProps, getInputProps }) => (
               <section>
                 <div {...getRootProps()}>
@@ -144,7 +175,7 @@ export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
                 </div>
               </section>
             )}
-          </Dropzone>
+          </Dropzone> */}
 
           {uploadingFile && (
             <FileCard
@@ -180,7 +211,7 @@ export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
                 <TableBody>
                   {chats
                     .filter((c) => {
-                      if (search === "") return true;
+                      if (search === '') return true;
                       return c.filename
                         .toLowerCase()
                         .includes(search.toLowerCase());
@@ -224,7 +255,11 @@ export default function ChatsPanel(props: { initialChats: ChatMetadataDto[] }) {
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 onClick={() => {
-                                  if (window.confirm("Are you sure you want to delete this chat?")) {
+                                  if (
+                                    window.confirm(
+                                      'Are you sure you want to delete this chat?',
+                                    )
+                                  ) {
                                     deleteFile(chat.id);
                                   }
                                 }}

@@ -8,7 +8,6 @@ import { PlanCheckerService } from 'src/payments/services/plan-checker.service';
 import { VectorStoreService } from 'src/infrastructure/vectorstore/vectorstore.service';
 import { LlmService } from 'src/infrastructure/llm/llm.service';
 import { PrismaModule } from 'src/database/prisma.module';
-import { MessagesRepository } from './repositories/messages.repository';
 import { ChatRepository } from './repositories/chat.repository';
 
 @Module({
@@ -19,7 +18,6 @@ import { ChatRepository } from './repositories/chat.repository';
     ChatsService,
     StorageService,
     PlanCheckerService,
-    MessagesRepository,
     ChatRepository,
   ],
   imports: [PrismaModule, PaymentsModule],

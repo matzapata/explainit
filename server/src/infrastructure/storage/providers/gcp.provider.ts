@@ -45,4 +45,12 @@ export class GcpStorageProvider implements StorageProvider {
     const [files] = await this.bucket.getFiles();
     return files.map((file) => file.name);
   }
+
+  async getFileUrl(path: string, expires?: number): Promise<string> {
+    const signedUrls = await this.bucket.file(path).getSignedUrl({
+      action: 'read',
+      expires: expires || Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days by default
+    });
+    return signedUrls[0];
+  }
 }

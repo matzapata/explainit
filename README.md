@@ -23,3 +23,11 @@ Setup pgvector extension in postgress db
 2. `CREATE EXTENSION IF NOT EXISTS vector;`
 
 
+# Usage
+
+1. Create postgres db
+2. Update prisma schema and run first migration
+3. Get resend and gcp storage credentials
+4. Update payments plans
+5. Configure kinde, add email to token with hasura mapping
+6. Remove unused modules

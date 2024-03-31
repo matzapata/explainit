@@ -14,9 +14,9 @@ interface SettingsLayoutProps extends NavbarProps {
 export default function SettingsLayout(props: SettingsLayoutProps) {
   const navbarItems = props.navbarItems ?? [
     {
-      title: "Chats",
+      title: "Generate",
       icon: <IconHome className="h-5 w-5 text-gray-500" />,
-      link: "/app/chat",
+      link: "/app/generate",
     },
   ];
   const nestedItems = props.nestedItems ?? [

@@ -1,14 +1,13 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   NotFoundException,
   Param,
   ParseFilePipeBuilder,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -21,33 +20,61 @@ import { ChatsService } from './services/chat.service';
 import { AuthGuard } from 'src/users/guards/auth.guard';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { ChatMetadataDto } from './dtos/chat-metadata.dto';
-import { ChatDto } from './dtos/chat.dto';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { PlanCheckerService } from 'src/payments/services/plan-checker.service';
-import { MimeType } from 'src/infrastructure/vectorstore/vectorstore.service';
-import { MessageAgent, User } from '@prisma/client';
+import { ChatMetadataDto } from './dtos/chat-metadata.dto';
+import { UpdateChatMetadataDto } from './dtos/update-chat-metadata.dto';
+import { User } from '@prisma/client';
+import { AuthUser } from 'src/users/middlewares/current-user.middleware';
+import { PostResourceDto } from './dtos/post-resource.dto';
+import { DeleteResourceDto } from './dtos/delete-resource.dto';
+import { ResourcesService } from './services/resources.service';
 
 @Controller('api/chats')
-@UseGuards(AuthGuard)
 export class ChatController {
   constructor(
     private readonly ragService: RetrievalAugmentedGenerationService,
     private readonly chatsService: ChatsService,
     private readonly storageService: StorageService,
     private readonly planCheckerService: PlanCheckerService,
+    private readonly resourcesService: ResourcesService,
   ) {}
 
   @Get('/')
+  @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
-  async getChats(@CurrentUser() user: User) {
-    return this.chatsService.findAllOwnedBy(user.id);
+  async getChatByOwner(@CurrentUser() user: AuthUser) {
+    let chat = this.chatsService.findByOwner(user.id);
+    if (!chat) {
+      // Create mock chat
+      chat = this.chatsService.create(user.id, {
+        organizationName: 'Lorem Ipsum',
+        organizationLogo: 'https://lorem.com/ipsum.png',
+        organizationUrl: 'https://lorem.com',
+        published: false,
+        conversationStarters: [],
+      });
+    }
+    return chat;
   }
 
-  @Post('/')
+  @Put('/')
+  @UseGuards(AuthGuard)
+  @Serialize(ChatMetadataDto)
+  async updateChat(
+    @CurrentUser() user: AuthUser,
+    @Body() data: UpdateChatMetadataDto,
+  ) {
+    const chat = this.chatsService.update(user.id, data);
+    return chat;
+  }
+
+  @Put('/logo')
+  @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
   @UseInterceptors(FileInterceptor('file'))
-  async createChat(
+  async updateChatLogo(
+    @CurrentUser() user: AuthUser,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
@@ -60,75 +87,61 @@ export class ChatController {
         .build(),
     )
     file: Express.Multer.File,
-    @CurrentUser() user: User,
   ) {
-    // One chat conversation per file. so files and chats are associated
-
-    // Check user's plan
-    const documentsCount = await this.chatsService.countDocumentsByOwner(
-      user.id,
-    );
-    await this.planCheckerService.canUploadDocument(user.id, documentsCount);
-
-    // Check if there's already a chat for the file
-    const existingChat = await this.chatsService.findFileForOwner(
-      user.id,
-      file.originalname,
-    );
-    if (existingChat) {
-      throw new BadRequestException('Chat already exists for this file');
-    }
-
-    // store embedded files with corresponding metadata
-    const embeddingsIds = await this.ragService.loadFile(
-      new Blob([file.buffer], { type: file.mimetype }),
-      file.mimetype as MimeType,
-      { filename: file.originalname, owner: user.id },
-    );
-
-    // store file in db
-    const chat = await this.chatsService.create(
-      user.id,
-      file.originalname,
-      file.size,
-      file.mimetype as MimeType,
-      embeddingsIds,
-    );
-
-    // store file in storage
-    await this.storageService.uploadFile(`${user.id}/aaa`, file.buffer);
-
-    return chat;
-  }
-
-  @Delete('/:id')
-  async deleteChat(@Param('id') id: string) {
-    const chat = await this.chatsService.findById(id);
-
-    // delete file from vector store
-    await this.ragService.deleteDocuments(chat.embeddingsIds);
-
-    // delete file from storage
-    await this.storageService
-      .deleteFile(`${chat.ownerId}/${chat.id}-${chat.filename}`)
-      .catch(() => null); // ignore not found errors
-
-    // delete file from files db
-    await this.chatsService.delete(id);
-
-    return chat;
-  }
-
-  @Delete('/:id/messages')
-  @Serialize(ChatMetadataDto)
-  async deleteMessages(@Param('id') id: string) {
-    const chat = await this.chatsService.findById(id);
+    let chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
 
-    // delete messages from db
-    await this.chatsService.deleteAllByChatId(id);
+    // upload logo
+    await this.storageService.uploadFile(chat.id, file.buffer);
+
+    // update chat with url
+    chat = await this.chatsService.update(user.id, {
+      organizationLogo: await this.storageService.getFileUrl(chat.id),
+    });
+
+    return chat;
+  }
+
+  @Post('/resources')
+  @UseGuards(AuthGuard)
+  @Serialize(ChatMetadataDto)
+  async addResourcesToChat(
+    @CurrentUser() user: AuthUser,
+    @Body() resource: PostResourceDto,
+  ) {
+    // create embeddings for the resource
+  }
+
+  @Delete('/resources')
+  @UseGuards(AuthGuard)
+  async deleteResourcesFromChat(
+    @CurrentUser() user: AuthUser,
+    @Body() resource: DeleteResourceDto,
+  ) {
+    // get resource
+    const r = await this.resourcesService.findById(resource.id);
+
+    // delete embeddings
+    await this.ragService.deleteDocuments(r.embeddingIds);
+
+    // delete resource
+    await this.resourcesService.delete(r.id);
+
+    return 'OK';
+  }
+
+  // Public endpoints for open chat
+  // TODO: Add rate limiting per plan for these endpoints. I mean no free plan, jus rate limit per account
+
+  @Get('/:id')
+  @Serialize(ChatMetadataDto)
+  async getChat(@Param('id') id: string) {
+    const chat = await this.chatsService.findById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
 
     return chat;
   }
@@ -138,54 +151,5 @@ export class ChatController {
     @Body() body: PostMessageDto,
     @CurrentUser() user: User,
     @Param('id') id: string,
-  ) {
-    // Check user's plan
-    const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
-    const messageCount = await this.chatsService.countMessagesByOwner(
-      user.id,
-      startOfToday,
-      new Date(),
-    );
-    await this.planCheckerService.canSendMessage(user.id, messageCount);
-
-    // Check user has permissions
-    const chat = await this.chatsService.findById(id, { messages: true });
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
-    if (chat.ownerId !== user.id) {
-      throw new ForbiddenException('Not allowed');
-    }
-
-    // Create response
-    const res = await this.ragService.invoke(
-      body.message,
-      chat.messages.map((m) => ({ agent: m.agent, message: m.message })),
-      2,
-      { filename: chat.filename, owner: user.id },
-    );
-
-    // Add user and ai message to chat
-    await this.chatsService.addMessage(id, body.message, MessageAgent.USER);
-
-    // Add ai message to chat
-    await this.chatsService.addMessage(id, res.answer, MessageAgent.AI);
-
-    return {
-      question: body.message,
-      answer: res.answer,
-      context: res.context,
-    };
-  }
-
-  @Get('/:id')
-  @Serialize(ChatDto)
-  async getChat(@Param('id') id: string) {
-    const chat = this.chatsService.findById(id, { messages: true });
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    }
-
-    return chat;
-  }
+  ) {}
 }

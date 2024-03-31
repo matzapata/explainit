@@ -1,9 +1,9 @@
 import Navbar from "@/components/navbar/landing";
-import FooterSection from "@/components/sections/footer-section";
-import FaqSection from "@/components/sections/faq-section";
-import PricingSection from "@/components/sections/pricing-section";
-import FeaturesSection from "@/components/sections/features-section";
-import HeroSection from "@/components/sections/hero-section";
+import FooterSection from "@/components/components/footer-section";
+import FaqSection from "@/components/components/faq-section";
+import PricingSection from "@/components/components/pricing-section";
+import FeaturesSection from "@/components/components/features-section";
+import HeroSection from "@/components/components/hero-section";
 
 export default function Home() {
   return (

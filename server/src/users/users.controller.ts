@@ -6,6 +6,7 @@ import { UsersService } from './services/users.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { UserDto } from './dto/user-dto';
 import { User } from '@prisma/client';
+import { AuthUser } from './middlewares/current-user.middleware';
 
 @Controller('api/users')
 @UseGuards(AuthGuard)
@@ -14,17 +15,19 @@ export class UsersController {
 
   @Put('/')
   @Serialize(UserDto)
-  async update(@CurrentUser() user: User, @Body() data: UpdateUserDto) {
+  async update(@CurrentUser() user: AuthUser, @Body() data: UpdateUserDto) {
     const updated = await this.usersService.update(user.id, data.name);
     return updated;
   }
 
   @Get('/')
-  async get(@CurrentUser() user: User) {
+  async get(@CurrentUser() user: AuthUser) {
+    const userData = await this.usersService.findById(user.id);
+
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
     };
   }
 }

@@ -6,45 +6,34 @@ import { PrismaService } from 'src/database/prisma.service';
 export class ChatRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(ownerId: string, data: Omit<Prisma.ChatCreateInput, 'owner'>) {
+  create(data: Prisma.ChatCreateInput) {
     return this.prisma.chat.create({
-      data: {
-        ...data,
-        owner: { connect: { id: ownerId } },
+      data,
+    });
+  }
+
+  update(owner: string, data: Prisma.ChatUpdateInput) {
+    return this.prisma.chat.update({
+      where: {
+        ownerId: owner,
+      },
+      data,
+    });
+  }
+
+  findByOwner(ownerId: string) {
+    return this.prisma.chat.findFirst({
+      where: {
+        ownerId,
       },
     });
   }
 
-  async delete(id: string) {
-    return this.prisma.chat.delete({ where: { id } });
-  }
-
-  async findById(id: string, include?: Prisma.ChatInclude) {
-    return this.prisma.chat.findUnique({
-      where: { id },
-      include,
-    });
-  }
-
-  async findByOwnerId(ownerId: string, include?: Prisma.ChatInclude) {
-    return this.prisma.chat.findMany({
-      where: { ownerId },
-      include,
-    });
-  }
-
-  async findByFilename(
-    ownerId: string,
-    filename: string,
-    include?: Prisma.ChatInclude,
-  ) {
+  findById(id: string) {
     return this.prisma.chat.findFirst({
-      where: { ownerId, filename },
-      include,
+      where: {
+        id,
+      },
     });
-  }
-
-  async countByOwner(ownerId: string) {
-    return this.prisma.chat.count({ where: { ownerId } });
   }
 }

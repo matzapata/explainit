@@ -15,12 +15,11 @@ import { VectorStoreService } from '../../infrastructure/vectorstore/vectorstore
 import { LlmService } from '../../infrastructure/llm/llm.service';
 import { MimeType } from 'src/infrastructure/vectorstore/vectorstore.service';
 import { pull } from 'langchain/hub';
-import { MessageAgent } from '@prisma/client';
 
-// export enum MessageAgent {
-//   user = 'USER',
-//   ai = 'AI',
-// }
+enum MessageAgent {
+  USER = 'user',
+  AGENT = 'agent',
+}
 
 @Injectable()
 export class RetrievalAugmentedGenerationService {

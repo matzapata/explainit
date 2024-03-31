@@ -116,9 +116,9 @@ export default function Navbar(props: NavbarProps) {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="inset-y-0 flex h-auto w-[300px] flex-col p-0"
+              className="inset-y-0 flex h-auto w-[300px] flex-col p-0 dark:border-gray-800"
             >
-              <div className="p-4 border-b">
+              <div className="p-4 border-b dark:border-gray-800">
                 <Logo />
               </div>
 
@@ -133,7 +133,7 @@ export default function Navbar(props: NavbarProps) {
                 ))}
               </div>
 
-              <div className="divide-y">
+              <div className="divide-y dark:divide-gray-800">
                 <div className="mb-6 space-y-2">
                   <SidebarNavItem
                     href="/contact"
@@ -159,13 +159,13 @@ export default function Navbar(props: NavbarProps) {
 
                     {/* Name and email */}
                     <div className="ml-3 items-center flex">
-                      <p className="text-sm">{props.user?.email}</p>
+                      <p className="text-sm dark:text-white">{props.user?.email}</p>
                     </div>
                   </div>
 
                   <LogoutLink postLogoutRedirectURL="/">
                     <button className="p-2">
-                      <IconLogOut className="h-5 w-5 text-gray-500" />
+                      <IconLogOut className="h-5 w-5 text-gray-500 dark:text-gray-100" />
                     </button>
                   </LogoutLink>
                 </div>
@@ -192,7 +192,7 @@ function SidebarNavItem(props: {
         }`}
       >
         {props.icon}
-        <a href="#" className="text-gray-700 font-semibold">
+        <a href="#" className="text-gray-700 dark:text-gray-100 font-semibold">
           {props.title}
         </a>
       </div>
