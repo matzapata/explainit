@@ -4,13 +4,15 @@ export class ChatMetadataDto {
   @Expose()
   id: string;
   @Expose()
-  organizationName: string;
+  name: string;
   @Expose()
-  organizationLogo: string;
+  logo: string;
   @Expose()
-  organizationUrl: string;
+  url: string;
   @Expose()
   conversationStarters: string[];
   @Expose()
   published: boolean;
+  @Expose()
+  resources: any[];
 }

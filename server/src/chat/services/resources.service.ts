@@ -1,15 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { ResourcesRepository } from '../repositories/resources.repository';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ResourcesService {
   constructor(private readonly resourcesRepository: ResourcesRepository) {}
 
-  findById(id: number) {
+  create(chatId: string, data: Omit<Prisma.ChatResourceCreateInput, 'chat'>) {
+    return this.resourcesRepository.create({
+      ...data,
+      chat: { connect: { id: chatId } },
+    });
+  }
+
+  findById(id: string) {
     return this.resourcesRepository.findById(id);
   }
 
-  delete(id: number) {
+  findByChatId(chatId: string) {
+    return this.resourcesRepository.findByChatId(chatId);
+  }
+
+  delete(id: string) {
     return this.resourcesRepository.delete(id);
   }
 }

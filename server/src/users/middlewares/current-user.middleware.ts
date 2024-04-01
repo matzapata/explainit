@@ -26,6 +26,10 @@ export class CurrentUserMiddleware implements NestMiddleware {
     const payload = await this.authService.verifyToken(token);
 
     if (payload) {
+      const user = await this.usersService.findById(payload.id);
+      if (!user) {
+        await this.usersService.create(payload.id, payload.email);
+      }
       req.currentUser = { id: payload.id, email: payload.email };
     } else req.currentUser = null;
 

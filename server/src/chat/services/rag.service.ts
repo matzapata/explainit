@@ -16,7 +16,7 @@ import { LlmService } from '../../infrastructure/llm/llm.service';
 import { MimeType } from '@src/infrastructure/vectorstore/vectorstore.service';
 import { pull } from 'langchain/hub';
 
-enum MessageAgent {
+export enum MessageAgent {
   USER = 'user',
   AGENT = 'agent',
 }
@@ -31,9 +31,16 @@ export class RetrievalAugmentedGenerationService {
   public async loadFile(
     file: Blob,
     mimetype: MimeType,
-    metadata: any,
+    metadata: { namespace: string },
   ): Promise<string[]> {
     return this.vectorStoreService.loadFile(file, mimetype, metadata);
+  }
+
+  public async loadUrl(
+    url: string,
+    metadata: { namespace: string },
+  ): Promise<string[]> {
+    return this.vectorStoreService.loadUrl(url, metadata);
   }
 
   public async deleteDocuments(ids: string[]) {
@@ -44,7 +51,7 @@ export class RetrievalAugmentedGenerationService {
     question: string,
     chat_history: { agent: MessageAgent; message: string }[],
     k: number,
-    filter: any,
+    filter: { namespace: string },
   ): Promise<{ question: string; answer: string; context: Document[] }> {
     // Contextualize the question with the chat history
     const contextualizedQuestion = await this.contextualizeQuestion(

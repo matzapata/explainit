@@ -26,11 +26,9 @@ export abstract class VectorStoreProvider {
     filter?: any,
   ): Promise<Document<Record<string, any>>[]>;
 
-  abstract loadDocuments(
-    documents: {
-      pageContent: string;
-      metadata: Record<string, any>;
-    }[],
+  abstract loadUrl(
+    url: string,
+    metadata?: Record<string, any>,
   ): Promise<string[]>;
 
   abstract loadFile(

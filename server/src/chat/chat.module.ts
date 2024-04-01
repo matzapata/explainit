@@ -9,6 +9,8 @@ import { VectorStoreService } from '@src/infrastructure/vectorstore/vectorstore.
 import { LlmService } from '@src/infrastructure/llm/llm.service';
 import { PrismaModule } from '@src/database/prisma.module';
 import { ChatRepository } from './repositories/chat.repository';
+import { ResourcesService } from './services/resources.service';
+import { ResourcesRepository } from './repositories/resources.repository';
 
 @Module({
   providers: [
@@ -19,6 +21,8 @@ import { ChatRepository } from './repositories/chat.repository';
     StorageService,
     PlanCheckerService,
     ChatRepository,
+    ResourcesService,
+    ResourcesRepository,
   ],
   imports: [PrismaModule, PaymentsModule],
   controllers: [ChatController],

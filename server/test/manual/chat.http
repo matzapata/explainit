@@ -1,39 +1,47 @@
 
 # Manual testing http requests with extension REST Client
 
-### GET /api/chats gets all the available chats for the user
-GET http://{{host}}/api/chats
+### GET /api/chat gets the chat for the owner
+GET http://{{host}}/api/chat
 Authorization: Bearer {{token}}
 
-### POST /api/chats creates a new chat from a file loading embeddings for it
-POST http://{{host}}/api/chats
+
+
+### PUT /api/chat
+PUT http://{{host}}/api/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Chat 1"
+}
+
+### PUT /api/chat/logo Upload a logo for the chat
+PUT http://{{host}}/api/chat/logo
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=----boundary
 
 ------boundary
 Content-Disposition: form-data; name="file"; filename="example.txt"
-Content-Type: text/plain
+Content-Type: image/jpg
 
-< ./data/example.txt
+< ./data/profile.jpg
 ------boundary--
 
-### GET /api/chats/:id Get the chat with the messages available
-GET http://{{host}}/api/chats/5b6c4768-ec28-4426-96e2-15e1692feba5
-Authorization: Bearer {{token}}
-
-### DELETE /api/chats/:id delete the chat with the given id
-DELETE http://{{host}}/api/chats/2519bba2-2285-446c-a02d-e8fa14d6a30c
-Authorization: Bearer {{token}}
-
-
-### PUT /api/chats/:id add a message to the chat
-POST  http://{{host}}/api/chats/5b6c4768-ec28-4426-96e2-15e1692feba5
+### POST /api/chat/resouces Upload a resource for the chat
+POST http://{{host}}/api/chat/resources
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "message": "Who is juan?"
+    "url": "https://js.langchain.com/docs/get_started/introduction"
 }
 
+### DELETE /api/chat/resouces/:id Delete resource
+DELETE http://{{host}}/api/chat/resources/e97fa1b3-4e04-4fa7-860c-7cf9bf03d9de
+Authorization: Bearer {{token}}
 
 
+
+### GET /api/chat/:id gets the chat for the consumer
+GET http://{{host}}/api/chat/8e8c781c-d271-4f37-82de-b75e7df4c795

@@ -12,6 +12,17 @@ import { VectorStoreRetriever } from 'langchain/vectorstores/base';
 import { Callbacks } from 'langchain/callbacks';
 import { Metadata } from 'langchain/vectorstores/singlestore';
 import { MimeType, VectorStoreProvider } from './vectorstore.provider';
+import { GitbookLoader } from 'langchain/document_loaders/web/gitbook';
+import { GithubRepoLoader } from 'langchain/document_loaders/web/github';
+import { compile } from 'html-to-text';
+import { RecursiveUrlLoader } from 'langchain/document_loaders/web/recursive_url';
+
+enum DocumentLoaders {
+  GITHUB = 'GITHUB',
+  GITBOOK = 'GITBOOK',
+  WEBSITE = 'WEBSITE',
+  NOT_SUPPORTED = 'NOT_SUPPORTED',
+}
 
 @Injectable()
 export class PgVectorStoreProvider implements VectorStoreProvider {
@@ -30,9 +41,9 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     this.vectorStore = await PGVectorStore.initialize(this.embeddings, {
       postgresConnectionOptions: {
         type: 'postgres',
-        connectionString: this.configService.get('POSTGRES_URL'),
+        connectionString: this.configService.get('DATABASE_URL'),
       } as PoolConfig,
-      tableName: 'documents',
+      tableName: 'Documents',
       columns: {
         idColumnName: 'id',
         vectorColumnName: 'embedding',
@@ -68,18 +79,57 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     return this.vectorStore.similaritySearch(query, k, filter);
   }
 
-  public async loadDocuments(
-    documents: {
-      pageContent: string;
-      metadata: Record<string, any>;
-    }[],
-  ): Promise<string[]> {
-    // returns ids of the added documents
-    return this.addDocuments(documents);
-  }
+  public async loadUrl(url: string, metadata: Record<string, any>) {
+    // detect loader
+    let loaderProvider: DocumentLoaders = DocumentLoaders.NOT_SUPPORTED;
+    if (url.includes('github')) loaderProvider = DocumentLoaders.GITHUB;
+    else if (url.includes('gitbook')) loaderProvider = DocumentLoaders.GITBOOK;
+    else loaderProvider = DocumentLoaders.WEBSITE;
 
-  public async deleteDocuments(ids: string[]) {
-    return this.vectorStore.delete({ ids });
+    // Load file content
+    let contents: Document<Record<string, any>>[] = [];
+    switch (loaderProvider) {
+      case DocumentLoaders.GITBOOK: {
+        const loader = new GitbookLoader(url);
+        contents = await loader.load();
+        break;
+      }
+      case DocumentLoaders.GITHUB: {
+        const loader = new GithubRepoLoader(url, {
+          branch: 'main',
+          recursive: true,
+          unknown: 'warn',
+          maxConcurrency: 5,
+        });
+        contents = await loader.load();
+        break;
+      }
+      case DocumentLoaders.WEBSITE: {
+        const compiledConvert = compile({ wordwrap: 130 });
+        const loader = new RecursiveUrlLoader(url, {
+          extractor: compiledConvert,
+          maxDepth: 1,
+        });
+        contents = await loader.load();
+
+        console.log('contents', [contents[0]]);
+        break;
+      }
+      default:
+        throw new Error('Unsupported loader');
+    }
+
+    // merge metadata
+    // TODO: looks like we need to add some batching here
+    const documents = [contents[0]].map((d) => ({
+      pageContent: d.pageContent,
+      metadata: {
+        ...d.metadata,
+        ...metadata,
+      },
+    }));
+
+    return this.loadDocuments(documents);
   }
 
   public async loadFile(
@@ -126,7 +176,21 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     return this.loadDocuments(documents);
   }
 
+  public async deleteDocuments(ids: string[]) {
+    return this.vectorStore.delete({ ids });
+  }
+
   // private methods:
+
+  private async loadDocuments(
+    documents: {
+      pageContent: string;
+      metadata: Record<string, any>;
+    }[],
+  ): Promise<string[]> {
+    // returns ids of the added documents
+    return this.addDocuments(documents);
+  }
 
   // Creates the embeddings for the documents and adds them to the vector store
   private async addDocuments(documents: Document[]): Promise<string[]> {
@@ -158,16 +222,21 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
       rows.push(values);
     }
 
+    console.log('rows', rows);
+
     const chunkSize = 500;
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
       const insertQuery = await this.buildInsertQuery(chunk);
       const flatValues = chunk.flat();
       try {
+        console.log('flatValues', flatValues);
         const res = await this.vectorStore.client.query(
           insertQuery,
           flatValues,
         );
+
+        console.log('rows', res.rows);
         return res.rows.map((row) => row.id);
       } catch (e) {
         throw new Error(`Error inserting: ${(e as Error).message}`);
@@ -199,11 +268,16 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
       .join(', ');
 
     const text = `
-      INSERT INTO ${'documents'}(
+      INSERT INTO ${'documents'}( 
         ${columns.map((column) => `"${column}"`).join(', ')}
       )
       VALUES ${valuesPlaceholders} RETURNING id
     `;
+
+    console.log('url', this.vectorStore.client);
+    console.log('url', rows);
+
+    console.log('text', text);
     return text;
   }
 }

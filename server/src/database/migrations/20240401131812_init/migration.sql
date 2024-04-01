@@ -1,9 +1,6 @@
 -- CreateExtension
 CREATE EXTENSION IF NOT EXISTS "vector";
 
--- CreateEnum
-CREATE TYPE "MessageAgent" AS ENUM ('USER', 'AI');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -52,10 +49,11 @@ CREATE TABLE "WebhookEvent" (
 -- CreateTable
 CREATE TABLE "Chat" (
     "id" TEXT NOT NULL,
-    "filename" TEXT NOT NULL,
-    "filesize" INTEGER NOT NULL,
-    "mimetype" TEXT NOT NULL,
-    "embeddingsIds" TEXT[],
+    "name" TEXT NOT NULL,
+    "logo" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "conversationStarters" TEXT[],
+    "published" BOOLEAN NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "ownerId" TEXT NOT NULL,
 
@@ -63,14 +61,15 @@ CREATE TABLE "Chat" (
 );
 
 -- CreateTable
-CREATE TABLE "Message" (
+CREATE TABLE "ChatResource" (
     "id" TEXT NOT NULL,
-    "message" TEXT NOT NULL,
-    "agent" "MessageAgent" NOT NULL,
+    "type" TEXT NOT NULL,
+    "data" TEXT NOT NULL,
+    "embeddingIds" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "chatId" TEXT NOT NULL,
 
-    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ChatResource_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -89,6 +88,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "UserSubscription_userId_key" ON "UserSubscription"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Chat_ownerId_key" ON "Chat"("ownerId");
+
 -- AddForeignKey
 ALTER TABLE "UserSubscription" ADD CONSTRAINT "UserSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -96,5 +98,4 @@ ALTER TABLE "UserSubscription" ADD CONSTRAINT "UserSubscription_userId_fkey" FOR
 ALTER TABLE "Chat" ADD CONSTRAINT "Chat_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
+ALTER TABLE "ChatResource" ADD CONSTRAINT "ChatResource_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "Chat"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

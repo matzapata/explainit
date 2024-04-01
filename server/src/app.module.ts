@@ -16,7 +16,13 @@ import { LoggerModule } from 'nestjs-pino';
     ChatModule,
     ContactModule,
     // logger
-    LoggerModule.forRoot({}),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+        },
+      },
+    }),
     // dotenv
     ConfigModule.forRoot({
       isGlobal: true,

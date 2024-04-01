@@ -63,12 +63,12 @@ model WebhookEvent {
 
 // ============================= chat module ============================= 
 model Chat {
-  id               String   @id @default(uuid())
-  organizationName String
-  organizationLogo String
-  organizationUrl  String
+  id                   String   @id @default(uuid())
+  name                 String
+  logo                 String
+  url                  String
   conversationStarters String[]
-  published        Boolean
+  published            Boolean
 
   // timestamps
   createdAt DateTime @default(now())
@@ -81,18 +81,17 @@ model Chat {
 }
 
 model ChatResource {
-  id          Int      @id @default(autoincrement())
-  type       String
-  data       String
+  id           String   @id @default(uuid())
+  type         String
+  data         String
   embeddingIds String[]
-
 
   // timestamps
   createdAt DateTime @default(now())
 
   // relations
-  chat        Chat     @relation(fields: [chatId], references: [id])
-  chatId      String
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String
 }
 
 // ============================= embeddings module =============================

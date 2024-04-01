@@ -22,15 +22,14 @@ import { CurrentUser } from '@src/users/decorators/current-user.decorator';
 import { Serialize } from '@src/interceptors/serialize.interceptor';
 import { StorageService } from '@src/infrastructure/storage/storage.service';
 import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
-import { ChatMetadataDto } from './dtos/chat-metadata.dto';
-import { UpdateChatMetadataDto } from './dtos/update-chat-metadata.dto';
-import { User } from '@prisma/client';
+import { ChatMetadataDto } from './dtos/get-chat-metadata.dto';
+import { UpdateChatMetadataDto } from './dtos/put-chat-metadata.dto';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 import { PostResourceDto } from './dtos/post-resource.dto';
-import { DeleteResourceDto } from './dtos/delete-resource.dto';
 import { ResourcesService } from './services/resources.service';
+import { Chat, ChatResource } from '@prisma/client';
 
-@Controller('api/chats')
+@Controller('api/chat')
 export class ChatController {
   constructor(
     private readonly ragService: RetrievalAugmentedGenerationService,
@@ -43,19 +42,26 @@ export class ChatController {
   @Get('/')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
-  async getChatByOwner(@CurrentUser() user: AuthUser) {
-    let chat = this.chatsService.findByOwner(user.id);
+  async getChatByOwner(
+    @CurrentUser() user: AuthUser,
+  ): Promise<Chat & { resources: ChatResource[] }> {
+    let chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
       // Create mock chat
-      chat = this.chatsService.create(user.id, {
-        organizationName: 'Lorem Ipsum',
-        organizationLogo: 'https://lorem.com/ipsum.png',
-        organizationUrl: 'https://lorem.com',
+      chat = await this.chatsService.create(user.id, {
+        name: 'Lorem Ipsum',
+        logo: 'https://lorem.com/ipsum.png',
+        url: 'https://lorem.com',
         published: false,
         conversationStarters: [],
       });
     }
-    return chat;
+    console.log('chat', chat);
+
+    // get resources
+    const resources = await this.resourcesService.findByChatId(chat.id);
+
+    return { ...chat, resources };
   }
 
   @Put('/')
@@ -64,7 +70,7 @@ export class ChatController {
   async updateChat(
     @CurrentUser() user: AuthUser,
     @Body() data: UpdateChatMetadataDto,
-  ) {
+  ): Promise<Chat> {
     const chat = this.chatsService.update(user.id, data);
     return chat;
   }
@@ -78,8 +84,8 @@ export class ChatController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType:
-            /(application\/json|application\/pdf|text\/csv|text\/plain)/,
+          // Only images are allowed
+          fileType: /(image\/jpg|image\/png)/,
         })
         .addMaxSizeValidator({
           maxSize: 1000000,
@@ -93,12 +99,17 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
-    // upload logo
-    await this.storageService.uploadFile(chat.id, file.buffer);
+    // TODO: check if file exists and delete it
+
+    // TODO: resize image
+
+    // TODO: properly set image type
+
+    await this.storageService.uploadFile(`logos/${chat.id}.jpg`, file.buffer);
 
     // update chat with url
     chat = await this.chatsService.update(user.id, {
-      organizationLogo: await this.storageService.getFileUrl(chat.id),
+      logo: await this.storageService.getFileUrl(`logos/${chat.id}.jpg`, true),
     });
 
     return chat;
@@ -111,18 +122,38 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() resource: PostResourceDto,
   ) {
-    // create embeddings for the resource
-    // const embeddings = await this.ragService.load
+    // get chat id for user
+    const chat = await this.chatsService.findByOwner(user.id);
+    console.log('chat', chat);
+
+    // load resource to get embeddings
+    try {
+      const embeddingIds = await this.ragService.loadUrl(resource.url, {
+        namespace: chat.id,
+      });
+
+      console.log('embeddingIds', embeddingIds);
+
+      // save resource
+      const r = await this.resourcesService.create(chat.id, {
+        data: resource.url,
+        type: 'url',
+        embeddingIds,
+      });
+
+      return r;
+    } catch (e) {
+      console.error(e);
+      return e.message;
+    }
   }
 
-  @Delete('/resources')
+  @Delete('/resources/:id')
   @UseGuards(AuthGuard)
-  async deleteResourcesFromChat(
-    @CurrentUser() user: AuthUser,
-    @Body() resource: DeleteResourceDto,
-  ) {
-    // get resource
-    const r = await this.resourcesService.findById(resource.id);
+  async deleteResourcesFromChat(@Param('id') id: string) {
+    console.log('id', id);
+
+    const r = await this.resourcesService.findById(id);
 
     // delete embeddings
     await this.ragService.deleteDocuments(r.embeddingIds);
@@ -133,8 +164,7 @@ export class ChatController {
     return 'OK';
   }
 
-  // Public endpoints for open chat
-  // TODO: Add rate limiting per plan for these endpoints. I mean no free plan, jus rate limit per account
+  // ============================== Public Chat Endpoints ==============================
 
   @Get('/:id')
   @Serialize(ChatMetadataDto)
@@ -150,7 +180,23 @@ export class ChatController {
   @Post('/:id')
   async postMessage(
     @Body() body: PostMessageDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-  ) {}
+  ) {
+    // TODO: Add rate limiting per plan for these endpoints. I mean no free plan, jus rate limit per account
+    const chat = await this.chatsService.findById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    // create response for the message
+    const response = await this.ragService.invoke(
+      body.question,
+      body.chatHistory,
+      2,
+      { namespace: chat.id },
+    );
+
+    return response;
+  }
 }

@@ -46,11 +46,12 @@ export class GcpStorageProvider implements StorageProvider {
     return files.map((file) => file.name);
   }
 
-  async getFileUrl(path: string, expires?: number): Promise<string> {
-    const signedUrls = await this.bucket.file(path).getSignedUrl({
-      action: 'read',
-      expires: expires || Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days by default
-    });
-    return signedUrls[0];
+  async getFileUrl(path: string, makePublic: boolean): Promise<string> {
+    if (!makePublic) {
+      throw new Error('GCP Storage requires files to be public');
+    }
+
+    await this.bucket.file(path).makePublic();
+    return `https://storage.googleapis.com/${this.bucket.name}/${path}`;
   }
 }

@@ -24,6 +24,7 @@ describe('ContactController', () => {
   });
 
   it('should require authentication to create a contact request', () => {
+    // https://stackoverflow.com/questions/59767377/how-can-i-unit-test-that-a-guard-is-applied-on-a-controller-in-nestjs
     const guards = Reflect.getMetadata('__guards__', ContactController);
     const guard = new guards[0]();
 
