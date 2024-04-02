@@ -20,7 +20,6 @@ import {
   WebhookEventName,
 } from '@src/infrastructure/payments/providers/payment.provider';
 import { plans } from './config/plans';
-import { User } from '@prisma/client';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 
 @Controller('api/payments')

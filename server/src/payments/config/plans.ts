@@ -18,7 +18,7 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     variantId: null,
     price: 0,
     description: 'Free plan',
-    features: ['1 documents', '100 messages per day'],
+    features: ['Preview page'],
     limits: {
       maxDocuments: 1,
       maxMessages: 100,
@@ -27,10 +27,9 @@ export const plans: { [key: string]: SubscriptionPlan } = {
   pro: {
     name: 'PRO',
     interval: 'month',
-    variantId: '99201',
-    price: 4.99,
-    description:
-      'Access more documents, send more messages and keep boosting your productivity',
+    variantId: '325882',
+    price: 9.99,
+    description: 'Create sharable chats for your documentation',
     features: ['10 documents per month', '1000 messages per day'],
     limits: {
       maxDocuments: 10,

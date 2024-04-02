@@ -5,6 +5,27 @@ Explainit. Create sharable chats with your documentation. Let developers get qui
 
 - Run dev with `docker-compose up --build`
 
+# TODO
+
+backend
+TODO: - improve web loader
+TODO: - slug instead of id for chats
+TODO: - rate limit on open endpoints
+TODO: - create prisma version of pgvector
+TODO: - chat-controller test
+TODO: - payments controller test
+TODO: - deployment
+TODO: - resize image on upload
+
+frontend
+TODO: - connect back and front
+TODO: - update texts
+
+general
+TODO: - buy domain
+TODO: - set up vercel project with db
+TODO: - test all flows
+
 # Deployment
 
 Setup env variables

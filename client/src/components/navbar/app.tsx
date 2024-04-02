@@ -50,12 +50,10 @@ export default function Navbar(props: NavbarProps) {
 
         <div className="hidden md:flex items-center space-x-4">
           <div>
-            {props.user.isPro ? (
+            {props.user.isPro && (
               <div className="bg-brand-200 text-xs px-2 py-0.5 rounded-full text-brand-600 font-medium border border-brand-600">
                 PRO
               </div>
-            ) : (
-              <GoProButton />
             )}
           </div>
 

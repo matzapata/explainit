@@ -22,6 +22,10 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
       link: '/app/generate/resources',
       title: 'Resources',
     },
+    {
+      link: '/app/generate/share',
+      title: 'Share',
+    },
   ];
 
   return (
@@ -46,7 +50,9 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
               ))}
             </div>
             <Button size="xs" variant="secondary-color">
-              Preview
+              <Link href="/app/chat/a">
+                Preview
+              </Link>
             </Button>
           </div>
         )}
