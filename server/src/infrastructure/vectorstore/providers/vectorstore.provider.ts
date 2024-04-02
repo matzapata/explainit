@@ -3,7 +3,10 @@ import { Callbacks } from 'langchain/callbacks';
 import { Metadata } from 'langchain/vectorstores/singlestore';
 import { Document } from 'langchain/document';
 
-export enum MimeType {
+export enum DocumentLoader {
+  github = 'github',
+  gitbook = 'gitbook',
+  website = 'website',
   pdf = 'application/pdf',
   text = 'text/plain',
   json = 'application/json',
@@ -26,16 +29,18 @@ export abstract class VectorStoreProvider {
     filter?: any,
   ): Promise<Document<Record<string, any>>[]>;
 
-  abstract loadUrl(
-    url: string,
-    metadata?: Record<string, any>,
-  ): Promise<string[]>;
+  abstract loadDocuments(
+    documents: {
+      pageContent: string;
+      metadata: Record<string, any>;
+    }[],
+  ): Promise<number[]>;
 
-  abstract loadFile(
+  abstract loadSource(
     filePathOrBlob: string | Blob,
-    mimetype: MimeType,
+    loader: DocumentLoader,
     metadata?: Record<string, any>,
-  ): Promise<string[]>;
+  ): Promise<number[]>;
 
-  abstract deleteDocuments(ids: string[]): Promise<void>;
+  abstract deleteDocuments(ids: number[]): Promise<void>;
 }

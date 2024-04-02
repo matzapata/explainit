@@ -28,6 +28,7 @@ import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 import { PostResourceDto } from './dtos/post-resource.dto';
 import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
+import { DocumentLoader } from '@src/infrastructure/vectorstore/vectorstore.service';
 
 @Controller('api/chat')
 export class ChatController {
@@ -117,35 +118,41 @@ export class ChatController {
 
   @Post('/resources')
   @UseGuards(AuthGuard)
-  @Serialize(ChatMetadataDto)
   async addResourcesToChat(
     @CurrentUser() user: AuthUser,
     @Body() resource: PostResourceDto,
   ) {
     // get chat id for user
     const chat = await this.chatsService.findByOwner(user.id);
-    console.log('chat', chat);
-
-    // load resource to get embeddings
-    try {
-      const embeddingIds = await this.ragService.loadUrl(resource.url, {
-        namespace: chat.id,
-      });
-
-      console.log('embeddingIds', embeddingIds);
-
-      // save resource
-      const r = await this.resourcesService.create(chat.id, {
-        data: resource.url,
-        type: 'url',
-        embeddingIds,
-      });
-
-      return r;
-    } catch (e) {
-      console.error(e);
-      return e.message;
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
     }
+
+    // select loader
+    let loader: DocumentLoader;
+    if (resource.url.includes('gitbook')) {
+      loader = DocumentLoader.gitbook;
+    } else if (resource.url.includes('github')) {
+      loader = DocumentLoader.github;
+    } else {
+      loader = DocumentLoader.website;
+    }
+
+    // add source to vectorstore
+    const embeddingIds = await this.ragService.loadSource(
+      resource.url,
+      loader,
+      { namespace: chat.id },
+    );
+
+    // save resource
+    const r = await this.resourcesService.create(chat.id, {
+      data: resource.url,
+      type: loader,
+      embeddingIds,
+    });
+
+    return r;
   }
 
   @Delete('/resources/:id')

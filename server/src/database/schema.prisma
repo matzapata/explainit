@@ -84,7 +84,7 @@ model ChatResource {
   id           String   @id @default(uuid())
   type         String
   data         String
-  embeddingIds String[]
+  embeddingIds Int[]
 
   // timestamps
   createdAt DateTime @default(now())

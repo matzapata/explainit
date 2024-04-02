@@ -11,9 +11,11 @@ import {
 } from '@langchain/core/runnables';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import { AIMessage, HumanMessage } from 'langchain/schema';
-import { VectorStoreService } from '../../infrastructure/vectorstore/vectorstore.service';
+import {
+  DocumentLoader,
+  VectorStoreService,
+} from '../../infrastructure/vectorstore/vectorstore.service';
 import { LlmService } from '../../infrastructure/llm/llm.service';
-import { MimeType } from '@src/infrastructure/vectorstore/vectorstore.service';
 import { pull } from 'langchain/hub';
 
 export enum MessageAgent {
@@ -28,22 +30,24 @@ export class RetrievalAugmentedGenerationService {
     private readonly llmService: LlmService,
   ) {}
 
-  public async loadFile(
-    file: Blob,
-    mimetype: MimeType,
+  public async loadSource(
+    data: string | Blob,
+    mimetype: DocumentLoader,
     metadata: { namespace: string },
-  ): Promise<string[]> {
-    return this.vectorStoreService.loadFile(file, mimetype, metadata);
+  ): Promise<number[]> {
+    return this.vectorStoreService.loadSource(data, mimetype, metadata);
   }
 
-  public async loadUrl(
-    url: string,
-    metadata: { namespace: string },
-  ): Promise<string[]> {
-    return this.vectorStoreService.loadUrl(url, metadata);
+  public async loadDocuments(
+    documents: {
+      pageContent: string;
+      metadata: Record<string, any>;
+    }[],
+  ): Promise<number[]> {
+    return this.vectorStoreService.loadDocuments(documents);
   }
 
-  public async deleteDocuments(ids: string[]) {
+  public async deleteDocuments(ids: number[]) {
     return this.vectorStoreService.deleteDocuments(ids);
   }
 
@@ -75,6 +79,13 @@ export class RetrievalAugmentedGenerationService {
       this.llmService.model,
       new StringOutputParser(),
     ]);
+
+    const res = await this.vectorStoreService.similaritySearch(
+      contextualizedQuestion,
+      k,
+      filter,
+    );
+    console.log('res', res, k, filter, contextualizedQuestion);
 
     const ragChainWithSource = new RunnableMap({
       steps: {

@@ -1,4 +1,4 @@
-import { IsObject, IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 import { MessageAgent } from '../services/rag.service';
 
 export class PostMessageDto {
@@ -6,6 +6,6 @@ export class PostMessageDto {
   question: string;
 
   // TODO: Add validation for agent
-  @IsObject()
+  @IsArray()
   chatHistory: { message: string; agent: MessageAgent }[];
 }

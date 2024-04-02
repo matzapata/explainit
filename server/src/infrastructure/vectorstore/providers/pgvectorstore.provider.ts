@@ -8,21 +8,16 @@ import { Document } from 'langchain/document';
 import { JSONLoader } from 'langchain/document_loaders/fs/json';
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
 import { CSVLoader } from 'langchain/document_loaders/fs/csv';
+import { GitbookLoader } from 'langchain/document_loaders/web/gitbook';
+import { GithubRepoLoader } from 'langchain/document_loaders/web/github';
+import { RecursiveUrlLoader } from 'langchain/document_loaders/web/recursive_url';
 import { VectorStoreRetriever } from 'langchain/vectorstores/base';
 import { Callbacks } from 'langchain/callbacks';
 import { Metadata } from 'langchain/vectorstores/singlestore';
-import { MimeType, VectorStoreProvider } from './vectorstore.provider';
-import { GitbookLoader } from 'langchain/document_loaders/web/gitbook';
-import { GithubRepoLoader } from 'langchain/document_loaders/web/github';
+import { VectorStoreProvider, DocumentLoader } from './vectorstore.provider';
 import { compile } from 'html-to-text';
-import { RecursiveUrlLoader } from 'langchain/document_loaders/web/recursive_url';
-
-enum DocumentLoaders {
-  GITHUB = 'GITHUB',
-  GITBOOK = 'GITBOOK',
-  WEBSITE = 'WEBSITE',
-  NOT_SUPPORTED = 'NOT_SUPPORTED',
-}
+import { BaseDocumentLoader } from 'langchain/document_loaders/base';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 
 @Injectable()
 export class PgVectorStoreProvider implements VectorStoreProvider {
@@ -57,7 +52,7 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     await this.vectorStore.end();
   }
 
-  public getRetriever(
+  getRetriever(
     k?: number,
     filter?: Metadata,
     callbacks?: Callbacks,
@@ -75,125 +70,22 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     );
   }
 
-  public similaritySearch(query: string, k: number, filter?: any) {
+  similaritySearch(query: string, k: number, filter?: any) {
     return this.vectorStore.similaritySearch(query, k, filter);
   }
 
-  public async loadUrl(url: string, metadata: Record<string, any>) {
-    // detect loader
-    let loaderProvider: DocumentLoaders = DocumentLoaders.NOT_SUPPORTED;
-    if (url.includes('github')) loaderProvider = DocumentLoaders.GITHUB;
-    else if (url.includes('gitbook')) loaderProvider = DocumentLoaders.GITBOOK;
-    else loaderProvider = DocumentLoaders.WEBSITE;
-
-    // Load file content
-    let contents: Document<Record<string, any>>[] = [];
-    switch (loaderProvider) {
-      case DocumentLoaders.GITBOOK: {
-        const loader = new GitbookLoader(url);
-        contents = await loader.load();
-        break;
-      }
-      case DocumentLoaders.GITHUB: {
-        const loader = new GithubRepoLoader(url, {
-          branch: 'main',
-          recursive: true,
-          unknown: 'warn',
-          maxConcurrency: 5,
-        });
-        contents = await loader.load();
-        break;
-      }
-      case DocumentLoaders.WEBSITE: {
-        const compiledConvert = compile({ wordwrap: 130 });
-        const loader = new RecursiveUrlLoader(url, {
-          extractor: compiledConvert,
-          maxDepth: 1,
-        });
-        contents = await loader.load();
-
-        console.log('contents', [contents[0]]);
-        break;
-      }
-      default:
-        throw new Error('Unsupported loader');
-    }
-
-    // merge metadata
-    // TODO: looks like we need to add some batching here
-    const documents = [contents[0]].map((d) => ({
-      pageContent: d.pageContent,
-      metadata: {
-        ...d.metadata,
-        ...metadata,
-      },
-    }));
-
-    return this.loadDocuments(documents);
+  async deleteDocuments(ids: number[]) {
+    return this.vectorStore.delete({ ids: ids.map((id) => id.toString()) });
   }
 
-  public async loadFile(
-    filePathOrBlob: string | Blob,
-    mimetype: MimeType,
-    metadata?: Record<string, any>,
-  ) {
-    // Load file content
-    let contents: Document<Record<string, any>>[] = [];
-    switch (mimetype) {
-      case MimeType.text: {
-        const loader = new TextLoader(filePathOrBlob);
-        contents = await loader.load();
-        break;
-      }
-      case MimeType.json: {
-        const loader = new JSONLoader(filePathOrBlob);
-        contents = await loader.load();
-        break;
-      }
-      case MimeType.pdf: {
-        const loader = new PDFLoader(filePathOrBlob);
-        contents = await loader.load();
-        break;
-      }
-      case MimeType.csv: {
-        const loader = new CSVLoader(filePathOrBlob);
-        contents = await loader.load();
-        break;
-      }
-      default:
-        throw new Error('Unsupported file type' + mimetype);
-    }
-
-    // merge metadata
-    const documents = contents.map((d) => ({
-      pageContent: d.pageContent,
-      metadata: {
-        ...d.metadata,
-        ...metadata,
-      },
-    }));
-
-    return this.loadDocuments(documents);
-  }
-
-  public async deleteDocuments(ids: string[]) {
-    return this.vectorStore.delete({ ids });
-  }
-
-  // private methods:
-
-  private async loadDocuments(
+  async loadDocuments(
     documents: {
       pageContent: string;
       metadata: Record<string, any>;
     }[],
-  ): Promise<string[]> {
+  ): Promise<number[]> {
     // returns ids of the added documents
-    return this.addDocuments(documents);
-  }
-
-  // Creates the embeddings for the documents and adds them to the vector store
-  private async addDocuments(documents: Document[]): Promise<string[]> {
+    documents = documents.filter((d) => d.pageContent.length > 0);
     const texts = documents.map(({ pageContent }) => pageContent);
 
     return this.addVectors(
@@ -202,11 +94,102 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     );
   }
 
+  async loadSource(
+    data: string | Blob,
+    docLoader: DocumentLoader,
+    metadata?: Record<string, any>,
+  ): Promise<number[]> {
+    // validate data type
+    switch (docLoader) {
+      case DocumentLoader.text:
+      case DocumentLoader.json:
+      case DocumentLoader.pdf:
+      case DocumentLoader.csv:
+        if (Blob.prototype.isPrototypeOf(data)) {
+          throw new Error('Data must be a blob for' + docLoader);
+        }
+        break;
+      case DocumentLoader.gitbook:
+      case DocumentLoader.github:
+      case DocumentLoader.website:
+        if (typeof data !== 'string') {
+          throw new Error('Data must be a url for' + docLoader);
+        }
+        break;
+      default:
+        throw new Error('Unsupported file type' + docLoader);
+    }
+
+    // select correct loader and splitter
+    let loader: BaseDocumentLoader;
+    switch (docLoader) {
+      case DocumentLoader.text: {
+        loader = new TextLoader(data);
+        break;
+      }
+      case DocumentLoader.json: {
+        loader = new JSONLoader(data);
+        break;
+      }
+      case DocumentLoader.pdf: {
+        loader = new PDFLoader(data);
+        break;
+      }
+      case DocumentLoader.csv: {
+        loader = new CSVLoader(data);
+        break;
+      }
+      case DocumentLoader.gitbook: {
+        loader = new GitbookLoader(data as string);
+        break;
+      }
+      case DocumentLoader.github: {
+        loader = new GithubRepoLoader(data as string, {
+          branch: 'main',
+          recursive: true,
+          unknown: 'warn',
+          maxConcurrency: 5,
+        });
+        break;
+      }
+      case DocumentLoader.website: {
+        loader = new RecursiveUrlLoader(data as string, {
+          extractor: compile({ wordwrap: 130 }),
+          maxDepth: 1,
+        });
+        break;
+      }
+      default:
+        throw new Error('Unsupported file type' + docLoader);
+    }
+
+    // select a splitter, for now we run with recursive but we can better improve this
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 4000,
+      chunkOverlap: 200,
+    });
+
+    // load and split content
+    const contents: Document<Record<string, any>>[] = await loader.load();
+    const splittedDocuments = await splitter.splitDocuments(contents);
+
+    // merge metadata
+    const documents = splittedDocuments.map((d) => ({
+      pageContent: d.pageContent,
+      metadata: {
+        ...d.metadata,
+        ...metadata,
+      },
+    }));
+
+    return this.loadDocuments(documents);
+  }
+
   // Adds the vectors to the vector store
   private async addVectors(
     vectors: number[][],
     documents: Document[],
-  ): Promise<string[]> {
+  ): Promise<number[]> {
     const rows = [];
 
     for (let i = 0; i < vectors.length; i += 1) {
@@ -222,21 +205,18 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
       rows.push(values);
     }
 
-    console.log('rows', rows);
-
     const chunkSize = 500;
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
-      const insertQuery = await this.buildInsertQuery(chunk);
+      const insertQuery = this.buildInsertQuery(chunk);
       const flatValues = chunk.flat();
       try {
-        console.log('flatValues', flatValues);
         const res = await this.vectorStore.client.query(
           insertQuery,
           flatValues,
         );
 
-        console.log('rows', res.rows);
+        console.log('res', res.rows);
         return res.rows.map((row) => row.id);
       } catch (e) {
         throw new Error(`Error inserting: ${(e as Error).message}`);
@@ -255,7 +235,7 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
     return `(${placeholders.join(', ')})`;
   }
 
-  private async buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
+  private buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
     const columns = ['content', 'embedding', 'metadata'];
 
     // Check if we have added ids to the rows.
@@ -268,16 +248,12 @@ export class PgVectorStoreProvider implements VectorStoreProvider {
       .join(', ');
 
     const text = `
-      INSERT INTO ${'documents'}( 
+      INSERT INTO "Documents" (
         ${columns.map((column) => `"${column}"`).join(', ')}
       )
       VALUES ${valuesPlaceholders} RETURNING id
     `;
 
-    console.log('url', this.vectorStore.client);
-    console.log('url', rows);
-
-    console.log('text', text);
     return text;
   }
 }
