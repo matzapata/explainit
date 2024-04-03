@@ -5,7 +5,7 @@ import GenerateLayout from '@/layouts/generate-layout';
 import { paymentsService } from '@/lib/services/payments-service';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 
-export default async function Chats() {
+export default async function ShareChat() {
   const { getAccessTokenRaw } = getKindeServerSession();
   const accessTokenRaw = await getAccessTokenRaw();
 

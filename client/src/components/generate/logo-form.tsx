@@ -27,32 +27,39 @@ import { useState } from 'react';
 import { toast } from '../ui/use-toast';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { chatService } from '@/lib/services/chat-service';
 
 const formSchema = z.object({
-  website: z.string().min(2, {
-    message: 'Website must be a url', // TODO: Add proper validation
-  }),
+  file:  typeof window === 'undefined' ? z.any() : z
+    .instanceof(FileList)
+    .refine((file) => file?.length == 1, 'Image is required.'),
 });
 
 export default function LogoForm(props: { logo?: string }) {
+
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
-  const [website, setWebsite] = useState<string | undefined>(props.logo);
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(props.logo);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      website: '',
+      file: undefined,
     },
   });
+  const fileRef = form.register('file');
 
-  const setNameMutation = useMutation({
-    mutationFn: (props: { website: string }) => {
+  const uploadPicture = useMutation({
+    mutationFn: (props: { file: FileList }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return Promise.resolve({ website: props.website });
+
+      const file = props.file[0];
+      if (!file.type.includes("image")) throw new Error("Invalid file type");
+
+      return chatService.updateOwnerChatLogo(accessTokenRaw, file)
     },
     onSuccess: (data) => {
-      setWebsite(data.website);
-      toast({ description: 'Name updated successfully.' });
+      setLogoUrl(data.logo);
+      toast({ description: 'Logo updated successfully.' });
       setOpen(false);
     },
     onError: (error) => {
@@ -61,7 +68,7 @@ export default function LogoForm(props: { logo?: string }) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    setNameMutation.mutate(values);
+    uploadPicture.mutate(values as any);
   }
 
   return (
@@ -70,12 +77,10 @@ export default function LogoForm(props: { logo?: string }) {
         Logo
       </p>
       <div className="flex md:flex-1 justify-between">
-        {/* <p className="text-sm text-gray-900 dark:text-gray-300">{website ?? "-"}</p> */}
         <Avatar>
-          {/* TODO: add image */}
-          <AvatarImage src={undefined} />
+          <AvatarImage src={logoUrl} />
           <AvatarFallback>
-            {/* {Array.from(props.user?.email ?? "c")[0].toUpperCase()} */}C
+            C
           </AvatarFallback>
         </Avatar>
 
@@ -87,11 +92,9 @@ export default function LogoForm(props: { logo?: string }) {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Website</DialogTitle>
+              <DialogTitle>Update Picture</DialogTitle>
               <DialogDescription>
-                Make changes to your website url here. People will use this link
-                to go straight to your docs. Don't worry, you can provide more
-                data to the chat later. Click save when you're done.
+                Use the logo of your company or organization. Click save when you're done.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -101,12 +104,12 @@ export default function LogoForm(props: { logo?: string }) {
               >
                 <FormField
                   control={form.control}
-                  name="website"
-                  render={({ field }) => (
+                  name="file"
+                  render={() => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Logo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Website" {...field} />
+                        <Input type="file" placeholder="Picture" {...fileRef} />
                       </FormControl>
 
                       <FormMessage />
@@ -115,7 +118,7 @@ export default function LogoForm(props: { logo?: string }) {
                 />
 
                 <DialogFooter>
-                  <Button type="submit" isLoading={setNameMutation.isPending}>
+                  <Button type="submit" isLoading={uploadPicture.isPending}>
                     Save changes
                   </Button>
                 </DialogFooter>

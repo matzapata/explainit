@@ -1,117 +1,21 @@
 'use client';
 
-import FileCard from '@/components/generate/file-card';
-import FileIcon from '@/components/generate/file-icon';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
-import {
-  ChatMetadataDto,
-  MimeType,
-  chatService,
-} from '@/lib/services/chat-service';
-import {
-  EllipsisVerticalIcon,
-  PlusIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/solid';
+import { ChatResource } from '@/lib/services/chat-service';
+import { XMarkIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Dropzone from 'react-dropzone';
-import { IconUploadCloud } from '@/components/ui/icons';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import GoProBanner from '../billing/go-pro-banner';
 
-export default function CreateChat(props: { initialResources: any[] }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+export default function CreateChat(props: {
+  initialResources: ChatResource[];
+}) {
   const router = useRouter();
-  const [search, setSearch] = useState('');
-  const [chats, setChats] = useState<ChatMetadataDto[]>(props.initialResources);
-  const [uploadingFile, setUploadingFile] = useState<{
-    filename: string;
-    size: string;
-    type: MimeType;
-    percentage: number;
-  } | null>(null);
-
-  const uploadFile = async (files: any[]) => {
-    const file = files[0];
-
-    // check if type is supported
-    if (Object.values(MimeType).indexOf(file.type) === -1) {
-      return toast({
-        variant: 'destructive',
-        description: 'File type not supported',
-      });
-    }
-
-    // check if size is supported
-    if (file.size > 1000000) {
-      return toast({
-        variant: 'destructive',
-        description: 'File size too large',
-      });
-    }
-
-    setUploadingFile({
-      filename: file.name,
-      size: Math.floor(file.size / 1000) + ' KB',
-      type: file.type,
-      percentage: 0,
-    });
-
-    try {
-      if (!accessTokenRaw) throw new Error('No access token');
-
-      const newChat = await chatService.createChat(
-        accessTokenRaw,
-        file,
-        (progress: number) => {
-          setUploadingFile((prev: any) => ({ ...prev, percentage: progress }));
-        },
-      );
-      setChats((c) => [...c, newChat]);
-    } catch (error: any) {
-      return toast({
-        variant: 'destructive',
-        description:
-          'Something went wrong. Please try again. ' +
-          error?.response.data.message,
-      });
-    } finally {
-      setUploadingFile(null);
-    }
-  };
-
-  const deleteFile = async (id: string) => {
-    try {
-      if (!accessTokenRaw) throw new Error('No access token');
-
-      await chatService.deleteChat(accessTokenRaw, id);
-      setChats((c) => c.filter((chat) => chat.id !== id));
-    } catch (error: any) {
-      return toast({
-        variant: 'destructive',
-        description:
-          'Something went wrong. Please try again. ' +
-          error?.response.data.message,
-      });
-    }
-  };
+  const { accessTokenRaw } = useKindeBrowserClient();
+  const [resources, setResources] = useState<ChatResource[]>(
+    props.initialResources,
+  );
 
   return (
     <main>

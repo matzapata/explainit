@@ -26,6 +26,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "../ui/use-toast";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { chatService } from "@/lib/services/chat-service";
 
 const formSchema = z.object({
   website: z.string().min(2, {
@@ -47,10 +48,10 @@ export default function WebsiteForm(props: { website?: string }) {
   const setNameMutation = useMutation({
     mutationFn: (props: { website: string }) => {
       if (!accessTokenRaw) throw new Error("No access token");
-      return Promise.resolve({ website: props.website })
+      return chatService.updateOwnerChat(accessTokenRaw, { url: props.website });
     },
     onSuccess: (data) => {
-      setWebsite(data.website);
+      setWebsite(data.url);
       toast({ description: "Website updated successfully." });
       setOpen(false);
     },

@@ -49,7 +49,7 @@ export default function Logo() {
             fontWeight: 900,
           }}
         >
-          CHATWITH.
+          EXPLAINIT.
         </h1>
       </div>
     </Link>

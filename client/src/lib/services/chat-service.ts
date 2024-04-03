@@ -1,20 +1,14 @@
 import { apiService } from "@/lib/services/api-service"
 import { AxiosInstance, AxiosProgressEvent } from "axios";
 
-export enum MimeType {
-    pdf = 'application/pdf',
-    text = 'text/plain',
-    json = 'application/json',
-    csv = 'text/csv',
-}
-
 export interface ChatMetadataDto {
     id: string;
-    filename: string;
-    mimetype: MimeType;
-    filesize: number;
-    createdAt: Date;
-    owner: string;
+    name: string;
+    logo: string;
+    url: string;
+    conversationStarters: string[];
+    published: boolean;
+    resources: ChatResource[];
 }
 
 export enum MessageRole {
@@ -28,24 +22,32 @@ export interface ChatMessage {
     context: { pageContent: string, metadata: any }[];
 }
 
-export interface ChatDto extends ChatMetadataDto {
-    messages: ChatMessage[];
+export interface ChatResource {
+    id: string;
+    type: string;
+    data: string;
 }
 
 export class ChatService {
 
     constructor(private readonly client: AxiosInstance) { }
 
-    async getAllChats(accessToken: string): Promise<ChatMetadataDto[]> {
-        const res = await this.client.get("/api/chats", { headers: { Authorization: `Bearer ${accessToken}` } })
-        return res.data.map((c: any) => ({ ...c, createdAt: new Date(c.createdAt) }))
+    async getOwnerChat(accessToken: string): Promise<ChatMetadataDto> {
+        const res = await this.client.get("/api/chat", { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
     }
 
-    async createChat(accessToken: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
+    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[] }): Promise<ChatMetadataDto> {
+        // name, website, conversation starters, published
+        const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+    async updateOwnerChatLogo(accessToken: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
         const formData = new FormData()
         formData.append("file", file)
 
-        const res = await this.client.post("/api/chats", formData, {
+        const res = await this.client.put("/api/chat/logo", formData, {
             headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${accessToken}` },
             onUploadProgress: (progressEvent: AxiosProgressEvent) => {
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent?.total ?? 1))
@@ -55,19 +57,13 @@ export class ChatService {
         return { ...res.data, createdAt: new Date(res.data.createdAt) }
     }
 
-    async getChat(accessToken: string, id: string): Promise<ChatDto> {
-        const res = await this.client.get(`/api/chats/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
-        return {
-            ...res.data, messages: res.data.messages.map((m: { id: string, message: string, createdAt: string, agent: "USER" | "AI" }) => ({
-                content: m.message,
-                role: m.agent === 'USER' ? MessageRole.user : MessageRole.ai,
-                context: []
-            })), createdAt: new Date(res.data.createdAt)
-        }
+    async getChat(id: string): Promise<ChatMetadataDto> {
+        // get chat by id public
+        throw new Error("Not implemented")
     }
 
-    async postMessage(accessToken: string,  id: string, message: string): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chats/${id}`, { message }, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async postMessage(accessToken: string, id: string, message: string): Promise<ChatMessage> {
+        const res = await this.client.post(`/api/chat/${id}`, { message }, { headers: { Authorization: `Bearer ${accessToken}` } })
         return {
             content: res.data.answer,
             role: MessageRole.ai,
@@ -75,12 +71,8 @@ export class ChatService {
         }
     }
 
-    clearMessages(accessToken: string, id: string): Promise<void> {
-        return this.client.delete(`/api/chats/${id}/messages`, { headers: { Authorization: `Bearer ${accessToken}` } })
-    }
-
-    deleteChat(accessToken: string, id: string): Promise<void> {
-        return this.client.delete(`/api/chats/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async addResource(accessToken: string, data: string): Promise<ChatMetadataDto> {
+        throw new Error("Not implemented")
     }
 
 

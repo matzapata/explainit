@@ -23,10 +23,10 @@ import {
   FormMessage,
 } from "../ui/form";
 import { useMutation } from "@tanstack/react-query";
-import { userService } from "@/lib/services/user-service";
 import { useState } from "react";
 import { toast } from "../ui/use-toast";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { chatService } from "@/lib/services/chat-service";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -48,7 +48,7 @@ export default function NameForm(props: { name?: string }) {
   const setNameMutation = useMutation({
     mutationFn: (props: { name: string }) => {
       if (!accessTokenRaw) throw new Error("No access token");
-      return Promise.resolve({ name: props.name })
+      return chatService.updateOwnerChat(accessTokenRaw, props)
     },
     onSuccess: (data) => {
       setName(data.name);

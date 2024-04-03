@@ -4,19 +4,25 @@ import GenerateLayout from '@/layouts/generate-layout';
 import { paymentsService } from '@/lib/services/payments-service';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import WebsiteForm from '@/components/generate/website-form';
-import { Button } from '@/components/ui/button';
-import { XMarkIcon } from '@heroicons/react/24/solid';
 import GoProBanner from '@/components/billing/go-pro-banner';
+import { chatService } from '@/lib/services/chat-service';
+import ConversationStartersTable from '@/components/generate/conversation-starters-table';
 
-export default async function Profile() {
+export default async function GenerateChat() {
   const { getAccessTokenRaw } = getKindeServerSession();
-  const user = await paymentsService.getSubscription(await getAccessTokenRaw());
+  const accessTokenRaw = await getAccessTokenRaw();
+
+  const [user, chat] = await Promise.all([
+    paymentsService.getSubscription(accessTokenRaw),
+    chatService.getOwnerChat(accessTokenRaw),
+  ]);
+
+  console.log("chat", chat)
 
   return (
     <GenerateLayout user={{ email: user.email, isPro: user.isPro }}>
       <div className="py-8 md:py-12 space-y-8 max-w-6xl mx-auto">
-        {/* Go pro */}
-        <GoProBanner />
+        {!user.isPro && <GoProBanner />}
 
         {/* Heading */}
         <div className="px-4 md:px-8">
@@ -42,13 +48,13 @@ export default async function Profile() {
           {/* Name table */}
           <div className="divide-y divide-gray-200 dark:divide-gray-800">
             {/* Name */}
-            <NameForm name={user.name} />
+            <NameForm name={chat.name} />
 
             {/* Logo */}
-            <LogoForm logo={undefined} />
+            <LogoForm logo={chat.logo} />
 
             {/* Website */}
-            <WebsiteForm website={undefined} />
+            <WebsiteForm website={chat.url} />
           </div>
         </div>
 
@@ -65,26 +71,7 @@ export default async function Profile() {
           </div>
 
           {/* Conversation starters */}
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            <div className="flex md:flex-1 justify-between py-6">
-              <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-                Chat name
-              </p>
-
-              <Button
-                className="text-sm dark:text-red-600"
-                variant="link-color"
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="flex md:flex-1 py-6">
-              <Button className="text-sm" variant="link-color">
-                Add new
-              </Button>
-            </div>
-          </div>
+         <ConversationStartersTable starters={chat.conversationStarters} />
         </div>
       </div>
     </GenerateLayout>
