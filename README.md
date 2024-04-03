@@ -8,14 +8,12 @@ Explainit. Create sharable chats with your documentation. Let developers get qui
 # TODO
 
 backend
-TODO: - improve web loader
-TODO: - slug instead of id for chats
-TODO: - rate limit on open endpoints
-TODO: - create prisma version of pgvector
+TODO: - deployment
+TODO: - rate limit on open endpoints https://docs.nestjs.com/security/rate-limiting#proxies (use this with chat id instead of ip)
 TODO: - chat-controller test
 TODO: - payments controller test
-TODO: - deployment
-TODO: - resize image on upload
+TODO: - create prisma version of pgvector
+TODO: - cleanup unused deps
 
 frontend
 TODO: - connect back and front

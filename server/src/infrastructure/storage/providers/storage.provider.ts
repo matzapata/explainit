@@ -6,4 +6,12 @@ export abstract class StorageProvider {
   abstract deleteFile(path: string): Promise<void>;
 
   abstract listFiles(): Promise<string[]>;
+
+  abstract getFileUrl(path: string, makePublic: boolean): Promise<string>;
+
+  abstract resizeImage(
+    file: Buffer,
+    width: number,
+    height: number,
+  ): Promise<Buffer>;
 }

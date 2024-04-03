@@ -1,4 +1,10 @@
-import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateChatMetadataDto {
   @IsOptional()
@@ -14,7 +20,8 @@ export class UpdateChatMetadataDto {
   url?: string;
 
   @IsOptional()
-  @MaxLength(40, { each: true })
+  @MaxLength(100, { each: true })
+  @MinLength(15, { each: true })
   conversationStarters?: string[];
 
   @IsOptional()

@@ -32,7 +32,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "url": "https://js.langchain.com/docs/get_started/introduction"
+    "url": "https://js.langchain.com/docs/use_cases/question_answering/streaming"
 }
 
 ### DELETE /api/chat/resouces/:id Delete resource
@@ -47,6 +47,6 @@ POST http://{{host}}/api/chat/990c27a3-2199-4ec3-a4c6-7e119cef7bcb
 Content-Type: application/json
 
 {
-    "question": "how to load data?",
+    "question": "How does streaming work with langchain?",
     "chatHistory": []
 }

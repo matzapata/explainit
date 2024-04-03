@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { StorageProvider } from './storage.provider';
 import { Storage, Bucket } from '@google-cloud/storage';
 import { ConfigService } from '@nestjs/config';
+import sharp from 'sharp';
 
 @Injectable()
 export class GcpStorageProvider implements StorageProvider {
@@ -38,7 +39,14 @@ export class GcpStorageProvider implements StorageProvider {
   }
 
   async deleteFile(path: string): Promise<void> {
-    await this.bucket.file(path).delete();
+    try {
+      await this.bucket.file(path).delete();
+    } catch (error) {
+      // Ignore error if file does not exist
+      if (error.code !== 404) {
+        throw error;
+      }
+    }
   }
 
   async listFiles(): Promise<string[]> {
@@ -53,5 +61,13 @@ export class GcpStorageProvider implements StorageProvider {
 
     await this.bucket.file(path).makePublic();
     return `https://storage.googleapis.com/${this.bucket.name}/${path}`;
+  }
+
+  async resizeImage(
+    file: Buffer,
+    width: number,
+    height: number,
+  ): Promise<Buffer> {
+    return sharp(file).resize(width, height).webp().toBuffer();
   }
 }

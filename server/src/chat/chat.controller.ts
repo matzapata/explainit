@@ -57,7 +57,6 @@ export class ChatController {
         conversationStarters: [],
       });
     }
-    console.log('chat', chat);
 
     // get resources
     const resources = await this.resourcesService.findByChatId(chat.id);
@@ -100,17 +99,21 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
-    // TODO: check if file exists and delete it
+    // check if file exists and delete it
+    await this.storageService.deleteFile(`logos/${chat.id}.webp`);
 
-    // TODO: resize image
+    // resize image
+    const resized = await this.storageService.resizeImage(
+      file.buffer,
+      200,
+      200,
+    );
 
-    // TODO: properly set image type
-
-    await this.storageService.uploadFile(`logos/${chat.id}.jpg`, file.buffer);
+    await this.storageService.uploadFile(`logos/${chat.id}.webp`, resized);
 
     // update chat with url
     chat = await this.chatsService.update(user.id, {
-      logo: await this.storageService.getFileUrl(`logos/${chat.id}.jpg`, true),
+      logo: await this.storageService.getFileUrl(`logos/${chat.id}.webp`, true),
     });
 
     return chat;
