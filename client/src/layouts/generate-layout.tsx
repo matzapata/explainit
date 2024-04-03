@@ -21,11 +21,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
     {
       link: '/app/generate/resources',
       title: 'Resources',
-    },
-    {
-      link: '/app/generate/share',
-      title: 'Share',
-    },
+    }
   ];
 
   return (

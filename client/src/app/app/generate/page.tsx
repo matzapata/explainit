@@ -7,6 +7,7 @@ import WebsiteForm from '@/components/generate/website-form';
 import GoProBanner from '@/components/billing/go-pro-banner';
 import { chatService } from '@/lib/services/chat-service';
 import ConversationStartersTable from '@/components/generate/conversation-starters-table';
+import { Button } from '@/components/ui/button';
 
 export default async function GenerateChat() {
   const { getAccessTokenRaw } = getKindeServerSession();
@@ -17,7 +18,7 @@ export default async function GenerateChat() {
     chatService.getOwnerChat(accessTokenRaw),
   ]);
 
-  console.log("chat", chat)
+  console.log('chat', chat);
 
   return (
     <GenerateLayout user={{ email: user.email, isPro: user.isPro }}>
@@ -58,8 +59,8 @@ export default async function GenerateChat() {
           </div>
         </div>
 
+        {/* Conversation starters */}
         <div className="md:px-8 px-4 ">
-          {/* Section heading */}
           <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
             <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
               Conversation starters
@@ -71,7 +72,26 @@ export default async function GenerateChat() {
           </div>
 
           {/* Conversation starters */}
-         <ConversationStartersTable starters={chat.conversationStarters} />
+          <ConversationStartersTable starters={chat.conversationStarters} />
+        </div>
+
+        {/* Share chat */}
+        <div className="md:px-8 px-4 ">
+          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
+            <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
+              You're ready to share!
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
+              Share your documentation with the world! You can use the link
+              below to share it with your users.
+            </p>
+          </div>
+
+          {/* Share */}
+          <div className="flex mt-6 border border-gray-700 rounded-lg items-center py-1 pl-4 pr-1">
+            <p className="flex-1 text-white">https://explainit.com/{chat.id}</p>
+            <Button size="sm">Copy link</Button>
+          </div>
         </div>
       </div>
     </GenerateLayout>
