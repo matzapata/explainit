@@ -9,6 +9,7 @@ interface GenerateLayoutProps extends NavbarProps {
   children: React.ReactNode;
   navbarItems?: NavbarItem[];
   nestedItems?: NavbarItem[];
+  chatId?: string;
 }
 
 export default function GenerateLayout(props: GenerateLayoutProps) {
@@ -21,7 +22,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
     {
       link: '/app/generate/resources',
       title: 'Resources',
-    }
+    },
   ];
 
   return (
@@ -45,11 +46,11 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
                 </Link>
               ))}
             </div>
-            <Button size="xs" variant="secondary-color">
-              <Link href="/app/chat/a">
-                Preview
-              </Link>
-            </Button>
+            {props.chatId && (
+              <Button size="xs" variant="secondary-color">
+                <Link href={`/app/chat/${props.chatId}`}>Preview</Link>
+              </Button>
+            )}
           </div>
         )}
       </nav>

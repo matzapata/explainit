@@ -7,7 +7,7 @@ import WebsiteForm from '@/components/generate/website-form';
 import GoProBanner from '@/components/billing/go-pro-banner';
 import { chatService } from '@/lib/services/chat-service';
 import ConversationStartersTable from '@/components/generate/conversation-starters-table';
-import { Button } from '@/components/ui/button';
+import ShareChatBox from '@/components/generate/share-chat-box';
 
 export default async function GenerateChat() {
   const { getAccessTokenRaw } = getKindeServerSession();
@@ -21,7 +21,10 @@ export default async function GenerateChat() {
   console.log('chat', chat);
 
   return (
-    <GenerateLayout user={{ email: user.email, isPro: user.isPro }}>
+    <GenerateLayout
+      user={{ email: user.email, isPro: user.isPro }}
+      chatId={chat.id}
+    >
       <div className="py-8 md:py-12 space-y-8 max-w-6xl mx-auto">
         {!user.isPro && <GoProBanner />}
 
@@ -88,10 +91,7 @@ export default async function GenerateChat() {
           </div>
 
           {/* Share */}
-          <div className="flex mt-6 border border-gray-700 rounded-lg items-center py-1 pl-4 pr-1">
-            <p className="flex-1 text-white">https://explainit.com/{chat.id}</p>
-            <Button size="sm">Copy link</Button>
-          </div>
+          <ShareChatBox id={chat.id} />
         </div>
       </div>
     </GenerateLayout>
