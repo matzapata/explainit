@@ -105,7 +105,7 @@ export default async function PricingSection() {
               Start with the free plan and upgrade to pro when you need more
               features.
             </p>
-            <RegisterLink postLoginRedirectURL="/app/chat">
+            <RegisterLink postLoginRedirectURL="/chat">
               <Button
                 variant={"secondary-color"}
                 size={"sm"}

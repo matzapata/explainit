@@ -30,7 +30,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
         </Avatar>
 
         {authenticated && (
-          <Link href="/app/generate">
+          <Link href="/generate">
             <XIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </Link>
         )}

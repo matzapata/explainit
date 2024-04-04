@@ -4,5 +4,6 @@ export default function middleware(req: any) {
     return withAuth(req);
 }
 export const config = {
-    matcher: ['/app/:path*']
+    // set protected pages
+    matcher: ['/generate/:path*', '/settings/:path*']
 };

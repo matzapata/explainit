@@ -43,20 +43,20 @@ export default function Navbar() {
         {/* login / signup / dashboard buttons */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <Link href={"/app/chat"}>
+            <Link href={"/chat"}>
               <Button variant={"secondary-gray"} size="sm">
                 Dashboard
               </Button>
             </Link>
           ) : (
             <>
-              <LoginLink postLoginRedirectURL="/app/chat">
+              <LoginLink postLoginRedirectURL="/chat">
                 <Button className="bg-transparent" variant="tertiary-gray">
                   Log in
                 </Button>
               </LoginLink>
 
-              <RegisterLink postLoginRedirectURL="/app/chat">
+              <RegisterLink postLoginRedirectURL="/chat">
                 <Button variant="primary">Sign up</Button>
               </RegisterLink>
             </>
@@ -92,20 +92,20 @@ export default function Navbar() {
                 </div>
                 <div className="py-6 px-4 flex flex-col space-y-3">
                   {user ? (
-                    <Link href={"/app/chat"}>
+                    <Link href={"/chat"}>
                       <Button variant={"secondary-gray"} size="sm">
                         Dashboard
                       </Button>
                     </Link>
                   ) : (
                     <>
-                      <RegisterLink postLoginRedirectURL="/app/chat">
+                      <RegisterLink postLoginRedirectURL="/chat">
                         <Button variant="primary" className="w-full">
                           Sign up
                         </Button>
                       </RegisterLink>
 
-                      <LoginLink postLoginRedirectURL="/app/chat">
+                      <LoginLink postLoginRedirectURL="/chat">
                         <Button variant="secondary-gray" className="w-full">
                           Log in
                         </Button>

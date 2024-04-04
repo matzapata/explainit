@@ -18,16 +18,16 @@ export default function SettingsLayout(props: SettingsLayoutProps) {
     {
       title: "Generate",
       icon: <IconHome className="h-5 w-5 text-gray-500" />,
-      link: "/app/generate",
+      link: "/generate",
     },
   ];
   const nestedItems = props.nestedItems ?? [
     {
-      link: "/app/settings",
+      link: "/settings",
       title: "General",
     },
     {
-      link: "/app/settings/billing",
+      link: "/settings/billing",
       title: "Billing",
     },
   ];

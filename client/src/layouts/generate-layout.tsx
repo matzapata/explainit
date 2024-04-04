@@ -19,11 +19,11 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
   const navbarItems = props.navbarItems ?? [];
   const nestedItems = props.nestedItems ?? [
     {
-      link: '/app/generate',
+      link: '/generate',
       title: 'General',
     },
     {
-      link: '/app/generate/resources',
+      link: '/generate/resources',
       title: 'Resources',
     },
   ];
@@ -51,7 +51,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
             </div>
             {props.chatId && (
               <Button size="xs" variant="secondary-color">
-                <Link href={`/app/chat/${props.chatId}`}>Preview</Link>
+                <Link href={`/chat/${props.chatId}`}>Preview</Link>
               </Button>
             )}
           </div>

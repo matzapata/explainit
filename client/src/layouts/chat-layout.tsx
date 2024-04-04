@@ -10,7 +10,7 @@ export default async function ChatLayout(props: ChatLayoutProps) {
   const navbarItems = props.navbarItems ?? [
     {
       title: "Chats",
-      link: "/app/chat",
+      link: "/chat",
       icon: <RectangleStackIcon className="h-5 w-5 text-gray-500" />,
     },
   ];

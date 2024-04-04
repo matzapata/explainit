@@ -58,7 +58,7 @@ export default function Navbar(props: NavbarProps) {
           </div>
 
           <Link
-            href={"/app/settings"}
+            href={"/settings"}
             className="rounded-md py-2 px-[10px] hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <IconSettings className="h-5 w-5 dark:text-gray-100" />
@@ -140,7 +140,7 @@ export default function Navbar(props: NavbarProps) {
                   />
                   <SidebarNavItem
                     title="Settings"
-                    href="/app/settings"
+                    href="/settings"
                     icon={<IconSettings className="h-5 w-5 text-gray-500" />}
                   />
                 </div>
