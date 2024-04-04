@@ -3,6 +3,7 @@
 import Navbar, { NavbarItem, NavbarProps } from "@/components/navbar/app";
 import { IconHome } from "@/components/ui/icons";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface SettingsLayoutProps extends NavbarProps {
   className?: string;
@@ -12,6 +13,7 @@ interface SettingsLayoutProps extends NavbarProps {
 }
 
 export default function SettingsLayout(props: SettingsLayoutProps) {
+  const pathname = usePathname();
   const navbarItems = props.navbarItems ?? [
     {
       title: "Generate",
@@ -44,7 +46,7 @@ export default function SettingsLayout(props: SettingsLayoutProps) {
                   key={i}
                   href={item.link}
                   className={
-                    "px-3 py-2 text-sm font-semibold text-gray-700 rounded dark:text-gray-300 dark:hover:text-gray-100 "
+                    `${item.link == pathname? "dark:text-white" : "dark:text-gray-300"} px-3 py-2 text-sm font-semibold text-gray-700 rounded`
                   }
                 >
                   {item.title}

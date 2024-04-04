@@ -29,42 +29,34 @@ import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { ChatResource, chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 
-// TODO: Update methods
 
 const formSchema = z.object({
-  starter: z
-    .string()
-    .min(15, {
-      message: 'conversation starter must be at least 15 characters',
-    })
-    .max(100, {
-      message: 'conversation starter must be at most 100 characters',
-    }),
+  resource: z.string().url({ message: 'Invalid URL' }),
 });
 
 export default function ResourcesTable(props: {
   initialResources: ChatResource[];
 }) {
   const { accessTokenRaw } = useKindeBrowserClient();
-  const [starters, setStarters] = useState<ChatResource[]>(props.initialResources);
+  const [resources, setResources] = useState<ChatResource[]>(
+    props.initialResources,
+  );
   const [open, setOpen] = useState<boolean>(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      starter: '',
+      resource: '',
     },
   });
 
-  const addConversationStarterMutation = useMutation({
-    mutationFn: (props: { starter: string }) => {
+  const addResourcesMutation = useMutation({
+    mutationFn: (props: { resource: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, {
-        // conversationStarters: [...starters, props.starter],
-      });
+      return chatService.addResource(accessTokenRaw, props.resource)
     },
     onSuccess: (data) => {
-      // setStarters(data.conversationStarters);
-      toast({ description: 'Conversation starters updated successfully.' });
+      setResources((r) => [...r, data]);
+      toast({ description: 'Successfully added resource.' });
       setOpen(false);
     },
     onError: (error) => {
@@ -72,15 +64,13 @@ export default function ResourcesTable(props: {
     },
   });
 
-  const deleteConversationStarterMutation = useMutation({
-    mutationFn: (props: { starter: string }) => {
+  const deleteResourceMutation = useMutation({
+    mutationFn: (props: { id: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, {
-        // conversationStarters: starters.filter((s) => s !== props.starter),
-      });
+      return chatService.deleteResource(accessTokenRaw, props.id)
     },
-    onSuccess: (data) => {
-      // setStarters(data.conversationStarters);
+    onSuccess: (id) => {
+      setResources((r) => r.filter((s) => s.id !== id));
       toast({ description: 'Successfully removed.' });
       setOpen(false);
     },
@@ -90,14 +80,13 @@ export default function ResourcesTable(props: {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addConversationStarterMutation.mutate(values);
+    addResourcesMutation.mutate(values);
   }
 
   return (
-    
     <div className="divide-y divide-gray-200 dark:divide-gray-800">
       <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-        {starters.map((s, i) => (
+        {resources.map((s, i) => (
           <div key={i} className="flex md:flex-1 justify-between py-6">
             <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
               {s.data}
@@ -110,7 +99,7 @@ export default function ResourcesTable(props: {
                     'Are you sure you want to delete this conversation starter?',
                   )
                 ) {
-                  // deleteConversationStarterMutation.mutate({ starter: s });
+                  deleteResourceMutation.mutate({ id: s.id });
                 }
               }}
               className="text-sm dark:text-red-600"
@@ -132,10 +121,9 @@ export default function ResourcesTable(props: {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add a new conversation starter</DialogTitle>
+              <DialogTitle>Add a new resources</DialogTitle>
               <DialogDescription>
-                Help your customers quickly understand what kind of questions
-                they can make
+                Add more knowledge sources to your chatbot. The more you give the better responses you can get. Attach links to documentations, websites, and more.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -145,12 +133,12 @@ export default function ResourcesTable(props: {
               >
                 <FormField
                   control={form.control}
-                  name="starter"
+                  name="resource"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Conversation starter</FormLabel>
                       <FormControl>
-                        <Input placeholder="How to..." {...field} />
+                        <Input placeholder="https://docs.lorem..." {...field} />
                       </FormControl>
 
                       <FormMessage />
@@ -161,7 +149,7 @@ export default function ResourcesTable(props: {
                 <DialogFooter>
                   <Button
                     type="submit"
-                    isLoading={addConversationStarterMutation.isPending}
+                    isLoading={addResourcesMutation.isPending}
                   >
                     Add
                   </Button>

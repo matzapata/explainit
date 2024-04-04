@@ -12,16 +12,7 @@ import {
   ChatMessage as IChatMessage,
   MessageRole,
 } from '@/lib/services/chat-service';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '../ui/drawer';
-import { Button } from '../ui/button';
-import { useState } from 'react';
+import { ResponseContextDrawer } from './chat-message-context';
 
 export interface ChatMessageProps {
   message: IChatMessage;
@@ -99,51 +90,3 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
   );
 }
 
-function ResponseContextDrawer(props: {
-  context: { pageContent: string; metadata: any }[];
-}) {
-  const [page, setPage] = useState(0);
-
-  return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <button className="text-xs text-gray-600 hover:underline">
-          Show context
-        </button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-3xl">
-          <DrawerHeader>
-            <DrawerTitle className="text-left">Response context</DrawerTitle>
-            <DrawerDescription className="text-left">
-              The response was generated with the following content from your
-              file
-            </DrawerDescription>
-          </DrawerHeader>
-
-          <div className="px-4 pb-10 max-h-44 overflow-scroll">
-            <p>{props.context[page].pageContent}</p>
-          </div>
-
-          <div className="px-4 py-4 space-x-2">
-            <Button
-              variant={'secondary-gray'}
-              size="sm"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Prev
-            </Button>
-            <Button
-              variant={'secondary-gray'}
-              size="sm"
-              disabled={page === props.context.length - 1}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
-  );
-}

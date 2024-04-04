@@ -37,7 +37,7 @@ export class ChatService {
         return res.data
     }
 
-    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[] }): Promise<ChatMetadataDto> {
+    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean }): Promise<ChatMetadataDto> {
         // name, website, conversation starters, published
         const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
@@ -58,12 +58,12 @@ export class ChatService {
     }
 
     async getChat(id: string): Promise<ChatMetadataDto> {
-        // get chat by id public
-        throw new Error("Not implemented")
+        const res = await this.client.get(`/api/chat/${id}`)
+        return res.data
     }
 
-    async postMessage(accessToken: string, id: string, message: string): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chat/${id}`, { message }, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async postMessage(id: string, message: string): Promise<ChatMessage> {
+        const res = await this.client.post(`/api/chat/${id}`, { message })
         return {
             content: res.data.answer,
             role: MessageRole.ai,
@@ -71,8 +71,14 @@ export class ChatService {
         }
     }
 
-    async addResource(accessToken: string, data: string): Promise<ChatMetadataDto> {
-        throw new Error("Not implemented")
+    async addResource(accessToken: string, url: string): Promise<ChatResource> {
+        const res = await this.client.post("/api/chat/resources", { url }, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+    async deleteResource(accessToken: string, id: string): Promise<string> {
+        await this.client.delete(`/api/chat/resources/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return id
     }
 
 

@@ -4,14 +4,11 @@ import {
   MessageRole,
   chatService,
 } from "@/lib/services/chat-service";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { apiService } from "../services/api-service";
 
 export default function useChat(
   chatId: string,
   initialMessages: ChatMessage[] = []
 ) {
-  const { accessTokenRaw } = useKindeBrowserClient();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -25,12 +22,9 @@ export default function useChat(
     setIsLoading(true);
 
     try {
-      if (!accessTokenRaw) {
-        throw new Error("No access token");
-      }
 
       // append the message
-      const response = await chatService.postMessage(accessTokenRaw, chatId, message);
+      const response = await chatService.postMessage(chatId, message);
       setMessages((prev) => [
         ...prev,
         { content: response.content, role: MessageRole.ai, context: response.context },
@@ -42,6 +36,7 @@ export default function useChat(
       setIsLoading(false);
     }
   };
+
 
   return { messages, setMessages, isLoading, input, setInput, append };
 }

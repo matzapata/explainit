@@ -7,29 +7,47 @@ import { EmptyScreen } from '@/components/chat/empty-screen';
 import { ChatScrollAnchor } from '@/components/chat/chat-scroll-anchor';
 import React from 'react';
 import useChat from '@/lib/hooks/use-chat';
-import { ChatMessage } from '@/lib/services/chat-service';
-import { ChatMessageLoading } from './chat-message-loading';
+import {
+  ChatMetadataDto,
+  MessageRole,
+} from '@/lib/services/chat-service';
 import DeleteMessages from './delete-messages';
+import Link from 'next/link';
 
 export interface ChatProps extends React.ComponentProps<'div'> {
-  initialMessages?: ChatMessage[];
-  id: string;
+  chat: ChatMetadataDto;
 }
 
-export function Chat({ id, initialMessages, className }: ChatProps) {
-  const { messages, isLoading, input, setInput, append } = useChat(
-    id,
-    initialMessages,
+export function Chat({ chat, className }: ChatProps) {
+  const { messages, setMessages, isLoading, input, setInput, append } = useChat(
+    chat.id,
+    [
+      {
+        content: 'Hi',
+        role: MessageRole.user,
+        context: [{ pageContent: 'string', metadata: 'any' }],
+      },
+      {
+        content: 'Bie',
+        role: MessageRole.ai,
+        context: [{ pageContent: 'string', metadata: 'any' }],
+      },
+    ],
   );
 
   return (
     <div className="relative">
       <div className="h-10 bg-white dark:bg-gray-950 border-b dark:border-b-gray-800 sticky top-16 z-50 left-0 w-screen px-4 md:px-8 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-          {/* {chat.filename[0].toUpperCase() + chat.filename.slice(1)} */}
+        <Link
+          href={chat.url}
+          className="text-sm font-medium text-gray-600 dark:text-gray-300"
+        >
           Documentation
-        </span>
-        <DeleteMessages id={id} />
+        </Link>
+        <DeleteMessages
+          disabled={!messages.length}
+          clearMessages={() => setMessages([])}
+        />
       </div>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
         {messages.length ? (
@@ -38,11 +56,15 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
-          <EmptyScreen setInput={setInput} />
+          <EmptyScreen
+            setInput={setInput}
+            chatName={chat.name}
+            starters={chat.conversationStarters}
+          />
         )}
       </div>
       <ChatPanel
-        id={id}
+        id={chat.id}
         isLoading={isLoading}
         append={append}
         messages={messages}

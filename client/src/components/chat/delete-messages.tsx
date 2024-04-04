@@ -1,36 +1,21 @@
 "use client";
 
-import { chatService } from "@/lib/services/chat-service";
 import { Button } from "../ui/button";
-import { toast } from "../ui/use-toast";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
-export default function DeleteMessages(props: { id: string }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
-
-  const clearMessages = async () => {
+export default function DeleteMessages(props: { disabled: boolean, clearMessages: () => void }) {
+  const clearMessages = () => {
     if (
       window.confirm("Are you sure you want to clear all messages?") === false
     ) {
       return;
     }
 
-    try {
-      if (!accessTokenRaw) {
-        throw new Error("No access token");
-      }
-      await chatService.clearMessages(accessTokenRaw, props.id);
-      window.location.reload();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        description: "Failed to clear messages",
-      });
-    }
+    clearMessages();
   };
 
   return (
     <Button
+      disabled={props.disabled}
       onClick={() => clearMessages()}
       variant={"link-gray"}
       size={"sm"}

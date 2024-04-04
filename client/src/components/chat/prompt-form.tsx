@@ -47,17 +47,17 @@ export function PromptForm({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/app/chat"
+              href="/"
               className={cn(
                 buttonVariants({ size: 'sm', variant: 'secondary-gray' }),
                 'absolute left-0 top-4 h-8 w-8 rounded-full bg-white dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800 p-0 sm:left-4',
               )}
             >
               <IconPlus />
-              <span className="sr-only">New Chat</span>
+              <span className="sr-only">Create your chat!</span>
             </Link>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent>Create your chat!</TooltipContent>
         </Tooltip>
         <Textarea
           ref={inputRef}

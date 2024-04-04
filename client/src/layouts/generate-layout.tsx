@@ -3,6 +3,7 @@
 import Navbar, { NavbarItem, NavbarProps } from '@/components/navbar/app';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface GenerateLayoutProps extends NavbarProps {
   className?: string;
@@ -13,6 +14,8 @@ interface GenerateLayoutProps extends NavbarProps {
 }
 
 export default function GenerateLayout(props: GenerateLayoutProps) {
+  const pathname = usePathname();
+
   const navbarItems = props.navbarItems ?? [];
   const nestedItems = props.nestedItems ?? [
     {
@@ -39,7 +42,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
                   key={i}
                   href={item.link}
                   className={
-                    'px-3 py-2 text-sm font-semibold text-gray-700 rounded dark:text-gray-300 dark:hover:text-gray-100 '
+                    `${item.link == pathname? "dark:text-white" : "dark:text-gray-300"} px-3 py-2 text-sm font-semibold text-gray-700 rounded`
                   }
                 >
                   {item.title}
