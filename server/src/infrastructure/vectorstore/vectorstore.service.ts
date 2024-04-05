@@ -1,5 +1,5 @@
 // Select the vector store provider to use
-export { PgVectorStoreProvider as VectorStoreService } from './providers/pgvectorstore.provider';
+export { PrismaVectorStoreProvider as VectorStoreService } from './providers/prismavectorstore.provider';
 
 // Export types
 export * from './providers/vectorstore.provider';

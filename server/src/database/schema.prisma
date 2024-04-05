@@ -84,7 +84,7 @@ model ChatResource {
   id           String   @id @default(uuid())
   type         String
   data         String
-  embeddingIds Int[]
+  embeddingIds String[]
 
   // timestamps
   createdAt DateTime @default(now())
@@ -95,9 +95,12 @@ model ChatResource {
 }
 
 // ============================= embeddings module =============================
-model Documents {
-  id        Int                          @id @default(autoincrement())
-  embedding Unsupported("vector(1536)")?
+model Embedding {
+  id        String @id @default(cuid())
   content   String
+  namespace String
   metadata  Json
+
+  embedding Unsupported("vector(1536)")?
 }
+

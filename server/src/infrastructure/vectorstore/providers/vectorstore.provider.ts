@@ -1,7 +1,4 @@
-import { VectorStoreRetriever } from 'langchain/vectorstores/base';
-import { Callbacks } from 'langchain/callbacks';
-import { Metadata } from 'langchain/vectorstores/singlestore';
-import { Document } from 'langchain/document';
+import { Embedding } from '@prisma/client';
 
 export enum DocumentLoader {
   github = 'github',
@@ -14,33 +11,26 @@ export enum DocumentLoader {
 }
 
 export abstract class VectorStoreProvider {
-  abstract getRetriever(
-    k?: number,
-    filter?: Metadata,
-    callbacks?: Callbacks,
-    tags?: string[],
-    metadata?: Record<string, unknown>,
-    verbose?: boolean,
-  ): VectorStoreRetriever;
-
   abstract similaritySearch(
     query: string,
     k: number,
-    filter?: any,
-  ): Promise<Document<Record<string, any>>[]>;
+    namespace: string,
+  ): Promise<Array<Embedding & { similarity: number }>>;
 
   abstract loadDocuments(
     documents: {
-      pageContent: string;
+      content: string;
+      namespace: string;
       metadata: Record<string, any>;
     }[],
-  ): Promise<number[]>;
+  ): Promise<Embedding['id'][]>;
 
   abstract loadSource(
-    filePathOrBlob: string | Blob,
-    loader: DocumentLoader,
+    data: string | Blob,
+    docLoader: DocumentLoader,
+    namespace: string,
     metadata?: Record<string, any>,
-  ): Promise<number[]>;
+  ): Promise<Embedding['id'][]>;
 
-  abstract deleteDocuments(ids: number[]): Promise<void>;
+  abstract deleteDocuments(ids: Embedding['id'][]): Promise<void>;
 }

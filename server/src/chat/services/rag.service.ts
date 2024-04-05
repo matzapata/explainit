@@ -9,6 +9,7 @@ import {
 } from '../../infrastructure/vectorstore/vectorstore.service';
 import { LlmService } from '../../infrastructure/llm/llm.service';
 import { Document } from 'langchain/document';
+import { Embedding } from '@prisma/client';
 
 export enum MessageAgent {
   USER = 'user',
@@ -25,40 +26,31 @@ export class RetrievalAugmentedGenerationService {
   public async loadSource(
     data: string | Blob,
     mimetype: DocumentLoader,
-    metadata: { namespace: string },
-  ): Promise<number[]> {
-    return this.vectorStoreService.loadSource(data, mimetype, metadata);
+    namespace: string,
+  ): Promise<Embedding['id'][]> {
+    return this.vectorStoreService.loadSource(data, mimetype, namespace);
   }
 
-  public async loadDocuments(
-    documents: {
-      pageContent: string;
-      metadata: Record<string, any>;
-    }[],
-  ): Promise<number[]> {
-    return this.vectorStoreService.loadDocuments(documents);
-  }
-
-  public async deleteDocuments(ids: number[]) {
+  public async deleteDocuments(ids: Embedding['id'][]) {
     return this.vectorStoreService.deleteDocuments(ids);
   }
 
   public async invoke(
     question: string,
-    chat_history: { agent: MessageAgent; message: string }[],
+    chatHistory: { agent: MessageAgent; message: string }[],
     k: number,
-    filter: { namespace: string },
-  ): Promise<{ question: string; answer: string; context: Document[] }> {
+    namespace: string,
+  ): Promise<{ question: string; answer: string; context: Embedding[] }> {
     // Contextualize the question with the chat history
     const standaloneQuestion = await this.buildStandaloneQuestion(
       question,
-      chat_history,
+      chatHistory,
     );
 
     const context = await this.vectorStoreService.similaritySearch(
       standaloneQuestion,
       k,
-      filter,
+      namespace,
     );
 
     // TODO: add stream here
@@ -125,7 +117,7 @@ export class RetrievalAugmentedGenerationService {
     return standaloneQuestion;
   }
 
-  private async buildAnswerQuestion(question: string, context: Document[]) {
+  private async buildAnswerQuestion(question: string, context: Embedding[]) {
     const answerTemplate = `You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know.
     Question: {question}
     Context: {context} 
@@ -145,7 +137,9 @@ export class RetrievalAugmentedGenerationService {
 
     const answer = await answerChain.invoke({
       question: question,
-      context: formatDocumentsAsString(context),
+      context: formatDocumentsAsString(
+        context.map((doc) => new Document({ pageContent: doc.content })),
+      ),
     });
     return answer;
   }

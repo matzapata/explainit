@@ -21,7 +21,6 @@ import { AuthGuard } from '@src/users/guards/auth.guard';
 import { CurrentUser } from '@src/users/decorators/current-user.decorator';
 import { Serialize } from '@src/interceptors/serialize.interceptor';
 import { StorageService } from '@src/infrastructure/storage/storage.service';
-import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
 import { ChatMetadataDto } from './dtos/get-chat-metadata.dto';
 import { UpdateChatMetadataDto } from './dtos/put-chat-metadata.dto';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
@@ -29,6 +28,7 @@ import { PostResourceDto } from './dtos/post-resource.dto';
 import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
 import { DocumentLoader } from '@src/infrastructure/vectorstore/vectorstore.service';
+import { GetResourceDto } from './dtos/get-resource.dto';
 
 @Controller('api/chat')
 export class ChatController {
@@ -36,7 +36,6 @@ export class ChatController {
     private readonly ragService: RetrievalAugmentedGenerationService,
     private readonly chatsService: ChatsService,
     private readonly storageService: StorageService,
-    private readonly planCheckerService: PlanCheckerService,
     private readonly resourcesService: ResourcesService,
   ) {}
 
@@ -121,6 +120,7 @@ export class ChatController {
 
   @Post('/resources')
   @UseGuards(AuthGuard)
+  @Serialize(GetResourceDto)
   async addResourcesToChat(
     @CurrentUser() user: AuthUser,
     @Body() resource: PostResourceDto,
@@ -145,7 +145,7 @@ export class ChatController {
     const embeddingIds = await this.ragService.loadSource(
       resource.url,
       loader,
-      { namespace: chat.id },
+      chat.id,
     );
 
     // save resource
@@ -160,6 +160,7 @@ export class ChatController {
 
   @Delete('/resources/:id')
   @UseGuards(AuthGuard)
+  @Serialize(GetResourceDto)
   async deleteResourcesFromChat(@Param('id') id: string) {
     console.log('id', id);
 
@@ -171,7 +172,7 @@ export class ChatController {
     // delete resource
     await this.resourcesService.delete(r.id);
 
-    return 'OK';
+    return r;
   }
 
   // ============================== Public Chat Endpoints ==============================
@@ -203,8 +204,8 @@ export class ChatController {
     const response = await this.ragService.invoke(
       body.question,
       body.chatHistory,
-      2,
-      { namespace: chat.id },
+      4,
+      chat.id,
     );
 
     return response;

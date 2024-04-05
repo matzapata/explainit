@@ -13,6 +13,6 @@ export class ChatMetadataDto {
   conversationStarters: string[];
   @Expose()
   published: boolean;
-  @Expose()
-  resources: any[];
+  @Expose() // TODO: transform here
+  resources: { id: string; type: string; data: string }[];
 }
