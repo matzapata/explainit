@@ -2,4 +2,4 @@
 export { LemonSqueezyPaymentProvider as PaymentsService } from './providers/lemonsqueezy.provider';
 
 // Export types
-export * from './providers/lemonsqueezy.provider';
+export * from './providers/payment.provider';
