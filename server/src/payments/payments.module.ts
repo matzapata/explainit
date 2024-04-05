@@ -5,12 +5,12 @@ import { UsersService } from '@src/users/services/users.service';
 import { PaymentsService } from '../infrastructure/payments/payments.service';
 import { UserSubscriptionService } from './services/user-subscription.service';
 import { WebhookEventsService } from './services/webhook-events.service';
-import { EmailService } from '@src/infrastructure/emails/email.service';
 import { PlanCheckerService } from './services/plan-checker.service';
 import { PrismaModule } from '@src/database/prisma.module';
 import { UsersModule } from '@src/users/users.module';
 import { UserSubscriptionRepository } from './repositories/user-subscription.repository';
 import { WebhookEventsRepository } from './repositories/webhook-events.repository';
+import { EmailsModule } from '@src/infrastructure/emails/emails.module';
 
 @Module({
   providers: [
@@ -19,13 +19,11 @@ import { WebhookEventsRepository } from './repositories/webhook-events.repositor
     UsersService,
     UserSubscriptionService,
     WebhookEventsService,
-    EmailService,
     PlanCheckerService,
     UserSubscriptionRepository,
     WebhookEventsRepository,
   ],
-  imports: [UsersModule, PrismaModule],
-
+  imports: [UsersModule, PrismaModule, EmailsModule],
   controllers: [PaymentsController],
   exports: [PlanCheckerService, UserSubscriptionService],
 })
