@@ -12,14 +12,14 @@ export interface ChatMetadataDto {
 }
 
 export enum MessageRole {
-    user = 'USER',
-    ai = 'AI',
+    user = 'user',
+    ai = 'ai',
 }
 
 export interface ChatMessage {
     content: string;
     role: MessageRole;
-    context: { pageContent: string, metadata: any }[];
+    context: { content: string, metadata: { url: string, title: string } }[];
 }
 
 export interface ChatResource {
@@ -62,8 +62,8 @@ export class ChatService {
         return res.data
     }
 
-    async postMessage(id: string, message: string): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chat/${id}`, { message })
+    async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[] ): Promise<ChatMessage> {
+        const res = await this.client.post(`/api/chat/${id}`, { question, chatHistory: chatHistory ?? [] })
         return {
             content: res.data.answer,
             role: MessageRole.ai,
@@ -71,8 +71,14 @@ export class ChatService {
         }
     }
 
-    async addResource(accessToken: string, url: string): Promise<ChatResource> {
-        const res = await this.client.post("/api/chat/resources", { url }, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async addResource(accessToken: string, urls: string[]): Promise<ChatResource[]> {
+        const res = await this.client.post("/api/chat/resources/web", { urls, type: "web" }, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+
+    async inspectResource(accessToken: string, url: string): Promise<{ urls: string[] }> {
+        const res = await this.client.post("/api/chat/resources/web/inspect", { url }, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
 
@@ -80,8 +86,6 @@ export class ChatService {
         await this.client.delete(`/api/chat/resources/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
         return id
     }
-
-
 }
 
 export const chatService = new ChatService(apiService.client)

@@ -32,7 +32,11 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             : 'bg-primary text-primary-foreground',
         )}
       >
-        {message.role === MessageRole.user ? <IconUser className='text-gray-300'/> : <IconOpenAI className='text-gray-300' />}
+        {message.role === MessageRole.user ? (
+          <IconUser className="text-gray-300" />
+        ) : (
+          <IconOpenAI className="text-gray-300" />
+        )}
       </div>
       <div className="ml-4 flex flex-1 overflow-hidden px-1">
         <div className="flex-1 space-y-3  pt-1">
@@ -41,7 +45,15 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             remarkPlugins={[remarkGfm, remarkMath]}
             components={{
               p({ children }) {
-                return <p className="mb-2 last:mb-0">{children}</p>;
+                if (children.length) {
+                  return (
+                    <p className="mb-2 last:mb-0">
+                      {children.map((c) => (
+                        <span>{c}</span>
+                      ))}
+                    </p>
+                  );
+                } else return <p className="mb-2 last:mb-0">{children}</p>;
               },
               code({ node, inline, className, children, ...props }) {
                 if (children?.length) {
@@ -60,7 +72,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
 
                 if (inline) {
                   return (
-                    <code className={className} {...props}>
+                    <code className={"bg-gray-800 px-0.5"} {...props}>
                       {children}
                     </code>
                   );
@@ -79,7 +91,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
           >
             {message.content}
           </MemoizedReactMarkdown>
-          {message.context.length? (
+          {message.context.length ? (
             <ResponseContextDrawer context={message.context} />
           ) : null}
         </div>
@@ -89,4 +101,3 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
     </div>
   );
 }
-

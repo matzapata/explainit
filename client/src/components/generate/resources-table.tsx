@@ -28,11 +28,25 @@ import { useMutation } from '@tanstack/react-query';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { ChatResource, chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
+import { Textarea } from '../ui/textarea';
 
-
-const formSchema = z.object({
-  resource: z.string().url({ message: 'Invalid URL' }),
+const inspectFormSchema = z.object({
+  url: z.string().url({ message: 'Invalid URL' }),
 });
+const addFormSchema = z.object({
+  urls: z
+    .string()
+    .min(10, { message: 'Please provide at least one URL to add' }),
+});
+
+function stringIsAValidUrl(s: string): boolean {
+  try {
+    new URL(s);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
 
 export default function ResourcesTable(props: {
   initialResources: ChatResource[];
@@ -42,20 +56,41 @@ export default function ResourcesTable(props: {
     props.initialResources,
   );
   const [open, setOpen] = useState<boolean>(false);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const [urls, setUrls] = useState<string[]>([]);
+  const inspectForm = useForm<z.infer<typeof inspectFormSchema>>({
+    resolver: zodResolver(inspectFormSchema),
     defaultValues: {
-      resource: '',
+      url: '',
+    },
+  });
+  const addForm = useForm<z.infer<typeof addFormSchema>>({
+    resolver: zodResolver(addFormSchema),
+    defaultValues: {
+      urls: '',
+    },
+  });
+
+  const inspectResourceMutation = useMutation({
+    mutationFn: async (props: { url: string }) => {
+      if (!accessTokenRaw) throw new Error('No access token');
+      return chatService.inspectResource(accessTokenRaw, props.url);
+    },
+    onSuccess: (data) => {
+      setUrls(data.urls);
+      addForm.setValue('urls', data.urls.join('\n'));
+    },
+    onError: (error) => {
+      toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
 
   const addResourcesMutation = useMutation({
-    mutationFn: (props: { resource: string }) => {
+    mutationFn: (props: { urls: string[] }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addResource(accessTokenRaw, props.resource)
+      return chatService.addResource(accessTokenRaw, props.urls);
     },
     onSuccess: (data) => {
-      setResources((r) => [...r, data]);
+      setResources((r) => [...r, ...data]);
       toast({ description: 'Successfully added resource.' });
       setOpen(false);
     },
@@ -67,7 +102,7 @@ export default function ResourcesTable(props: {
   const deleteResourceMutation = useMutation({
     mutationFn: (props: { id: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.deleteResource(accessTokenRaw, props.id)
+      return chatService.deleteResource(accessTokenRaw, props.id);
     },
     onSuccess: (id) => {
       setResources((r) => r.filter((s) => s.id !== id));
@@ -79,8 +114,33 @@ export default function ResourcesTable(props: {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    addResourcesMutation.mutate(values);
+  function onAddSubmit(values: z.infer<typeof addFormSchema>) {
+    const urls = values.urls.split('\n').filter((u) => !!u);
+    for (const u of urls) {
+      if (!stringIsAValidUrl(u)) {
+        addForm.setError('urls', {
+          type: 'manual',
+          message: `Invalid URL ${u}`,
+        });
+        return;
+      }
+    }
+
+    addResourcesMutation.mutate({ urls: urls });
+  }
+
+  function onInspectSubmit(values: z.infer<typeof inspectFormSchema>) {
+    inspectResourceMutation.mutate(values);
+  }
+
+  function onDeleteClick(id: string) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this resource? The ai won't know about that topic anymore.",
+      )
+    ) {
+      deleteResourceMutation.mutate({ id });
+    }
   }
 
   return (
@@ -93,15 +153,7 @@ export default function ResourcesTable(props: {
             </p>
 
             <Button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    'Are you sure you want to delete this conversation starter?',
-                  )
-                ) {
-                  deleteResourceMutation.mutate({ id: s.id });
-                }
-              }}
+              onClick={() => onDeleteClick(s.id)}
               className="text-sm dark:text-red-600"
               variant="link-color"
             >
@@ -113,30 +165,44 @@ export default function ResourcesTable(props: {
 
       {/* Add new form */}
       <div className="flex md:flex-1 py-6">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            if (!o) {
+              inspectForm.reset();
+              addForm.reset();
+              setUrls([]);
+            }
+            setOpen(o);
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="text-sm" variant="link-color">
               Add new
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
               <DialogTitle>Add a new resources</DialogTitle>
               <DialogDescription>
-                Add more knowledge sources to your chatbot. The more you give the better responses you can get. Attach links to documentations, websites, and more.
+                Add more knowledge sources to your chatbot. The more you give
+                the better responses you can get. Give us a starter url, we'll
+                see what we can find and start from there.
               </DialogDescription>
             </DialogHeader>
-            <Form {...form}>
+
+            {/* Inspect form */}
+            <Form {...inspectForm}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={inspectForm.handleSubmit(onInspectSubmit)}
                 className="space-y-4"
               >
                 <FormField
-                  control={form.control}
-                  name="resource"
+                  control={inspectForm.control}
+                  name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Conversation starter</FormLabel>
+                      <FormLabel>Your documentation base url</FormLabel>
                       <FormControl>
                         <Input placeholder="https://docs.lorem..." {...field} />
                       </FormControl>
@@ -145,17 +211,58 @@ export default function ResourcesTable(props: {
                     </FormItem>
                   )}
                 />
-
-                <DialogFooter>
-                  <Button
-                    type="submit"
-                    isLoading={addResourcesMutation.isPending}
-                  >
-                    Add
-                  </Button>
-                </DialogFooter>
+                {!urls.length && (
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      isLoading={inspectResourceMutation.isPending}
+                    >
+                      Add
+                    </Button>
+                  </DialogFooter>
+                )}
               </form>
             </Form>
+
+            {/* Add form */}
+            {!urls.length ? null : (
+              <Form {...addForm}>
+                <form
+                  onSubmit={addForm.handleSubmit(onAddSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={addForm.control}
+                    name="urls"
+                    render={({ field }) => (
+                      <FormItem>
+                        <p className="text-gray-300 mb-2 text-sm">
+                          We found the following urls, do you want to add them
+                          all? Are we missing anything? Do one url per line
+                        </p>
+                        <FormControl>
+                          <Textarea
+                            rows={10}
+                            placeholder="Type your message here."
+                            {...field}
+                          />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      isLoading={addResourcesMutation.isPending}
+                    >
+                      Add all
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            )}
           </DialogContent>
         </Dialog>
       </div>

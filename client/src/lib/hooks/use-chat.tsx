@@ -24,7 +24,10 @@ export default function useChat(
     try {
 
       // append the message
-      const response = await chatService.postMessage(chatId, message);
+      const response = await chatService.postMessage(chatId, message, messages.map(m => ({ 
+        agent: m.role,
+        message: m.content
+       })));
       setMessages((prev) => [
         ...prev,
         { content: response.content, role: MessageRole.ai, context: response.context },

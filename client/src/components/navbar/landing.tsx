@@ -43,7 +43,7 @@ export default function Navbar() {
         {/* login / signup / dashboard buttons */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <Link href={"/chat"}>
+            <Link href={"/generate"}>
               <Button variant={"secondary-gray"} size="sm">
                 Dashboard
               </Button>
@@ -92,7 +92,7 @@ export default function Navbar() {
                 </div>
                 <div className="py-6 px-4 flex flex-col space-y-3">
                   {user ? (
-                    <Link href={"/chat"}>
+                    <Link href={"/generate"}>
                       <Button variant={"secondary-gray"} size="sm">
                         Dashboard
                       </Button>

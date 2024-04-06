@@ -21,7 +21,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   return (
     <div>
       <div
-        className={`${authenticated ? 'justify-between' : 'justify-center'} border-b h-16 bg-white px-4 md:px-8 items-center dark:bg-gray-950 border-b-gray-200 dark:border-b-gray-800 flex `}
+        className={`${authenticated ? 'justify-between' : 'justify-center'} sticky z-50 top-0 w-screen bg-gray-950 border-b h-16  px-4 md:px-8 items-center dark:bg-gray-950 border-b-gray-200 dark:border-b-gray-800 flex `}
       >
         {/* Enterprise logo */}
         <Avatar>

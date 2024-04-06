@@ -25,7 +25,7 @@ export function ChatMessageActions({
   return (
     <div
       className={cn(
-        'flex justify-end transition-opacity group-hover:opacity-100 md:absolute md:-right-10 md:top-4 md:opacity-0',
+        'flex justify-end transition-opacity group-hover:opacity-100 md:absolute md:-right-10 md:top-8 md:opacity-0',
         className
       )}
       {...props}
