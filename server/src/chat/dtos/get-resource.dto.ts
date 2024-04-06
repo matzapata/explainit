@@ -7,4 +7,6 @@ export class GetResourceDto {
   type: string;
   @Expose()
   data: string;
+  @Expose()
+  urls: string[];
 }

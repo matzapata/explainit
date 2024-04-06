@@ -1,6 +1,8 @@
-import { IsUrl } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class PostResourceDto {
-  @IsUrl()
-  url: string;
+  @IsString({ each: true })
+  urls: string[];
+  @IsString()
+  type: string; // web for now but can add github and more
 }

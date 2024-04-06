@@ -10,6 +10,7 @@ import { ResourcesRepository } from './repositories/resources.repository';
 import { VectorStoreModule } from '@src/infrastructure/vectorstore/vectorstore.module';
 import { LlmModule } from '@src/infrastructure/llm/llm.module';
 import { StorageModule } from '@src/infrastructure/storage/storage.module';
+import { CrawlerModule } from '@src/infrastructure/crawler/cawler.module';
 
 @Module({
   providers: [
@@ -25,6 +26,7 @@ import { StorageModule } from '@src/infrastructure/storage/storage.module';
     VectorStoreModule,
     LlmModule,
     StorageModule,
+    CrawlerModule,
   ],
   controllers: [ChatController],
 })

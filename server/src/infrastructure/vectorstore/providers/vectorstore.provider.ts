@@ -17,19 +17,12 @@ export abstract class VectorStoreProvider {
     namespace: string,
   ): Promise<Array<Embedding & { similarity: number }>>;
 
-  abstract loadDocuments(
+  abstract addDocuments(
     documents: {
       content: string;
       namespace: string;
       metadata: Record<string, any>;
     }[],
-  ): Promise<Embedding['id'][]>;
-
-  abstract loadSource(
-    data: string | Blob,
-    docLoader: DocumentLoader,
-    namespace: string,
-    metadata?: Record<string, any>,
   ): Promise<Embedding['id'][]>;
 
   abstract deleteDocuments(ids: Embedding['id'][]): Promise<void>;

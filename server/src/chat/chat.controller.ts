@@ -39,6 +39,7 @@ export class ChatController {
     private readonly resourcesService: ResourcesService,
   ) {}
 
+  // get chat metadata based on the owner
   @Get('/')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
@@ -63,6 +64,7 @@ export class ChatController {
     return { ...chat, resources };
   }
 
+  // Updates the chat metadata
   @Put('/')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
@@ -74,6 +76,7 @@ export class ChatController {
     return chat;
   }
 
+  // Uploads a logo for the chat
   @Put('/logo')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
@@ -118,10 +121,11 @@ export class ChatController {
     return chat;
   }
 
-  @Post('/resources')
+  // loads the urls from a webpage and adds them to the chat
+  @Post('/resources/web')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
-  async addResourcesToChat(
+  async loadWebResource(
     @CurrentUser() user: AuthUser,
     @Body() resource: PostResourceDto,
   ) {
@@ -131,52 +135,43 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
-    // select loader
-    let loader: DocumentLoader;
-    if (resource.url.includes('gitbook')) {
-      loader = DocumentLoader.gitbook;
-    } else if (resource.url.includes('github')) {
-      loader = DocumentLoader.github;
-    } else {
-      loader = DocumentLoader.website;
-    }
-
     // add source to vectorstore
-    const embeddingIds = await this.ragService.loadSource(
-      resource.url,
-      loader,
+    const results = await this.ragService.loadWebpageWithCrawling(
+      resource.urls,
       chat.id,
     );
 
-    // save resource
-    const r = await this.resourcesService.create(chat.id, {
-      data: resource.url,
-      type: loader,
-      embeddingIds,
-    });
-
-    return r;
+    // return { r, ...urls };
+    return results;
   }
 
+  // inspect a webpage and get urls to add to the chat
+  @Post('/resources/web/inspect')
+  @UseGuards(AuthGuard)
+  async inspectWebResource(@Body() resource: { url: string }) {
+    // TODO: DTO
+    const results = await this.ragService.inspectWebpage(resource.url);
+
+    return { urls: results };
+  }
+
+  //  deletes a resource from the chat including embeddings
   @Delete('/resources/:id')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
   async deleteResourcesFromChat(@Param('id') id: string) {
-    console.log('id', id);
-
     const r = await this.resourcesService.findById(id);
 
-    // delete embeddings
     await this.ragService.deleteDocuments(r.embeddingIds);
 
-    // delete resource
     await this.resourcesService.delete(r.id);
 
     return r;
   }
 
-  // ============================== Public Chat Endpoints ==============================
+  // Public Chat Endpoints ============================================================
 
+  // get chat metadata based on the chat id. This is a public endpoint
   @Get('/:id')
   @Serialize(ChatMetadataDto)
   async getChat(@Param('id') id: string) {
@@ -188,6 +183,7 @@ export class ChatController {
     return chat;
   }
 
+  // post a message to the chat. This is a public endpoint
   @Post('/:id')
   async postMessage(
     @Body() body: PostMessageDto,

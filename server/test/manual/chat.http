@@ -26,8 +26,8 @@ Content-Type: image/jpg
 < ./data/profile.jpg
 ------boundary--
 
-### POST /api/chat/resouces Upload a resource for the chat
-POST http://{{host}}/api/chat/resources
+### POST /api/chat/resources/web/inspect Checks urls that can be added as resources
+POST http://{{host}}/api/chat/resources/web/inspect
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -35,15 +35,25 @@ Content-Type: application/json
     "url": "https://js.langchain.com/docs/use_cases/question_answering/streaming"
 }
 
+### POST /api/chat/resources/web Add a web resource
+POST http://{{host}}/api/chat/resources/web
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "type": "web",
+    "urls": ["https://js.langchain.com/docs/use_cases/question_answering/streaming"]
+}
+
 ### DELETE /api/chat/resouces/:id Delete resource
-DELETE http://{{host}}/api/chat/resources/e97fa1b3-4e04-4fa7-860c-7cf9bf03d9de
+DELETE http://{{host}}/api/chat/resources/2126e890-b2f9-40a5-9479-1f417192bb64
 Authorization: Bearer {{token}}
 
 ### GET /api/chat/:id gets the chat for the consumer
-GET http://{{host}}/api/chat/990c27a3-2199-4ec3-a4c6-7e119cef7bcb
+GET http://{{host}}/api/chat/fd64e2f6-3e8e-40cb-8024-a2e1d69e6c56
 
 ### POST /api/chat/:id generate response for question
-POST http://{{host}}/api/chat/990c27a3-2199-4ec3-a4c6-7e119cef7bcb
+POST http://{{host}}/api/chat/fd64e2f6-3e8e-40cb-8024-a2e1d69e6c56
 Content-Type: application/json
 
 {

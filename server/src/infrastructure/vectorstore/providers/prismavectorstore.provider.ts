@@ -1,16 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
-import { Document } from 'langchain/document';
-import { JSONLoader } from 'langchain/document_loaders/fs/json';
-import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
-import { CSVLoader } from 'langchain/document_loaders/fs/csv';
-import { GitbookLoader } from 'langchain/document_loaders/web/gitbook';
-import { GithubRepoLoader } from 'langchain/document_loaders/web/github';
-import { RecursiveUrlLoader } from 'langchain/document_loaders/web/recursive_url';
-import { VectorStoreProvider, DocumentLoader } from './vectorstore.provider';
-import { compile } from 'html-to-text';
-import { BaseDocumentLoader } from 'langchain/document_loaders/base';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { VectorStoreProvider } from './vectorstore.provider';
 import { PrismaService } from '@src/database/prisma.service';
 import { EmbeddingsService } from '@src/infrastructure/embeddings/embeddings.service';
 import { Embedding } from '@prisma/client';
@@ -22,7 +11,7 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
     private readonly prisma: PrismaService,
   ) {}
 
-  async loadDocuments(
+  async addDocuments(
     documents: {
       content: string;
       namespace: string;
@@ -89,98 +78,5 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
     `;
 
     return docs as Array<Embedding & { similarity: number }>;
-  }
-
-  async loadSource(
-    data: string | Blob,
-    docLoader: DocumentLoader,
-    namespace: string,
-    metadata?: Record<string, any>,
-  ): Promise<Embedding['id'][]> {
-    // validate data type
-    switch (docLoader) {
-      case DocumentLoader.text:
-      case DocumentLoader.json:
-      case DocumentLoader.pdf:
-      case DocumentLoader.csv:
-        if (Blob.prototype.isPrototypeOf(data)) {
-          throw new Error('Data must be a blob for' + docLoader);
-        }
-        break;
-      case DocumentLoader.gitbook:
-      case DocumentLoader.github:
-      case DocumentLoader.website:
-        if (typeof data !== 'string') {
-          throw new Error('Data must be a url for' + docLoader);
-        }
-        break;
-      default:
-        throw new Error('Unsupported file type' + docLoader);
-    }
-
-    // select correct loader and splitter
-    let loader: BaseDocumentLoader;
-    switch (docLoader) {
-      case DocumentLoader.text: {
-        loader = new TextLoader(data);
-        break;
-      }
-      case DocumentLoader.json: {
-        loader = new JSONLoader(data);
-        break;
-      }
-      case DocumentLoader.pdf: {
-        loader = new PDFLoader(data);
-        break;
-      }
-      case DocumentLoader.csv: {
-        loader = new CSVLoader(data);
-        break;
-      }
-      case DocumentLoader.gitbook: {
-        loader = new GitbookLoader(data as string);
-        break;
-      }
-      case DocumentLoader.github: {
-        loader = new GithubRepoLoader(data as string, {
-          branch: 'main',
-          recursive: true,
-          unknown: 'warn',
-          maxConcurrency: 5,
-        });
-        break;
-      }
-      case DocumentLoader.website: {
-        loader = new RecursiveUrlLoader(data as string, {
-          extractor: compile({ wordwrap: 130 }),
-          maxDepth: 1,
-        });
-        break;
-      }
-      default:
-        throw new Error('Unsupported file type' + docLoader);
-    }
-
-    // select a splitter, for now we run with recursive but we can better improve this
-    const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 4000,
-      chunkOverlap: 200,
-    });
-
-    // load and split content
-    const contents: Document<Record<string, any>>[] = await loader.load();
-    const splittedDocuments = await splitter.splitDocuments(contents);
-
-    // merge metadata
-    const documents = splittedDocuments.map((d) => ({
-      namespace,
-      content: d.pageContent,
-      metadata: {
-        ...d.metadata,
-        ...metadata,
-      },
-    }));
-
-    return this.loadDocuments(documents);
   }
 }
