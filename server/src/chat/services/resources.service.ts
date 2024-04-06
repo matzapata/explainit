@@ -21,6 +21,10 @@ export class ResourcesService {
     return this.resourcesRepository.findByChatId(chatId);
   }
 
+  findByUrl(chatId: string, url: string) {
+    return this.resourcesRepository.findByUrl(chatId, url);
+  }
+
   delete(id: string) {
     return this.resourcesRepository.delete(id);
   }

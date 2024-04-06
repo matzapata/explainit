@@ -24,6 +24,18 @@ export class ResourcesRepository {
     });
   }
 
+  findByUrl(chatId: string, url: string) {
+    return this.prisma.chatResource.findFirst({
+      where: {
+        chatId,
+        data: {
+          equals: url,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
+
   delete(id: string) {
     return this.prisma.chatResource.delete({
       where: { id },

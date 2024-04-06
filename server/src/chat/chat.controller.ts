@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -27,8 +28,8 @@ import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 import { PostResourceDto } from './dtos/post-resource.dto';
 import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
-import { DocumentLoader } from '@src/infrastructure/vectorstore/vectorstore.service';
 import { GetResourceDto } from './dtos/get-resource.dto';
+import { PostResourceInspectDto } from './dtos/post-resource-inspect.dto';
 
 @Controller('api/chat')
 export class ChatController {
@@ -135,24 +136,48 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
+    // filter out already existing urls
+    const resources = await this.resourcesService.findByChatId(chat.id);
+    const urls = resources.map((r) => r.data);
+    const newUrls = resource.urls.filter((r) => !urls.includes(r));
+    if (newUrls.length === 0) {
+      throw new BadRequestException('No new urls to add');
+    }
+
     // add source to vectorstore
     const results = await this.ragService.loadWebpageWithCrawling(
-      resource.urls,
+      newUrls,
       chat.id,
     );
 
-    // return { r, ...urls };
     return results;
   }
 
   // inspect a webpage and get urls to add to the chat
   @Post('/resources/web/inspect')
   @UseGuards(AuthGuard)
-  async inspectWebResource(@Body() resource: { url: string }) {
-    // TODO: DTO
-    const results = await this.ragService.inspectWebpage(resource.url);
+  async inspectWebResource(
+    @CurrentUser() user: AuthUser,
+    @Body() data: PostResourceInspectDto,
+  ) {
+    const chat = await this.chatsService.findByOwner(user.id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
 
-    return { urls: results };
+    // check if the url is already used
+    const resources = await this.resourcesService.findByChatId(chat.id);
+    const urls = resources.map((r) => r.data);
+    if (urls.includes(data.url)) {
+      throw new BadRequestException(
+        `Resource with url ${data.url} already exists`,
+      );
+    }
+
+    const results = await this.ragService.inspectWebpage(data.url);
+
+    // filter out already existing urls
+    return { urls: results.filter((r) => !urls.includes(r)) };
   }
 
   //  deletes a resource from the chat including embeddings

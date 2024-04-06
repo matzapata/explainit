@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+Content-Type: application/json; charset=utf-8
+Content-Length: 173
+ETag: W/"ad-6md8cgxQODGXbmPfSFUtVBnQQ/k"
+Date: Sat, 06 Apr 2024 09:32:29 GMT
+Connection: close
+
+{"id":"fd64e2f6-3e8e-40cb-8024-a2e1d69e6c56","name":"Lorem Ipsum","logo":"https://lorem.com/ipsum.png","url":"https://lorem.com","conversationStarters":[],"published":false}
