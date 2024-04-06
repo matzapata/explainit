@@ -8,7 +8,6 @@ import GoProButton from "../billing/go-pro-button";
 export default async function PricingSection() {
   const  plans = await paymentsService.getPlans()
   
-
   return (
     <div className="py-24 sm:py-32" id="pricing">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -98,12 +97,11 @@ export default async function PricingSection() {
         {/* Still access for free */}
         <div className="bg-white dark:bg-gray-950 mx-auto mt-16 p-6 max-w-3xl rounded-3xl ring-1 ring-gray-200 dark:ring-gray-800 sm:mt-20 space-y-4">
           <h1 className="text-brand-600 dark:text-brand-500 font-medium text-lg">
-            Get started for free, no credit card required
+            Not convinced yet? Check out the demo!
           </h1>
           <div className="space-y-4">
             <p className="text-gray-600 dark:text-gray-300">
-              Start with the free plan and upgrade to pro when you need more
-              features.
+              With our free plan you can still sign up and inspect the inside but won't be able to load resources.
             </p>
             <RegisterLink postLoginRedirectURL="/chat">
               <Button

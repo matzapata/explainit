@@ -44,7 +44,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
             <Link href={"/generate"}>
-              <Button variant={"secondary-gray"} size="sm">
+              <Button variant={"secondary-color"} size="sm">
                 Dashboard
               </Button>
             </Link>

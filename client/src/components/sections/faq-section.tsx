@@ -8,6 +8,19 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { IconMinusCircle, IconPlusCircle } from "../ui/icons";
 
+const faq = [
+  {
+    question: 'Is there a free trial available?',
+    answer:
+      'No, we do not offer a free trial. However, you can cancel your subscription at any time. You can checkout our demo.',
+  },
+  {
+    question: 'Can I cancel my subscription?',
+    answer:
+      'Yes, you can cancel your subscription at any time. You can also pause your subscription for up to 3 months.',
+  },
+]
+
 export default function FaqSection() {
   const router = useRouter();
   const [openFaqId, setOpenFaqId] = useState<number | null>(null);
@@ -44,23 +57,26 @@ export default function FaqSection() {
       {/* Questions and answers */}
       <div className="px-4 max-w-3xl mx-auto w-full">
         <div className="divide-y border-y dark:border-y-gray-800 dark:divide-gray-800">
-          {brandConfig.faq.map((f, i) => (
-            <div key={i} className="flex py-8 flex-1 space-x-1">
+          {faq.map((f, i) => (
+            <div key={i} className="flex py-6 flex-1 space-x-1">
               <div className="flex-grow">
-                <h2 className="text-lg h-7 font-medium text-gray-700 dark:text-gray-400">
+                <div className="h-7 flex items-center">
+
+                <h2 className="text-base font-medium text-gray-700 dark:text-gray-400">
                   {f.question}
                 </h2>
+                </div>
                 {openFaqId === i && <p className="text-gray-600 dark:text-gray-300">{f.answer}</p>}
               </div>
 
               <div>
                 {openFaqId === i ? (
                   <button className="py-0.5" onClick={() => setOpenFaqId(null)}>
-                    <IconMinusCircle className="h-6 w-6" />
+                    <IconMinusCircle className="h-5 w-5" />
                   </button>
                 ) : (
                   <button className="py-0.5" onClick={() => setOpenFaqId(i)}>
-                    <IconPlusCircle className="h-6 w-6" />
+                    <IconPlusCircle className="h-5 w-5" />
                   </button>
                 )}
               </div>

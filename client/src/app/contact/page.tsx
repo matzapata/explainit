@@ -1,8 +1,8 @@
 'use client';
 
-import FooterSection from '@/components/components/footer-section';
+import FooterSection from '@/components/sections/footer-section';
 import Navbar from '@/components/navbar/landing';
-import FaqSection from '@/components/components/faq-section';
+import FaqSection from '@/components/sections/faq-section';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -66,7 +66,9 @@ export default function Contact() {
           description: 'Failed to send message, please try again',
         });
       })
-      .finally(() => { setLoading(true); });
+      .finally(() => {
+        setLoading(true);
+      });
   }
 
   return (

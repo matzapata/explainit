@@ -1,24 +1,42 @@
-import { ChatBubbleLeftRightIcon, UsersIcon } from "@heroicons/react/24/solid";
+import { ChatBubbleLeftRightIcon, CogIcon, GlobeAltIcon, LinkIcon, PaintBrushIcon, UsersIcon } from "@heroicons/react/24/solid";
 import { IconOpenAI } from "../ui/icons";
 
 const features =    [
   {
     title: 'AI-Powered',
     description:
-      'ChatWith is powered by advanced AI technology, allowing it to understand the context of your PDF and provide accurate, relevant answers.',
+      'ExplainIt is powered by advanced AI technology, allowing it to understand the context of your documentation and provide accurate, relevant answers.',
     icon: <IconOpenAI className="h-5 w-5" />,
   },
   {
     title: 'Interactive',
     description:
-      "ChatWith allows two-way communication with your PDF instead of simply extracting text. You can ask questions, get answers, and even follow up on those answers. It's like having a conversation with the author of your PDF document.",
+      "ExplainIt allows two-way communication with your documentation instead of simply extracting text. You can ask questions, get answers, and even follow up on those answers.",
     icon: <ChatBubbleLeftRightIcon className="h-5 w-5" />,
   },
   {
     title: 'User-Friendly',
     description:
-      "With its intuitive interface, anyone can quickly start using ChatWith. You don't need any special skills or knowledge to use ChatWith. If you can chat with a friend, you can chat with a PDF.",
+      "With its intuitive interface, anyone can quickly start using ExplainIt. Provide some example questions to spark conversations and link your documentation",
     icon: <UsersIcon  className="h-5 w-5" />,
+  },
+  {
+    title: 'Crawling',
+    description:
+      "The best part is you don't need to spend more than 5 minutes creating your chatbot. Explain it takes a base url and grabs the content for itself.",
+    icon: <GlobeAltIcon  className="h-5 w-5" />,
+  },
+  {
+    title: 'Sources included',
+    description:
+      "We all know ai can sometimes hallucinate a bit, but don't worry, we provide the sources used for the generation so your users can check for themselves.",
+    icon: <LinkIcon  className="h-5 w-5" />,
+  },
+  {
+    title: 'Customizable',
+    description:
+      "Add and remove as many sources as you want. Set the chat logo, name and link! It's your chatbot, make it yours.",
+    icon: <CogIcon  className="h-5 w-5" />,
   },
 ]
 
@@ -50,7 +68,7 @@ export default function FeaturesSection() {
           </svg>
         </h1>
         <p className="mt-6 text-lg text-center text-gray-600 dark:text-gray-300">
-          Elevate Your Document Experience with Chatwith. Explore the features we have to offer.
+          Empower your developer community with ExplainIt. Explore the features we have to offer.
         </p>
       </div>
 

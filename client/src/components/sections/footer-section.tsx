@@ -29,7 +29,7 @@ export default function FooterSection() {
       </div>
 
       <div className="px-4">
-        <p className="text-gray-600 dark:text-gray-300">© {brandConfig.name.toLowerCase()}</p>
+        <p className="text-gray-600 dark:text-gray-300 items-center">© {brandConfig.name.toLowerCase()}</p>
       </div>
     </footer>
   );
