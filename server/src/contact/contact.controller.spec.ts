@@ -31,7 +31,7 @@ describe('ContactController', () => {
     expect(guard).toBeInstanceOf(AuthGuard);
   });
 
-  it("should send an email from 'contact@get-chatwith.com' to 'CONTACT_EMAIL' including user id, email, subject and message ", async () => {
+  it("should send an email from 'contact@mzslabs.com' to 'CONTACT_EMAIL' including user id, email, subject and message ", async () => {
     // Arrange
     const contactEmail = 'CONTACT_EMAIL';
     const user = { id: 'id', email: 'email' };
@@ -44,7 +44,7 @@ describe('ContactController', () => {
 
     // Assert
     expect(emailService.sendEmail).toHaveBeenCalledWith({
-      from: 'contact@get-chatwith.com',
+      from: 'contact@mzslabs.com',
       to: contactEmail,
       subject: `New contact request from ${user.email}`,
       text: `Email: ${user.email}\nUID: ${user.id}\nSubject:${createContactDto.subject}\n\nMessage: ${createContactDto.message}`,
