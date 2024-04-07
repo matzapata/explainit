@@ -38,9 +38,14 @@ export class ChatService {
     }
 
     async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean }): Promise<ChatMetadataDto> {
-        // name, website, conversation starters, published
-        const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })
-        return res.data
+        try {
+            // name, website, conversation starters, published
+            const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })
+            return res.data
+        } catch (error: any) {
+            console.error(error)
+            throw new Error("Failed to update chat. " + error?.response?.data?.message ?? "")
+        }
     }
 
     async updateOwnerChatLogo(accessToken: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {

@@ -11,16 +11,16 @@ export class PlanCheckerService {
   async canPublishChat(userId: string): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
 
-    if (plan.limits.resources > 0) {
-      throw new BadRequestException('You have reached your message limit');
+    if (plan.limits.resources === 0) {
+      throw new BadRequestException('Please turn pro to publish chat');
     }
   }
 
   async canAddResource(userId: string): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
 
-    if (plan.limits.resources > 0) {
-      throw new BadRequestException('You have reached your message limit');
+    if (plan.limits.resources === 0) {
+      throw new BadRequestException('Please turn pro to add resources');
     }
   }
 

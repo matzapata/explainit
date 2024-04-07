@@ -1,7 +1,7 @@
 import { TestBed } from '@automock/jest';
 import { AuthGuard } from '../users/guards/auth.guard';
 import { ChatController } from './chat.controller';
-import { RetrievalAugmentedGenerationService } from './services/rag.service';
+import { RagService } from './services/rag.service';
 import { ChatsService } from './services/chat.service';
 import { StorageService } from '@src/infrastructure/storage/storage.service';
 import { ResourcesService } from './services/resources.service';
@@ -11,7 +11,7 @@ describe('ChatController', () => {
   let chatController: ChatController;
 
   // Declare the mocks
-  let ragService: jest.Mocked<RetrievalAugmentedGenerationService>;
+  let ragService: jest.Mocked<RagService>;
   let chatsService: jest.Mocked<ChatsService>;
   let storageService: jest.Mocked<StorageService>;
   let resourcesService: jest.Mocked<ResourcesService>;
@@ -23,7 +23,7 @@ describe('ChatController', () => {
     chatController = unit;
 
     // Retrieve mocks from the unit reference and assign
-    ragService = unitRef.get(RetrievalAugmentedGenerationService);
+    ragService = unitRef.get(RagService);
     chatsService = unitRef.get(ChatsService);
     storageService = unitRef.get(StorageService);
     resourcesService = unitRef.get(ResourcesService);

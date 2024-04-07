@@ -237,8 +237,7 @@ export default function ResourcesTable(props: {
                     render={({ field }) => (
                       <FormItem>
                         <p className="text-gray-300 mb-2 text-sm">
-                          We found the following urls, do you want to add them
-                          all? Are we missing anything? Do one url per line
+                          Please cleanup the urls you don't want to add. Try to keep only content users may want to know for better performance. Also new urls if any is missing.
                         </p>
                         <FormControl>
                           <Textarea

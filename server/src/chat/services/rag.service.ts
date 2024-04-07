@@ -3,17 +3,10 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import { PromptTemplate } from '@langchain/core/prompts';
-import {
-  DocumentLoader,
-  VectorStoreService,
-} from '../../infrastructure/vectorstore/vectorstore.service';
+import { VectorStoreService } from '../../infrastructure/vectorstore/vectorstore.service';
 import { LlmService } from '../../infrastructure/llm/llm.service';
 import { Document } from 'langchain/document';
-import { ChatResource, Embedding } from '@prisma/client';
-import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
-import { NodeHtmlMarkdown } from 'node-html-markdown';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { ResourcesService } from './resources.service';
+import { Embedding } from '@prisma/client';
 
 export enum MessageAgent {
   USER = 'user',
@@ -21,68 +14,22 @@ export enum MessageAgent {
 }
 
 @Injectable()
-export class RetrievalAugmentedGenerationService {
+export class RagService {
   constructor(
     private readonly vectorStoreService: VectorStoreService,
     private readonly llmService: LlmService,
-    private readonly crawlerService: CrawlerService,
-    private readonly resourcesService: ResourcesService,
   ) {}
 
-  // loaders ========================================
+  // load ========================================
 
-  async inspectWebpage(url: string) {
-    const urls = await this.crawlerService.inspect({
-      url,
-    });
-
-    return urls;
-  }
-
-  async loadWebpageWithCrawling(
-    urls: string[],
-    chatid: string,
-    metadata?: Record<string, any>,
-  ): Promise<ChatResource[]> {
-    // crawl the website
-    const documents = await this.crawlerService.scrape({
-      urls,
-    });
-
-    // split the documents into chunks
-    const nhm = new NodeHtmlMarkdown();
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-      chunkSize: 3000,
-      chunkOverlap: 100,
-    });
-
-    const result: ChatResource[] = [];
-    for (const d of documents) {
-      // convert documents to markdown
-      const mdText = nhm.translate(d.html);
-      const docs = await splitter.createDocuments([mdText]);
-
-      const ids = await this.vectorStoreService.addDocuments(
-        docs.map((doc) => ({
-          content: doc.pageContent,
-          namespace: chatid,
-          metadata: {
-            url: d.url,
-            title: d.title,
-            ...metadata,
-          },
-        })),
-      );
-
-      const r = await this.resourcesService.create(chatid, {
-        data: d.url,
-        type: DocumentLoader.website,
-        embeddingIds: ids,
-      });
-      result.push(r);
-    }
-
-    return result;
+  public async addDocuments(
+    documents: {
+      content: string;
+      namespace: string;
+      metadata: Record<string, any>;
+    }[],
+  ) {
+    return this.vectorStoreService.addDocuments(documents);
   }
 
   // delete ========================================

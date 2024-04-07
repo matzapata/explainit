@@ -13,7 +13,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { RetrievalAugmentedGenerationService } from './services/rag.service';
+import { RagService } from './services/rag.service';
 import { PostMessageDto } from './dtos/post-message.dto';
 import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -32,15 +32,19 @@ import { GetResourceDto } from './dtos/get-resource.dto';
 import { PostResourceInspectDto } from './dtos/post-resource-inspect.dto';
 import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
 import { RateLimitGuard } from './guards/rate-limit.guard';
+import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
+import { RagLoaderService } from './services/rag-loader.service';
 
 @Controller('api/chat')
 export class ChatController {
   constructor(
-    private readonly ragService: RetrievalAugmentedGenerationService,
+    private readonly ragService: RagService,
+    private readonly ragLoaderService: RagLoaderService,
     private readonly chatsService: ChatsService,
     private readonly storageService: StorageService,
     private readonly resourcesService: ResourcesService,
     private readonly planChecker: PlanCheckerService,
+    private readonly crawlerService: CrawlerService,
   ) {}
 
   // get chat metadata based on the owner
@@ -76,6 +80,10 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() data: UpdateChatMetadataDto,
   ): Promise<Chat> {
+    if (data.published) {
+      await this.planChecker.canPublishChat(user.id);
+    }
+
     const chat = this.chatsService.update(user.id, data);
     return chat;
   }
@@ -144,19 +152,37 @@ export class ChatController {
 
     // filter out already existing urls
     const resources = await this.resourcesService.findByChatId(chat.id);
-    const urls = resources.map((r) => r.data);
-    const newUrls = resource.urls.filter((r) => !urls.includes(r));
+    const existingUrls = resources.map((r) => r.data);
+    const newUrls = resource.urls.filter((r) => !existingUrls.includes(r));
     if (newUrls.length === 0) {
       throw new BadRequestException('No new urls to add');
     }
 
-    // add source to vectorstore
-    const results = await this.ragService.loadWebpageWithCrawling(
-      newUrls,
-      chat.id,
-    );
+    // scrape the urls content
+    const scrappedHtml = await this.crawlerService.scrape({
+      urls: resource.urls,
+    });
 
-    return results;
+    // load documents and resources
+    const result: ChatResource[] = [];
+    for (const d of scrappedHtml) {
+      // Create documents for rag, one per page. We'll do one resource per page
+      const documents = await this.ragLoaderService.generateDocsFromHtml(
+        d,
+        chat.id,
+      );
+
+      const ids = await this.ragService.addDocuments(documents);
+
+      const r = await this.resourcesService.create(chat.id, {
+        data: d.url,
+        type: 'website',
+        embeddingIds: ids,
+      });
+      result.push(r);
+    }
+
+    return result;
   }
 
   // inspect a webpage and get urls to add to the chat
@@ -184,10 +210,12 @@ export class ChatController {
       );
     }
 
-    const results = await this.ragService.inspectWebpage(data.url);
+    const crawledUrls = await this.crawlerService.inspect({
+      url: data.url,
+    });
 
     // filter out already existing urls
-    return { urls: results.filter((r) => !urls.includes(r)) };
+    return { urls: crawledUrls.filter((r) => !urls.includes(r)) };
   }
 
   //  deletes a resource from the chat including embeddings
@@ -221,7 +249,7 @@ export class ChatController {
   }
 
   // post a message to the chat. This is a public endpoint
-  @Post('/a/:id')
+  @Post('/:id')
   @UseGuards(RateLimitGuard)
   async postMessage(
     @Body() body: PostMessageDto,

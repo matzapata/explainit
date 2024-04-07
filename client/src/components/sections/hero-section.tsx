@@ -11,7 +11,7 @@ export default function HeroSection() {
         <span className="text-brand-600">in seconds!</span>
       </h1>
       <h2 className="mt-4 md:text-base text-gray-600 dark:text-gray-300 text-sm text-center max-w-3xl md:mx-auto">
-        Explain it takes your customer expirience to the next level. Create a
+        Explainit. takes your customer expirience to the next level. Create a
         ChatGPT powered chatbot for your documentation in seconds and speed up
         your community.
       </h2>
