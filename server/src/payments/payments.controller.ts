@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   Logger,
-  LoggerService,
   NotFoundException,
   Post,
   UseGuards,
