@@ -21,7 +21,7 @@ export class ContactController {
   ) {
     const { message, subject } = createContactDto;
     await this.emailService.sendEmail({
-      from: 'contact@get-chatwith.com',
+      from: 'contact@mzslabs.com',
       to: this.configService.getOrThrow('CONTACT_EMAIL'),
       subject: `New contact request from ${user.email}`,
       text: `Email: ${user.email}\nUID: ${user.id}\nSubject:${subject}\n\nMessage: ${message}`,

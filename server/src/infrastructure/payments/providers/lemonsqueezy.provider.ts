@@ -293,27 +293,25 @@ export class LemonSqueezyPaymentProvider implements PaymentProvider {
       case 'subscription_created':
       case 'subscription_updated': {
         event = WebhookEventName.subscription_created;
-        const subscriptionId = body.data.id;
-        const subscription = await this.findSubscriptionById(subscriptionId);
 
         data = {
           id: body.data.id,
           subscriptionId: body.data.id,
           provider: this.name,
           userId: body.meta.custom_data.user_id,
-          variantId: subscription.variantId,
-          orderId: subscription.orderId,
-          status: subscription.status,
-          pauseMode: subscription.pauseMode,
-          pauseResumesAt: subscription.pauseResumesAt,
-          cancelled: subscription.cancelled,
-          trialEndsAt: subscription.trialEndsAt,
-          billingAnchor: subscription.billingAnchor,
-          renewsAt: subscription.renewsAt,
-          endsAt: subscription.endsAt,
-          createdAt: subscription.createdAt,
-          updatedAt: subscription.updatedAt,
-          testMode: subscription.testMode,
+          variantId: String(body.data.attributes.variant_id),
+          orderId: String(body.data.attributes.order_id),
+          status: body.data.attributes.status as SubscriptionStatus,
+          pauseMode: body.data.attributes.pause?.mode,
+          pauseResumesAt: body.data.attributes.pause?.resumes_at,
+          cancelled: body.data.attributes.cancelled,
+          trialEndsAt: body.data.attributes.trial_ends_at,
+          billingAnchor: body.data.attributes.billing_anchor,
+          renewsAt: new Date(body.data.attributes.renews_at),
+          endsAt: body.data.attributes.ends_at,
+          createdAt: new Date(body.data.attributes.created_at),
+          updatedAt: new Date(body.data.attributes.updated_at),
+          testMode: body.data.attributes.test_mode,
           invoiceUrl: null,
         };
         break;

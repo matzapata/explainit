@@ -7,21 +7,20 @@ Explainit. Create sharable chats with your documentation. Let developers get qui
 
 # TODO
 
-backend
-TODO: - deployment
-TODO: - rate limit on open endpoints https://docs.nestjs.com/security/rate-limiting#proxies (use this with chat id instead of ip)
+development-product
+
+TODO: - Add a demo, example with smart wallets or any other website
+TODO: - Custom plan prompt in landing.
+
+development-improvements
+
 TODO: - chat-controller test
-TODO: - payments controller test
-TODO: - create prisma version of pgvector
-TODO: - cleanup unused deps
 
-frontend
-TODO: - connect back and front
-TODO: - update texts
+deployment
 
-general
-TODO: - buy domain
-TODO: - set up vercel project with db
+TODO: - Deployment, get it toghether, supabase db, storage and auth? railway for deployments? Ideally all aws or gcp
+    - railway, cheap, no storage, no vectordb 
+TODO: - add metadata to token ({ switch auth provider? })
 TODO: - test all flows
 
 # Deployment
@@ -34,12 +33,10 @@ Setup env variables
 - domain
 
 
-1. `cd client && npm run deploy`
-2. `cd server && npm run deploy`
+0. Create empty services in railway and pgvector db
+1. `cd client && railway link && railway up`
+2. `cd server && railway link && railway up`
 
-Setup pgvector extension in postgress db
-1. Connect with psql
-2. `CREATE EXTENSION IF NOT EXISTS vector;`
 
 
 # Usage

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  LoggerService,
   NotFoundException,
   Post,
   UseGuards,
@@ -30,6 +31,7 @@ export class PaymentsController {
     private readonly usersService: UsersService,
     private readonly webhookEventsService: WebhookEventsService,
     private readonly emailService: EmailService,
+    private readonly logger: LoggerService,
   ) {}
 
   @Get('/plans')
@@ -47,7 +49,6 @@ export class PaymentsController {
     return {
       id: user.id,
       email: user.email,
-      // name: user.name, // TODO: Add name to user
       isPro: userSubscription.plan.variantId !== null,
       plan: userSubscription.plan,
       subscription: userSubscription.sub,
@@ -89,7 +90,7 @@ export class PaymentsController {
 
   @Post('/webhook')
   @HttpCode(200)
-  async handleWebhook(@Body() body: { data: any; event: string }) {
+  async handleWebhook(@Body() body: any) {
     // Parse event and data
     const { data, event } = await this.paymentService.parseWebhookEvent(body);
 
@@ -142,18 +143,20 @@ export class PaymentsController {
 
       // Send email to user notifying them of subscription update
       await this.emailService.sendEmail({
-        from: 'hello@get-chatwith.com',
+        from: 'hello@mzslabs.com',
         to: user.email,
         html: `Your subscription has been updated to ${data.status}`,
         subject: 'Subscription updated',
       });
     } catch (error) {
-      console.error('Error processing webhook event', error);
+      this.logger.error('Error processing webhook event', error);
       await this.webhookEventsService.setProcessed(
         webhookEvent.id,
         false,
         error.message,
       );
+
+      throw error;
     }
 
     return 'OK';
