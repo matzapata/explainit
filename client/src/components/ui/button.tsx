@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center rounded-lg font-semibold justify-center whitespace-nowrap ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center rounded-lg font-semibold justify-center whitespace-nowrap ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -14,9 +14,9 @@ const buttonVariants = cva(
         "secondary-color": "text-brand-700 dark:text-brand-500 bg-white dark:bg-gray-900 border border-brand-300 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900",
         "tertiary-gray": "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-950 hover:bg-zinc-700 border border-gray-300 dark:border-gray-800",
         "tertiary-color": "text-brand-700 bg-white  hover:bg-brand-50",
-        "link-gray": "text-slate-900 dark:text-gray-300 dark:hover:text-gray-100 hover:text-gray-950 p-0",
+        "link-gray": "text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 hover:text-gray-950 p-0",
         "link-color": "text-brand-700 dark:text-brand-600 hover:text-brand-800 p-0",
-        destructive: "bg-red-500 text-slate-50 hover:bg-red-500/90",
+        destructive: "bg-red-500 text-gray-50 hover:bg-red-500/90",
         "destructive-secondary": "bg-white text-red-500 hover:bg-red-50 border border-red-300",
         "destructive-tertiary": "bg-white text-red-500 hover:bg-red-50",
         "destructive-link": "bg-white text-red-500 hover:text-red-600",
