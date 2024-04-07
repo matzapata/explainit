@@ -4,7 +4,7 @@ import {
   Controller,
   Get,
   HttpCode,
-  LoggerService,
+  Logger,
   NotFoundException,
   Post,
   UseGuards,
@@ -25,13 +25,14 @@ import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 
 @Controller('api/payments')
 export class PaymentsController {
+  private readonly logger = new Logger('PaymentsController');
+
   constructor(
     private readonly paymentService: PaymentsService,
     private readonly userSubscriptionService: UserSubscriptionService,
     private readonly usersService: UsersService,
     private readonly webhookEventsService: WebhookEventsService,
     private readonly emailService: EmailService,
-    private readonly logger: LoggerService,
   ) {}
 
   @Get('/plans')
