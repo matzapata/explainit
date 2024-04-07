@@ -6,8 +6,8 @@ export interface SubscriptionPlan {
   description: string;
   features: string[];
   limits: {
-    maxDocuments: number;
-    maxMessages: number;
+    chats: number;
+    messagesPerDay: number;
   };
 }
 
@@ -20,8 +20,8 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     description: 'Free plan',
     features: ['Preview page'],
     limits: {
-      maxDocuments: 1,
-      maxMessages: 100,
+      chats: 1,
+      messagesPerDay: 0,
     },
   },
   pro: {
@@ -30,10 +30,10 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     variantId: '325882',
     price: 9.99,
     description: 'Create sharable chats for your documentation',
-    features: ['10 documents per month', '1000 messages per day'],
+    features: ['1 public chat', '2000 messages per day'],
     limits: {
-      maxDocuments: 10,
-      maxMessages: 1000,
+      chats: 1,
+      messagesPerDay: 2000,
     },
   },
 };

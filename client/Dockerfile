@@ -1,5 +1,7 @@
 FROM node:18-alpine
 
+ARG NEXT_PUBLIC_API_SERVER_BASE_URL
+
 WORKDIR /app
 
 COPY package.json .
@@ -15,7 +17,6 @@ RUN npm prune --production
 
 ENV NODE_ENV production
 
-ENV PORT 3000
-EXPOSE 3000
+EXPOSE $PORT
 
 CMD ["npm", "run", "start"]

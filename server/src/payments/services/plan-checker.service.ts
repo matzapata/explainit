@@ -14,7 +14,7 @@ export class PlanCheckerService {
     documentsCount: number,
   ): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
-    const uploadLimit = plan.limits.maxDocuments;
+    const uploadLimit = plan.limits.chats;
 
     if (uploadLimit === 0) {
       throw new BadRequestException('You have reached your document limit');
@@ -28,7 +28,7 @@ export class PlanCheckerService {
 
   async canSendMessage(userId: string, messageCount): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
-    const messageLimit = plan.limits.maxMessages;
+    const messageLimit = plan.limits.messagesPerDay;
 
     if (messageLimit === 0) {
       throw new BadRequestException('You have reached your message limit');
