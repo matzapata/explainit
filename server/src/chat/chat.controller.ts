@@ -30,6 +30,8 @@ import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
 import { GetResourceDto } from './dtos/get-resource.dto';
 import { PostResourceInspectDto } from './dtos/post-resource-inspect.dto';
+import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 
 @Controller('api/chat')
 export class ChatController {
@@ -38,6 +40,7 @@ export class ChatController {
     private readonly chatsService: ChatsService,
     private readonly storageService: StorageService,
     private readonly resourcesService: ResourcesService,
+    private readonly planChecker: PlanCheckerService,
   ) {}
 
   // get chat metadata based on the owner
@@ -130,6 +133,9 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() resource: PostResourceDto,
   ) {
+    // check if the user can add a resource
+    await this.planChecker.canAddResource(user.id);
+
     // get chat id for user
     const chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
@@ -160,6 +166,10 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() data: PostResourceInspectDto,
   ) {
+    // check if the user can add a resource
+    await this.planChecker.canAddResource(user.id);
+
+    // get the chat for the user
     const chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
@@ -187,8 +197,10 @@ export class ChatController {
   async deleteResourcesFromChat(@Param('id') id: string) {
     const r = await this.resourcesService.findById(id);
 
+    // delete embeddings
     await this.ragService.deleteDocuments(r.embeddingIds);
 
+    // delete resources
     await this.resourcesService.delete(r.id);
 
     return r;
@@ -209,13 +221,15 @@ export class ChatController {
   }
 
   // post a message to the chat. This is a public endpoint
-  @Post('/:id')
+  @Post('/a/:id')
+  @UseGuards(RateLimitGuard)
   async postMessage(
     @Body() body: PostMessageDto,
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
   ) {
-    // TODO: Add rate limiting per plan for these endpoints. I mean no free plan, jus rate limit per account
+    // check if the user can post a message
+
     const chat = await this.chatsService.findById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');

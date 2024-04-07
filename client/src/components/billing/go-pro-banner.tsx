@@ -1,4 +1,4 @@
-import { Button } from "../ui/button";
+import GoProButton from "./go-pro-button";
 
 
 export default function GoProBanner() {
@@ -11,9 +11,7 @@ export default function GoProBanner() {
               please upgrade
             </p>
           </div>
-          <Button size="sm" variant="secondary-gray">
-            Go pro
-          </Button>
+          <GoProButton variant={"secondary-gray"} size="sm" />
         </div>
     )
 }

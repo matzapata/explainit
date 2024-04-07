@@ -1,11 +1,10 @@
-import Logo from '@/components/brand/logo';
 import { Chat } from '@/components/chat/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { chatService } from '@/lib/services/chat-service';
-import { paymentsService } from '@/lib/services/payments-service';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import { XIcon } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 interface ChatPageProps {
   params: {
@@ -18,6 +17,9 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const authenticated = await isAuthenticated();
   const chat = await chatService.getChat(params.id);
 
+  if (!authenticated && !chat.published) {
+    return redirect('/not-found');
+  } 
   return (
     <div>
       <div

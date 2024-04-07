@@ -6,7 +6,8 @@ export interface SubscriptionPlan {
   description: string;
   features: string[];
   limits: {
-    chats: number;
+    publish: boolean;
+    resources: number;
     messagesPerDay: number;
   };
 }
@@ -20,7 +21,8 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     description: 'Free plan',
     features: ['Preview page'],
     limits: {
-      chats: 1,
+      publish: false,
+      resources: 0,
       messagesPerDay: 0,
     },
   },
@@ -32,7 +34,8 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     description: 'Create sharable chats for your documentation',
     features: ['1 public chat', '2000 messages per day'],
     limits: {
-      chats: 1,
+      publish: true,
+      resources: 1,
       messagesPerDay: 2000,
     },
   },

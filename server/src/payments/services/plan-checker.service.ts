@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserSubscriptionService } from './user-subscription.service';
-
-// TODO: We can improve this by using redis
+import { plans } from '../config/plans';
 
 @Injectable()
 export class PlanCheckerService {
@@ -9,33 +8,27 @@ export class PlanCheckerService {
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
-  async canUploadDocument(
-    userId: string,
-    documentsCount: number,
-  ): Promise<void> {
+  async canPublishChat(userId: string): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
-    const uploadLimit = plan.limits.chats;
 
-    if (uploadLimit === 0) {
-      throw new BadRequestException('You have reached your document limit');
-    }
-
-    // get documents count
-    if (documentsCount >= uploadLimit) {
-      throw new BadRequestException('You have reached your document limit');
+    if (plan.limits.resources > 0) {
+      throw new BadRequestException('You have reached your message limit');
     }
   }
 
-  async canSendMessage(userId: string, messageCount): Promise<void> {
+  async canAddResource(userId: string): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
-    const messageLimit = plan.limits.messagesPerDay;
 
-    if (messageLimit === 0) {
+    if (plan.limits.resources > 0) {
       throw new BadRequestException('You have reached your message limit');
     }
+  }
 
-    if (messageCount >= messageLimit) {
-      throw new BadRequestException('You have reached your message limit');
+  async canSendMessage(messageCount: number): Promise<void> {
+    if (messageCount > plans.pro.limits.messagesPerDay) {
+      throw new BadRequestException(
+        'Chat has reached the messages limit per day',
+      );
     }
   }
 }
