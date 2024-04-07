@@ -103,7 +103,7 @@ export default async function PricingSection() {
             <p className="text-gray-600 dark:text-gray-300">
               With our free plan you can still sign up and inspect the inside but won't be able to load resources.
             </p>
-            <RegisterLink postLoginRedirectURL="/chat">
+            <RegisterLink postLoginRedirectURL="/generate">
               <Button
                 variant={"secondary-color"}
                 size={"sm"}

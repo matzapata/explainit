@@ -50,13 +50,13 @@ export default function Navbar() {
             </Link>
           ) : (
             <>
-              <LoginLink postLoginRedirectURL="/chat">
+              <LoginLink postLoginRedirectURL="/generate">
                 <Button className="bg-transparent" variant="tertiary-gray">
                   Log in
                 </Button>
               </LoginLink>
 
-              <RegisterLink postLoginRedirectURL="/chat">
+              <RegisterLink postLoginRedirectURL="/generate">
                 <Button variant="primary">Sign up</Button>
               </RegisterLink>
             </>
@@ -99,13 +99,13 @@ export default function Navbar() {
                     </Link>
                   ) : (
                     <>
-                      <RegisterLink postLoginRedirectURL="/chat">
+                      <RegisterLink postLoginRedirectURL="/generate">
                         <Button variant="primary" className="w-full">
                           Sign up
                         </Button>
                       </RegisterLink>
 
-                      <LoginLink postLoginRedirectURL="/chat">
+                      <LoginLink postLoginRedirectURL="/generate">
                         <Button variant="secondary-gray" className="w-full">
                           Log in
                         </Button>
