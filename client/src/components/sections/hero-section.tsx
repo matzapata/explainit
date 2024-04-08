@@ -18,17 +18,19 @@ export default function HeroSection() {
 
       <div className="mt-8 md:space-y-0 flex justify-center space-x-3">
         <RegisterLink>
-          <Button variant={'primary'} className="w-full md:w-auto md:ml-4">
+          <Button variant={'primary'} className="w-full md:w-auto md:ml-4 px-8">
             Sign up
           </Button>
         </RegisterLink>
+      </div>
 
-        <Button
-          variant={'secondary-gray'}
-          className="w-auto items-center space-x-2"
-        >
-          <span className="text-gray-700">Demo</span>
-        </Button>
+
+
+      <div className="w-full mt-14">
+        <iframe
+          className="w-full aspect-video"
+          src="https://www.loom.com/embed/3cffe7ffd004491f8b228102251bdc24?sid=9d786530-40b8-4514-aad6-7e0159106cfe&hideEmbedTopBar=true&hide_owner=true"
+        ></iframe>
       </div>
 
       <div className="mt-14 space-y-4">
