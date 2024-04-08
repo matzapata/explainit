@@ -10,7 +10,7 @@ export default function ShareLinkForm(props: { id: string }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setSharableLink(`${window.location.host}/chat/${props.id}`);
+      setSharableLink(`https://${window.location.host}/chat/${props.id}`);
     }
   }, [props.id]);
 
