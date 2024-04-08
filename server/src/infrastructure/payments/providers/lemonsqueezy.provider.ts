@@ -240,7 +240,7 @@ export class LemonSqueezyPaymentProvider implements PaymentProvider {
       productName: res.data.included[0].attributes.name,
       variantId: res.data.data.id,
       variantName: attributes.name,
-      description: attributes.description.replace(/<[^>]*>?/gm, ''),
+      description: attributes.description?.replace(/<[^>]*>?/gm, ''),
       price: Number(attributes.price),
       interval: attributes.interval,
       intervalCount: attributes.interval_count,
