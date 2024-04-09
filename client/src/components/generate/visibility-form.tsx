@@ -42,7 +42,7 @@ export default function VisibilityForm(props: {
       });
     },
     onError: (error) => {
-      toast({ description: error.message ?? `Sorry, something went wrong. Please try again.` });
+      toast({ variant: "destructive", description: error.message ?? `Sorry, something went wrong. Please try again.` });
     },
   });
 

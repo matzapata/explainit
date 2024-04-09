@@ -8,9 +8,9 @@ import {
 } from '../ui/drawer';
 
 export function ResponseContextDrawer(props: {
-  context: { content: string; metadata: { url: string; title: string } }[];
+  context: { content: string; metadata: { source: string; title: string } }[];
 }) {
-  const uniqueUrls = Array.from(new Set(props.context.map((item) => item.metadata.url)));
+  const uniqueUrls = Array.from(new Set(props.context.map((item) => item.metadata.source)));
 
   return (
     <Drawer>
@@ -31,8 +31,9 @@ export function ResponseContextDrawer(props: {
           </DrawerHeader>
 
           <div className="px-4 pb-14 max-h-44 overflow-scroll">
-            {uniqueUrls.map((url) => (
+            {uniqueUrls.map((url, i) => (
               <a
+                key={i}
                 href={url}
                 target="_blank"
                 rel="noreferrer"

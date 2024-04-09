@@ -54,7 +54,7 @@ export default async function PricingSection() {
             </div>
             <ul
               role="list"
-              className="mt-8 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-600 dark:text-gray-300 sm:grid-cols-2 sm:gap-6"
+              className="mt-8 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-600 dark:text-gray-300"
             >
               {plans.pro.features.map((feature) => (
                 <li key={feature} className="flex gap-x-3">
@@ -97,11 +97,11 @@ export default async function PricingSection() {
         {/* Still access for free */}
         <div className="bg-white dark:bg-gray-950 mx-auto mt-16 p-6 max-w-3xl rounded-3xl ring-1 ring-gray-200 dark:ring-gray-800 sm:mt-20 space-y-4">
           <h1 className="text-brand-600 dark:text-brand-500 font-medium text-lg">
-            Not convinced yet? Check out the demo!
+            Not convinced yet? Experiment with the free plan!
           </h1>
           <div className="space-y-4">
             <p className="text-gray-600 dark:text-gray-300">
-              With our free plan you can still sign up and inspect the inside but won't be able to load resources.
+              Create a chat with a free plan and see how it works. Load up to 10 resources and go pro whenever you're ready to make it public.
             </p>
             <RegisterLink postLoginRedirectURL="/generate">
               <Button

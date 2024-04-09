@@ -7,21 +7,18 @@ Explainit. Create sharable chats with your documentation. Let developers get qui
 
 # TODO
 
+deployment
+
 development-product
 
-TODO: - Add a demo, example with smart wallets or any other website
-TODO: - Custom plan prompt in landing.
 
 development-improvements
 
+TODO: - implement events for stuff like, plan cancelled and so on, so far just email to manually do it
 TODO: - chat-controller test
+TODO: - Deployment, get it toghether, supabase db, storage and auth? railway for deployments? 
+    - Ideally all aws ses, s3, hosting, plus railway for server and db
 
-deployment
-
-TODO: - Deployment, get it toghether, supabase db, storage and auth? railway for deployments? Ideally all aws or gcp
-    - railway, cheap, no storage, no vectordb 
-TODO: - add metadata to token ({ switch auth provider? })
-TODO: - test all flows
 
 # Deployment
 

@@ -22,6 +22,7 @@ import {
 } from '@src/infrastructure/payments/providers/payment.provider';
 import { plans } from './config/plans';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('api/payments')
 export class PaymentsController {
@@ -33,6 +34,7 @@ export class PaymentsController {
     private readonly usersService: UsersService,
     private readonly webhookEventsService: WebhookEventsService,
     private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get('/plans')
@@ -119,6 +121,20 @@ export class PaymentsController {
 
       if (data.status === SubscriptionStatus.cancelled) {
         await this.userSubscriptionService.deleteByUserId(user.id);
+
+        // Send email to user notifying them of subscription update
+        await this.emailService.sendEmail({
+          from: 'hello@mzslabs.com',
+          to: user.email,
+          html: `Please tell us what did we wrong to make you cancel your subscription.`,
+          subject: 'Sorry to see you go!',
+        });
+        await this.emailService.sendEmail({
+          from: 'hello@mzslabs.com',
+          to: this.configService.get('CONTACT_EMAIL'),
+          html: `User ${user.email} has cancelled their subscription. Please reach out to them.`,
+          subject: 'Subscription cancelled! 😔',
+        });
       } else if (data.status === SubscriptionStatus.active) {
         await this.userSubscriptionService.upsertByUserId(user.id, {
           variantId: data.variantId,
@@ -137,18 +153,18 @@ export class PaymentsController {
           pauseResumesAt: data.pauseResumesAt,
           testMode: data.testMode,
         });
+
+        // Send email to user notifying them of subscription update
+        await this.emailService.sendEmail({
+          from: 'hello@mzslabs.com',
+          to: user.email,
+          html: `Your subscription has been updated to ${data.status}`,
+          subject: 'Subscription updated',
+        });
       }
 
       // Mark event as processed
       await this.webhookEventsService.setProcessed(webhookEvent.id, true);
-
-      // Send email to user notifying them of subscription update
-      await this.emailService.sendEmail({
-        from: 'hello@mzslabs.com',
-        to: user.email,
-        html: `Your subscription has been updated to ${data.status}`,
-        subject: 'Subscription updated',
-      });
     } catch (error) {
       this.logger.error('Error processing webhook event', error);
       await this.webhookEventsService.setProcessed(

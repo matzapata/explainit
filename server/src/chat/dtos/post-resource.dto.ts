@@ -1,8 +1,16 @@
-import { IsString } from 'class-validator';
+import { IsString, Length } from 'class-validator';
 
-export class PostResourceDto {
+export class PostWebResourceDto {
   @IsString({ each: true })
   urls: string[];
+}
+
+export class PostTextResourceDto {
   @IsString()
-  type: string; // web for now but can add github and more
+  @Length(1000)
+  text: string;
+  @IsString()
+  source: string;
+  @IsString()
+  title: string;
 }
