@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserSubscriptionService } from './user-subscription.service';
-import { plans } from '../config/plans';
 
 @Injectable()
 export class PlanCheckerService {
@@ -11,23 +10,21 @@ export class PlanCheckerService {
   async canPublishChat(userId: string): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
 
-    if (plan.limits.resources === 0) {
-      throw new BadRequestException('Please turn pro to publish chat');
+    if (!plan.limits.publish) {
+      throw new BadRequestException('Please turn PRO to publish chat');
     }
   }
 
-  async canAddResource(userId: string): Promise<void> {
+  async withinResourcesLimit(
+    userId: string,
+    resourcesCount: number,
+  ): Promise<void> {
     const { plan } = await this.userSubscriptionService.findByUserId(userId);
 
-    if (plan.limits.resources === 0) {
-      throw new BadRequestException('Please turn pro to add resources');
-    }
-  }
-
-  async canSendMessage(messageCount: number): Promise<void> {
-    if (messageCount > plans.pro.limits.messagesPerDay) {
+    if (resourcesCount > plan.limits.resources) {
       throw new BadRequestException(
-        'Chat has reached the messages limit per day',
+        'Please turn pro to add more resources your plan has a maximum of: ' +
+          plan.limits.resources,
       );
     }
   }

@@ -25,7 +25,10 @@ import { StorageService } from '@src/infrastructure/storage/storage.service';
 import { ChatMetadataDto } from './dtos/get-chat-metadata.dto';
 import { UpdateChatMetadataDto } from './dtos/put-chat-metadata.dto';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
-import { PostResourceDto } from './dtos/post-resource.dto';
+import {
+  PostTextResourceDto,
+  PostWebResourceDto,
+} from './dtos/post-resource.dto';
 import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
 import { GetResourceDto } from './dtos/get-resource.dto';
@@ -139,24 +142,28 @@ export class ChatController {
   @Serialize(GetResourceDto)
   async loadWebResource(
     @CurrentUser() user: AuthUser,
-    @Body() resource: PostResourceDto,
+    @Body() resource: PostWebResourceDto,
   ) {
-    // check if the user can add a resource
-    await this.planChecker.canAddResource(user.id);
-
     // get chat id for user
     const chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
 
-    // filter out already existing urls
     const resources = await this.resourcesService.findByChatId(chat.id);
+
+    // filter out already existing urls
     const existingUrls = resources.map((r) => r.data);
     const newUrls = resource.urls.filter((r) => !existingUrls.includes(r));
     if (newUrls.length === 0) {
       throw new BadRequestException('No new urls to add');
     }
+
+    // check if user can add more resources
+    await this.planChecker.withinResourcesLimit(
+      user.id,
+      resources.length + newUrls.length,
+    );
 
     // scrape the urls content
     const scrappedHtml = await this.crawlerService.scrape({
@@ -185,6 +192,45 @@ export class ChatController {
     return result;
   }
 
+  @Post('/resources/text')
+  @UseGuards(AuthGuard)
+  @Serialize(GetResourceDto)
+  async loadTextResource(
+    @CurrentUser() user: AuthUser,
+    @Body() resource: PostTextResourceDto,
+  ) {
+    // get chat id for user
+    const chat = await this.chatsService.findByOwner(user.id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    // check if user can add more resources
+    const resources = await this.resourcesService.findByChatId(chat.id);
+    await this.planChecker.withinResourcesLimit(user.id, resources.length + 1);
+
+    // load documents and resources
+    // Create documents for rag, one per page. We'll do one resource per page
+    const documents = await this.ragLoaderService.generateDocsFromText(
+      {
+        text: resource.text,
+        source: resource.source,
+        title: resource.title,
+      },
+      chat.id,
+    );
+
+    const ids = await this.ragService.addDocuments(documents);
+
+    const r = await this.resourcesService.create(chat.id, {
+      data: resource.title,
+      type: 'text',
+      embeddingIds: ids,
+    });
+
+    return [r];
+  }
+
   // inspect a webpage and get urls to add to the chat
   @Post('/resources/web/inspect')
   @UseGuards(AuthGuard)
@@ -192,9 +238,6 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() data: PostResourceInspectDto,
   ) {
-    // check if the user can add a resource
-    await this.planChecker.canAddResource(user.id);
-
     // get the chat for the user
     const chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
@@ -251,11 +294,7 @@ export class ChatController {
   // post a message to the chat. This is a public endpoint
   @Post('/:id')
   @UseGuards(RateLimitGuard)
-  async postMessage(
-    @Body() body: PostMessageDto,
-    @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
-  ) {
+  async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
     // check if the user can post a message
 
     const chat = await this.chatsService.findById(id);

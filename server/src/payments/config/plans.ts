@@ -22,7 +22,7 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     features: ['Preview page'],
     limits: {
       publish: false,
-      resources: 0,
+      resources: 10,
       messagesPerDay: 0,
     },
   },

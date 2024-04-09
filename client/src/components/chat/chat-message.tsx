@@ -48,8 +48,8 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                 if (children.length) {
                   return (
                     <p className="mb-2 last:mb-0">
-                      {children.map((c) => (
-                        <span>{c}</span>
+                      {children.map((c, i) => (
+                        <span key={i}>{c}</span>
                       ))}
                     </p>
                   );

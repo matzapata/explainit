@@ -15,7 +15,6 @@ import {
 import { IconLifeBuoy, IconLogOut, IconSettings } from "../ui/icons";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import GoProButton from "../billing/go-pro-button";
 
 export interface NavbarProps {
   items?: NavbarItem[];

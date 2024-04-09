@@ -19,7 +19,7 @@ export enum MessageRole {
 export interface ChatMessage {
     content: string;
     role: MessageRole;
-    context: { content: string, metadata: { url: string, title: string } }[];
+    context: { content: string, metadata: { source: string, title: string } }[];
 }
 
 export interface ChatResource {
@@ -76,9 +76,26 @@ export class ChatService {
         }
     }
 
-    async addResource(accessToken: string, urls: string[]): Promise<ChatResource[]> {
-        const res = await this.client.post("/api/chat/resources/web", { urls, type: "web" }, { headers: { Authorization: `Bearer ${accessToken}` } })
-        return res.data
+    async addWebResource(accessToken: string, urls: string[]): Promise<ChatResource[]> {
+        try {
+            // name, website, conversation starters, published
+            const res = await this.client.post("/api/chat/resources/web", { urls }, { headers: { Authorization: `Bearer ${accessToken}` } })
+            return res.data
+        } catch (error: any) {
+            console.error(error)
+            throw new Error(error?.response?.data?.message ?? "")
+        }
+    }
+
+    async addTextResource(accessToken: string, text: string, title: string, source: string): Promise<ChatResource[]> {
+        try {
+            // name, website, conversation starters, published
+            const res = await this.client.post("/api/chat/resources/text", { text, title, source }, { headers: { Authorization: `Bearer ${accessToken}` } })
+            return res.data
+        } catch (error: any) {
+            console.error(error)
+            throw new Error(error?.response?.data?.message ?? "")
+        }
     }
 
 

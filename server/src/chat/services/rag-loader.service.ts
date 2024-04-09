@@ -34,8 +34,36 @@ export class RagLoaderService {
       content: d.pageContent,
       namespace: namespace,
       metadata: {
-        url: doc.url,
+        source: doc.url,
         title: doc.title,
+        ...metadata,
+      },
+    }));
+  }
+
+  async generateDocsFromText(
+    data: {
+      text: string;
+      source: string;
+      title: string;
+    },
+    namespace: string,
+    metadata?: Record<string, any>,
+  ): Promise<RagDocument[]> {
+    // split the documents into chunks
+    const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
+      chunkSize: 3000,
+      chunkOverlap: 100,
+    });
+
+    const documents = await splitter.createDocuments([data.text]);
+
+    return documents.map((d) => ({
+      content: d.pageContent,
+      namespace: namespace,
+      metadata: {
+        source: data.source,
+        title: data.title,
         ...metadata,
       },
     }));
