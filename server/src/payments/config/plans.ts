@@ -29,7 +29,8 @@ export const plans: { [key: string]: SubscriptionPlan } = {
   pro: {
     name: 'PRO',
     interval: 'month',
-    variantId: '331617',
+    // variantId: '331617', test mode
+    variantId: '242710',
     price: 9.99,
     description: 'Create sharable chats for your documentation',
     features: ['1 public chat', '2000 messages per day'],

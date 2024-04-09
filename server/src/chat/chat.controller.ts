@@ -295,8 +295,6 @@ export class ChatController {
   @Post('/:id')
   @UseGuards(RateLimitGuard)
   async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
-    // check if the user can post a message
-
     const chat = await this.chatsService.findById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');

@@ -9,18 +9,15 @@ Explainit. Create sharable chats with your documentation. Let developers get qui
 
 deployment
 
-TODO: - live payements
-
 development-product
 
-TODO: - on plan cancel, make chat private again
 
 development-improvements
 
+TODO: - implement events for stuff like, plan cancelled and so on, so far just email to manually do it
 TODO: - chat-controller test
 TODO: - Deployment, get it toghether, supabase db, storage and auth? railway for deployments? 
-    - Ideally all aws (ses, cognito for auth with next auth, s3, aws lambda, hosting. db? (ok, maybe this outside, but just one) ) or gcp
-    - railway, cheap, no storage, no vectordb 
+    - Ideally all aws ses, s3, hosting, plus railway for server and db
 
 
 # Deployment
