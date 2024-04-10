@@ -102,7 +102,7 @@ export class ChatController {
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
           // Only images are allowed
-          fileType: /(image\/jpg|image\/png)/,
+          fileType: /(image\/jpg|image\/png)|(image\/jpeg)/,
         })
         .addMaxSizeValidator({
           maxSize: 1000000,
@@ -126,6 +126,7 @@ export class ChatController {
       200,
     );
 
+    // upload file
     await this.storageService.uploadFile(`logos/${chat.id}.webp`, resized);
 
     // update chat with url
@@ -133,7 +134,7 @@ export class ChatController {
       logo: await this.storageService.getFileUrl(`logos/${chat.id}.webp`, true),
     });
 
-    return chat;
+    return { ...chat, logo: chat.logo + '?v=' + Date.now() }; // add a version to the url to force refresh
   }
 
   // loads the urls from a webpage and adds them to the chat
