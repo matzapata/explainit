@@ -109,7 +109,7 @@ export default function LogoForm(props: { logo?: string }) {
                     <FormItem>
                       <FormLabel>Logo</FormLabel>
                       <FormControl>
-                        <Input type="file" placeholder="Picture" {...fileRef} />
+                        <Input className='text-gray-500' type="file" placeholder="Picture" {...fileRef} />
                       </FormControl>
 
                       <FormMessage />
