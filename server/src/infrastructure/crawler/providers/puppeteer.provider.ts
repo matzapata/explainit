@@ -93,7 +93,7 @@ export class PuppeteerCrawlerProvider implements CrawlerProvider {
     await page.goto(props.url, { waitUntil: 'networkidle0' });
     const links = await page.$$eval(
       'a',
-      (as) => as.map((a) => a.href.split('#')[0]), // remove anchor links
+      (as) => as.map((a) => a.href.split('#')[0].split('?')[0]), // remove anchor links
     );
     const urls = Array.from(
       new Set(
