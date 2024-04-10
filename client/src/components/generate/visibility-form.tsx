@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, buttonVariants } from '../ui/button';
+import { buttonVariants } from '../ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from '../ui/use-toast';
@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 
+import confetti from 'canvas-confetti';
+
 export default function VisibilityForm(props: {
   published: boolean;
   id: string;
@@ -27,7 +29,7 @@ export default function VisibilityForm(props: {
   const [published, setPublished] = useState<boolean>(props.published);
 
   const setVisibilityMutation = useMutation({
-    mutationFn: (props: { published: boolean }) => {
+    mutationFn: async (props: { published: boolean }) => {
       if (!accessTokenRaw) throw new Error('No access token');
       return chatService.updateOwnerChat(accessTokenRaw, {
         published: props.published,
@@ -40,9 +42,50 @@ export default function VisibilityForm(props: {
           ? 'Congratulations your chat is now accessible by the world!'
           : "Hey! Don't wait too long before making it public again!",
       });
+
+      if (data.published) {
+        // firework animation
+        const duration = 10 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = {
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          zIndex: 0,
+        };
+
+        const randomInRange = (min: number, max: number) => {
+          return Math.random() * (max - min) + min;
+        };
+
+        const interval: NodeJS.Timeout = setInterval(function () {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+          // since particles fall down, start a bit higher than random
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          });
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          });
+        }, 250);
+      }
     },
     onError: (error) => {
-      toast({ variant: "destructive", description: error.message ?? `Sorry, something went wrong. Please try again.` });
+      toast({
+        variant: 'destructive',
+        description:
+          error.message ?? `Sorry, something went wrong. Please try again.`,
+      });
     },
   });
 
@@ -57,8 +100,11 @@ export default function VisibilityForm(props: {
         </p>
 
         <AlertDialog>
-          <AlertDialogTrigger className={cn(buttonVariants({ variant: "link-color" }), "text-sm")}   disabled={setVisibilityMutation.isPending}>
-              {published ? 'Hide' : 'Publish'}
+          <AlertDialogTrigger
+            className={cn(buttonVariants({ variant: 'link-color' }), 'text-sm')}
+            disabled={setVisibilityMutation.isPending}
+          >
+            {published ? 'Hide' : 'Publish'}
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
