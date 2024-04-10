@@ -14,9 +14,10 @@ export class UserSubscriptionService {
 
     return {
       sub,
-      plan: Object.values(plans).find(
-        (p) => p.variantId === (sub?.variantId || null),
-      ),
+      plan:
+        Object.values(plans).find(
+          (p) => p.variantId === (sub?.variantId || null),
+        ) ?? plans.free,
     };
   }
 
