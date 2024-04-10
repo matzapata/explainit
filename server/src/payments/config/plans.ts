@@ -35,7 +35,7 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     features: ['1 public chat', '2000 messages per day'],
     limits: {
       publish: true,
-      resources: 1,
+      resources: 100,
       messagesPerDay: 2000,
     },
   },
