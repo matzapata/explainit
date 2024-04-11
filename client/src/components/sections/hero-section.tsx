@@ -29,7 +29,7 @@ export default function HeroSection() {
       <div className="w-full mt-14">
         <iframe
           className="w-full aspect-video"
-          src="https://www.loom.com/embed/3cffe7ffd004491f8b228102251bdc24?sid=9d786530-40b8-4514-aad6-7e0159106cfe&hideEmbedTopBar=true&hide_owner=true"
+          src={`${process.env.NEXT_PUBLIC_LOOM_DEMO_URL}&hideEmbedTopBar=true&hide_owner=true`}
         ></iframe>
       </div>
 
