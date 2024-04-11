@@ -23,6 +23,8 @@ import {
 import { plans } from './config/plans';
 import { AuthUser } from '@src/users/middlewares/current-user.middleware';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SubscriptionCanceled } from './events/subscription-canceled.event';
 
 @Controller('api/payments')
 export class PaymentsController {
@@ -35,6 +37,7 @@ export class PaymentsController {
     private readonly webhookEventsService: WebhookEventsService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Get('/plans')
@@ -129,12 +132,19 @@ export class PaymentsController {
           html: `Please tell us what did we wrong to make you cancel your subscription.`,
           subject: 'Sorry to see you go!',
         });
+        // Send email to admin notifying them of subscription update
         await this.emailService.sendEmail({
           from: 'hello@mzslabs.com',
           to: this.configService.get('CONTACT_EMAIL'),
           html: `User ${user.email} has cancelled their subscription. Please reach out to them.`,
           subject: 'Subscription cancelled! 😔',
         });
+
+        // emit event
+        this.eventEmitter.emit(
+          SubscriptionCanceled.type,
+          new SubscriptionCanceled(user.id),
+        );
       } else if (data.status === SubscriptionStatus.active) {
         await this.userSubscriptionService.upsertByUserId(user.id, {
           variantId: data.variantId,

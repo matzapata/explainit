@@ -37,6 +37,8 @@ import { PlanCheckerService } from '@src/payments/services/plan-checker.service'
 import { RateLimitGuard } from './guards/rate-limit.guard';
 import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
 import { RagLoaderService } from './services/rag-loader.service';
+import { OnEvent } from '@nestjs/event-emitter';
+import { SubscriptionCanceled } from '@src/payments/events/subscription-canceled.event';
 
 @Controller('api/chat')
 export class ChatController {
@@ -310,5 +312,12 @@ export class ChatController {
     );
 
     return response;
+  }
+
+  // Handle events ============================================================
+
+  @OnEvent(SubscriptionCanceled.type)
+  async onSubscriptionCanceled(payload: SubscriptionCanceled) {
+    await this.chatsService.update(payload.userId, { published: false });
   }
 }

@@ -7,6 +7,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { ChatModule } from './chat/chat.module';
 import { ContactModule } from './contact/contact.module';
 import { LoggerModule } from 'nestjs-pino';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -15,6 +16,8 @@ import { LoggerModule } from 'nestjs-pino';
     PaymentsModule,
     ChatModule,
     ContactModule,
+    // events
+    EventEmitterModule.forRoot(),
     // logger
     LoggerModule.forRoot({
       pinoHttp: {
