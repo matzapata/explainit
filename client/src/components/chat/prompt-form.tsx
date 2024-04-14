@@ -3,14 +3,13 @@ import Link from 'next/link';
 import Textarea from 'react-textarea-autosize';
 
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
+import { IconArrowElbow } from '@/components/ui/icons';
 import { ArrowUpRight } from 'lucide-react';
 
 interface PromptProps {
@@ -43,22 +42,7 @@ export function PromptForm({
       }}
       ref={formRef}
     >
-      <div className="relative flex mb-2 max-h-60 w-full grow flex-col overflow-hidden bg-white dark:bg-gray-950 dark:border-gray-800 px-8 sm:rounded-md sm:border sm:px-12">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href="/"
-              className={cn(
-                buttonVariants({ size: 'sm', variant: 'secondary-gray' }),
-                'absolute left-0 top-4 h-8 w-8 rounded-full bg-white dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800 p-0 sm:left-4',
-              )}
-            >
-              <IconPlus />
-              <span className="sr-only">Create your chat!</span>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>Create your chat!</TooltipContent>
-        </Tooltip>
+      <div className="relative flex mb-2 max-h-60 w-full grow flex-col overflow-hidden bg-white dark:bg-gray-950 dark:border-gray-800 pr-8 sm:rounded-md sm:border sm:pr-12">
         <Textarea
           ref={inputRef}
           tabIndex={0}
@@ -87,12 +71,10 @@ export function PromptForm({
           </Tooltip>
         </div>
       </div>
-      <div className='flex space-x-0 justify-center items-center'>
-        <p className="text-gray-600 text-sm">
-          Powered by explainit.
-        </p>
-        <ArrowUpRight  className='h-3 w-3 text-gray-600'/>
-      </div>
+      <Link href="/" className="flex space-x-0 justify-center items-center">
+        <p className="text-gray-600 text-sm">Powered by explainit.</p>
+        <ArrowUpRight className="h-3 w-3 text-gray-600" />
+      </Link>
     </form>
   );
 }
