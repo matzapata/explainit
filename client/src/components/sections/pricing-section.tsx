@@ -83,7 +83,7 @@ export default async function PricingSection() {
                 </p>
 
                 <GoProButton className="mt-10 block w-full rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
-                  Get access
+                  Subscribe
                 </GoProButton>
 
                 <p className="mt-6 text-xs leading-5 text-gray-600 dark:text-gray-300">

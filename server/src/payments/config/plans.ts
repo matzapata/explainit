@@ -32,11 +32,11 @@ export const plans: { [key: string]: SubscriptionPlan } = {
     variantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
     price: 9.99,
     description: 'Create sharable chats for your documentation',
-    features: ['1 public chat', '2000 messages per day'],
+    features: ['1 public chat', '1000 messages per day'],
     limits: {
       publish: true,
       resources: 100,
-      messagesPerDay: 2000,
+      messagesPerDay: 1000,
     },
   },
 };

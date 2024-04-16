@@ -236,10 +236,10 @@ Content-Type: application/json
       "created_at": "2024-03-16T11:56:34.000000Z",
       "product_id": 92548,
       "updated_at": "2024-03-16T12:16:45.000000Z",
-      "user_email": "matias@sphereone.xyz",
-      "variant_id": 99201,
+      "user_email": "matuzapata@gmail.com",
+      "variant_id": 331617,
       "customer_id": 2504844,
-      "product_name": "Chatwith",
+      "product_name": "Explainit",
       "variant_name": "PRO",
       "order_item_id": 2265600,
       "trial_ends_at": null,
@@ -312,7 +312,7 @@ Content-Type: application/json
     "event_name": "subscription_updated",
     "webhook_id": "186ab60d-2265-44cf-acf0-7bd204b2dfd3",
     "custom_data": {
-      "user_id": "kp_b84de3466192450f91f00fa838950fd0"
+      "user_id": "kp_72efe4895c884b4c8c7abc8bf954b0e0"
     }
   }
 }
@@ -432,6 +432,3 @@ Content-Type: application/json
     }
   }
 }
-
-
-# TODO: payment failed

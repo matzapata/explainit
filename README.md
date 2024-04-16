@@ -44,3 +44,15 @@ Setup env variables
 4. Update payments plans
 5. Configure kinde, add email to token with hasura mapping
 6. Remove unused modules
+
+# Indie hackers / reddit
+
+## I build a ai chatbot generator for documentation sites in seconds
+
+If you have a developer documentation and want to boost your community with ai this is for you! Just pull in the base url of the site add some customization and get a sharable link for your chat, link it anywhere you want.
+
+I saw this trend in some places like gcp with gemini, or langchain or supabase ask ai, but they're all custom implemented solutions, not everyone wants to advocate developer resources to create the rag, deploy it and maintain it, you just want devs to build with your stuff, the more they can do the better, the quicker the better, and if they get a smooth experience while doing it that's legendary already.
+
+Just some clicks!! With one base url you are half way through. Check it out at https://explainit.mzslabs.com
+
+Any feedback is welcomed! Thanks!

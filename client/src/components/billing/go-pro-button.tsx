@@ -36,7 +36,7 @@ export default function GoProButton({children, ...props}: ButtonProps) {
       isLoading={loading}
       {...props}
     >
-      {children || "Go Pro"}
+      {children || "Subscribe"}
     </Button>
   );
 }
