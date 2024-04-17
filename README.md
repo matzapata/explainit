@@ -56,3 +56,37 @@ I saw this trend in some places like gcp with gemini, or langchain or supabase a
 Just some clicks!! With one base url you are half way through. Check it out at https://explainit.mzslabs.com
 
 Any feedback is welcomed! Thanks!
+
+## Chat bubble snippet
+
+```html
+<html>
+    <head>
+        <style>
+            /* Style for the chat bubble */
+            .chat-bubble {
+                z-index: 1000;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #007bff;
+                color: #ffffff;
+                padding: 10px 20px;
+                border-radius: 20px 20px 0px 20px;
+                cursor: pointer;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            /* Style for the chat bubble when hovered */
+            .chat-bubble:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <a className="chat-bubble" href="https://explainit.mzslabs.com/chat/{your-id}">Ask AI</a>
+        <!-- ... -->
+    </body>
+</html>
+```

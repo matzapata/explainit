@@ -7,9 +7,9 @@ import WebsiteForm from '@/components/generate/website-form';
 import GoProBanner from '@/components/billing/go-pro-banner';
 import { chatService } from '@/lib/services/chat-service';
 import ConversationStartersTable from '@/components/generate/conversation-starters-table';
-import ShareChatBox from '@/components/generate/visibility-form';
 import VisibilityForm from '@/components/generate/visibility-form';
 import ShareLinkForm from '@/components/generate/share-link';
+import CodeSnippet from '@/components/generate/code-snippet';
 
 export default async function GenerateChat() {
   const { getAccessTokenRaw } = getKindeServerSession();
@@ -62,28 +62,8 @@ export default async function GenerateChat() {
           </div>
         </div>
 
-        {/* Share chat */}
-        <div className="md:px-8 px-4 ">
-          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
-            <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
-              Share your chat with your users!
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Share your documentation with the world! You can use the link
-              below to share it with your users.
-            </p>
-          </div>
-
-          {/* Share */}
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            <VisibilityForm id={chat.id} published={chat.published} />
-
-            <ShareLinkForm id={chat.id} />
-          </div>
-        </div>
-
-        {/* Conversation starters */}
-        <div className="md:px-8 px-4 ">
+           {/* Conversation starters */}
+           <div className="md:px-8 px-4 ">
           <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
             <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
               Conversation starters
@@ -97,6 +77,32 @@ export default async function GenerateChat() {
           {/* Conversation starters */}
           <ConversationStartersTable starters={chat.conversationStarters} />
         </div>
+
+        {/* Share chat */}
+        <div className="md:px-8 px-4 ">
+          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
+            <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
+              Share your chat with your users!
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
+              Share your documentation with the world! You can use the link
+              below to share it with your users.
+            </p>
+          </div>
+
+          
+
+          {/* Share */}
+          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+            <VisibilityForm id={chat.id} published={chat.published} />
+
+            <ShareLinkForm id={chat.id} />
+
+            <CodeSnippet id={chat.id} />
+          </div>
+        </div>
+
+     
       </div>
     </GenerateLayout>
   );
