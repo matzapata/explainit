@@ -134,7 +134,7 @@ export default function FeaturesSection() {
           start boosting your community, no dependencies, super lightweight.
         </p>
       </div>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-xs sm:max-w-sm md:max-w-4xl mx-auto">
         <SyntaxHighlighter
           language={'html'}
           style={coldarkDark}

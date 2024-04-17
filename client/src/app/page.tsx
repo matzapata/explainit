@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <main className="relative">
       <div className=" w-screen bg-[#FF6154] py-1 flex items-center justify-between text-white px-6">
-        <p className='font-semibold'>Live in producthunt! Support us with an upvote 🚀</p>
+        <p className='font-semibold hidden md:block'>Live in producthunt! Support us with an upvote 🚀</p>
         <a
           href="https://www.producthunt.com/posts/explainit?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-explainit"
           target="_blank"
