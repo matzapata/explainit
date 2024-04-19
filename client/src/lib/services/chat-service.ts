@@ -49,17 +49,22 @@ export class ChatService {
     }
 
     async updateOwnerChatLogo(accessToken: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
-        const formData = new FormData()
-        formData.append("file", file)
+        try {
+            const formData = new FormData()
+            formData.append("file", file)
 
-        const res = await this.client.put("/api/chat/logo", formData, {
-            headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${accessToken}` },
-            onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent?.total ?? 1))
-                onUploadProgress?.(percentCompleted)
-            },
-        })
-        return { ...res.data, createdAt: new Date(res.data.createdAt) }
+            const res = await this.client.put("/api/chat/logo", formData, {
+                headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${accessToken}` },
+                onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent?.total ?? 1))
+                    onUploadProgress?.(percentCompleted)
+                },
+            })
+            return { ...res.data, createdAt: new Date(res.data.createdAt) }
+        } catch (error: any) {
+            console.error(error)
+            throw new Error(error?.response?.data?.message ?? "")
+        }
     }
 
     async getChat(id: string): Promise<ChatMetadataDto> {
@@ -67,7 +72,7 @@ export class ChatService {
         return res.data
     }
 
-    async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[] ): Promise<ChatMessage> {
+    async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
         const res = await this.client.post(`/api/chat/${id}`, { question, chatHistory: chatHistory ?? [] })
         return {
             content: res.data.answer,

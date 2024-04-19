@@ -63,7 +63,7 @@ export default function LogoForm(props: { logo?: string }) {
       setOpen(false);
     },
     onError: (error) => {
-      toast({ description: `Sorry, something went wrong. Please try again.` });
+      toast({ description: `Sorry, something went wrong. Please try again.${error.message? " Error" + error.message : ""}` });
     },
   });
 
@@ -94,7 +94,7 @@ export default function LogoForm(props: { logo?: string }) {
             <DialogHeader>
               <DialogTitle>Update Picture</DialogTitle>
               <DialogDescription>
-                Use the logo of your company or organization. Click save when you're done.
+                Use the logo of your company or organization. Maximum file size is 1MB. Allowed formats PNG/JPG/JPEG.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
