@@ -75,6 +75,17 @@ export class PaymentsController {
       user.id,
     );
 
+    try {
+      await this.emailService.sendEmail({
+        from: 'hello@mzslabs.com',
+        to: this.configService.get('CONTACT_EMAIL'),
+        html: `User ${user.email} has is going to upgrade to PRO. Please reach out to them.`,
+        subject: 'Subscription incoming!!!!! 🚀',
+      });
+    } catch (e) {
+      this.logger.error('Error sending email', e);
+    }
+
     return { url };
   }
 
