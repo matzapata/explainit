@@ -34,7 +34,7 @@ import { Chat, ChatResource } from '@prisma/client';
 import { GetResourceDto } from './dtos/get-resource.dto';
 import { PostResourceInspectDto } from './dtos/post-resource-inspect.dto';
 import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
-import { RateLimitGuard } from './guards/rate-limit.guard';
+import { ChatMessagesRateLimit } from './guards/chat-messages-rate-limit.guard';
 import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
 import { RagLoaderService } from './services/rag-loader.service';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -296,7 +296,7 @@ export class ChatController {
 
   // post a message to the chat. This is a public endpoint
   @Post('/:id')
-  @UseGuards(RateLimitGuard)
+  @UseGuards(ChatMessagesRateLimit)
   async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
     const chat = await this.chatsService.findById(id);
     if (!chat) {

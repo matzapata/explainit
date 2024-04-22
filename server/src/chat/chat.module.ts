@@ -11,7 +11,6 @@ import { VectorStoreModule } from '@src/infrastructure/vectorstore/vectorstore.m
 import { LlmModule } from '@src/infrastructure/llm/llm.module';
 import { StorageModule } from '@src/infrastructure/storage/storage.module';
 import { CrawlerModule } from '@src/infrastructure/crawler/cawler.module';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { RagLoaderService } from './services/rag-loader.service';
 
 @Module({
@@ -30,14 +29,6 @@ import { RagLoaderService } from './services/rag-loader.service';
     LlmModule,
     StorageModule,
     CrawlerModule,
-    // rate limiter
-    ThrottlerModule.forRoot([
-      {
-        // limit requests to 10 per minute
-        ttl: 3600, // ms
-        limit: 10,
-      },
-    ]),
   ],
   controllers: [ChatController],
 })

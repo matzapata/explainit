@@ -92,6 +92,12 @@ model ChatResource {
   chatId String @db.ObjectId
 }
 
+model ChatRateLimit {
+  key     String  @id @map("_id")
+  points  Int
+  expire  DateTime?
+}
+
 // ============================= embeddings module =============================
 model Embedding {
   id        String  @id @default(auto()) @map("_id") @db.ObjectId
@@ -101,4 +107,3 @@ model Embedding {
 
   embedding Float[]
 }
-
