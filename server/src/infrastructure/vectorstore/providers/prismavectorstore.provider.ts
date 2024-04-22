@@ -30,15 +30,9 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
           content: doc.content,
           namespace: doc.namespace ?? 'public',
           metadata: { ...doc.metadata },
+          embedding: embedding,
         },
       });
-
-      // Add the embedding
-      await this.prisma.$executeRaw`
-          UPDATE "Embedding"
-          SET embedding = ${embedding}::vector
-          WHERE id = ${record.id}
-      `;
 
       ids.push(record.id);
     }
@@ -62,21 +56,37 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
     k = k ?? 5;
 
     const embedding = await this.embeddings.generateEmbeddings(query);
-    const vectorQuery = `[${embedding.join(',')}]`;
-    const docs = await this.prisma.$queryRaw`
-      SELECT
-        id,
-        "content",
-        "metadata",
-        "namespace",
-        1 - (embedding <=> ${vectorQuery}::vector) as similarity
-      FROM "Embedding"
-      WHERE 1 - (embedding <=> ${vectorQuery}::vector) > .5
-      AND namespace = ${namespace}
-      ORDER BY  similarity DESC
-      LIMIT ${k};
-    `;
 
+    const docs = await this.prisma.embedding.aggregateRaw({
+      pipeline: [
+        {
+          $vectorSearch: {
+            index: 'embeddings_index', // name of the index
+            path: 'embedding', // name of the field that contains the vector
+            queryVector: embedding,
+            numCandidates: 100,
+            limit: 10,
+            filter: { namespace },
+          },
+        },
+        {
+          $project: {
+            // Mapping _id to id
+            _id: 0,
+            id: { $toString: '$_id' },
+            content: 1,
+            metadata: 1,
+            namespace: 1,
+            similarity: {
+              $meta: 'vectorSearchScore',
+            },
+          },
+        },
+      ],
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return docs as Array<Embedding & { similarity: number }>;
   }
 }

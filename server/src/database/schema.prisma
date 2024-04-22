@@ -1,18 +1,16 @@
 datasource db {
-  provider   = "postgresql"
+  provider   = "mongodb"
   url        = env("DATABASE_URL")
-  extensions = [vector]
 }
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "darwin-arm64"]
 }
 
 // ============================= user module ============================= 
 model User {
-  id    String  @id @default(uuid())
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
   email String  @unique
   name  String?
 
@@ -26,7 +24,7 @@ model User {
 
 // ============================= payments module ============================= 
 model UserSubscription {
-  id             Int       @id @default(autoincrement())
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
   subscriptionId String // from provider
   variantId      String
   orderId        String
@@ -47,11 +45,11 @@ model UserSubscription {
 
   // relations  
   user   User   @relation(fields: [userId], references: [id])
-  userId String @unique
+  userId String @db.ObjectId @unique
 }
 
 model WebhookEvent {
-  id              Int     @id @default(autoincrement())
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
   eventName       String
   processed       Boolean @default(false)
   body            String
@@ -63,7 +61,7 @@ model WebhookEvent {
 
 // ============================= chat module ============================= 
 model Chat {
-  id                   String   @id @default(uuid())
+  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
   name                 String
   logo                 String
   url                  String
@@ -75,13 +73,13 @@ model Chat {
 
   // relations
   owner   User   @relation(fields: [ownerId], references: [id])
-  ownerId String @unique
+  ownerId String @db.ObjectId @unique
 
   resources ChatResource[]
 }
 
 model ChatResource {
-  id           String   @id @default(uuid())
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
   type         String
   data         String
   embeddingIds String[]
@@ -91,16 +89,16 @@ model ChatResource {
 
   // relations
   chat   Chat   @relation(fields: [chatId], references: [id])
-  chatId String
+  chatId String @db.ObjectId
 }
 
 // ============================= embeddings module =============================
 model Embedding {
-  id        String @id @default(cuid())
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
   content   String
   namespace String
   metadata  Json
 
-  embedding Unsupported("vector(1536)")?
+  embedding Float[]
 }
 

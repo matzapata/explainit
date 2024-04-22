@@ -50,10 +50,10 @@ DELETE http://{{host}}/api/chat/resources/2126e890-b2f9-40a5-9479-1f417192bb64
 Authorization: Bearer {{token}}
 
 ### GET /api/chat/:id gets the chat for the consumer
-GET http://{{host}}/api/chat/fd64e2f6-3e8e-40cb-8024-a2e1d69e6c56
+GET http://{{host}}/api/chat/66261ae48daee07eb34ba3a4
 
 ### POST /api/chat/:id generate response for question
-POST http://{{host}}/api/chat/fd64e2f6-3e8e-40cb-8024-a2e1d69e6c56
+POST http://{{host}}/api/chat/66261ae48daee07eb34ba3a4
 Content-Type: application/json
 
 {

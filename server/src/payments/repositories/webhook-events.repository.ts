@@ -13,7 +13,7 @@ export class WebhookEventsRepository {
   }
 
   async updateWebhookEvent(
-    id: number,
+    id: string,
     data: Prisma.WebhookEventUpdateInput,
   ): Promise<WebhookEvent> {
     return this.prisma.webhookEvent.update({ where: { id }, data });

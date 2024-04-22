@@ -11,7 +11,7 @@ export class WebhookEventsService {
   }
 
   async setProcessed(
-    id: number,
+    id: string,
     processed: boolean,
     processingError?: string,
   ): Promise<WebhookEvent> {

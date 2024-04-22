@@ -74,7 +74,7 @@ export class ChatController {
     // get resources
     const resources = await this.resourcesService.findByChatId(chat.id);
 
-    return { ...chat, resources };
+    return { ...chat, logo: chat.logo + '?v=' + Date.now(), resources };
   }
 
   // Updates the chat metadata

@@ -14,8 +14,8 @@ export class UsersService {
     return this.repo.findUserById(id, include);
   }
 
-  create(id: string, email: string): Promise<User> {
-    return this.repo.createUser({ id, email });
+  create(email: string): Promise<User> {
+    return this.repo.createUser({ email });
   }
 
   update(id: string, name: string): Promise<User> {
