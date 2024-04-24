@@ -10,7 +10,7 @@ export class OpenAILlmProvider implements LlmProvider {
 
   constructor(private readonly configService: ConfigService) {
     this.model = new OpenAI({
-      modelName: 'gpt-3.5-turbo-0613',
+      modelName: 'gpt-3.5-turbo-0125',
       temperature: 0.8,
       openAIApiKey: this.configService.get('OPENAI_API_KEY'),
       cache: false,

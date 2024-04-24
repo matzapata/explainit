@@ -11,11 +11,26 @@
 # az provider register --namespace Microsoft.App
 # az provider register --namespace Microsoft.OperationalInsights
 
+
+
 # ============================== utils ==============================
+
+print_blue() {
+    echo -e "\033[1;34m$1\033[0m"
+}
+print_red() {
+    echo -e "\033[1;31m$1\033[0m"
+}
+print_yellow() {
+    echo -e "\033[1;33m$1\033[0m"
+}
+print_green() {
+    echo -e "\033[1;32m$1\033[0m"
+}
 
 # Function to prompt for confirmation
 confirm() {
-    echo "$1"
+    print_blue "$1"
     while true; do
         read -p "Enter [Y/N]: " yn
         case $yn in
@@ -28,60 +43,90 @@ confirm() {
 
 # ==============================  settings ==============================
 
-container_name="explainit-client"
-resource_group="explainit"
-image_tag="matzapa/explainit-client"
+# warning
+print_yellow "Warning. Run command with sudo. Ensure env variables are between """
 
-echo "Enter release name: (examples: latest / 1.0.0)"
-read release_name
+# Check if required environment variables are set
+if [ -z "$container_name" ] || [ -z "$resource_group" ] || [ -z "$image_tag" ] || [ -z "$release_name" ] || [ -z "$env_file" ] || [ -z "$port" ] || [ -z "$environment" ]; then
+    print_red "Required environment variables are not set. Exiting..."
+    exit 1
+fi
+
 
 # confirm settings
-echo "Deployment settings:"
+print_blue "Deployment settings:"
 echo "Container name: $container_name"
 echo "Resource group: $resource_group"
 echo "Image: $image_tag:$release_name"
+echo "Environment file: $env_file"
+echo "Port: $port"
 
 if confirm "Do you want to proceed with these settings?"; then
-    echo "Proceeding with deployment..."
+    print_green "Proceeding with deployment..."
 else
-    echo "Deployment cancelled."
+    print_red "Deployment cancelled."
     exit 1
 fi
 
-# ==============================  main ==============================
+# ============================== build image ==============================
 
-# build the container image
-echo "Building the container image..."
-docker build -t $image_tag:$release_name .
-build_status=$?
+if confirm "Do you want to create and publish a new build?"; then
+    print_blue "Building the container image..."
 
-# check if the build was successful
-if [ $build_status -eq 0 ]; then
-    echo "Container image built successfully."
-else
-    echo "Failed to build container image."
-    exit 1
+    # create build args
+    build_args=""
+    while IFS='=' read -r key value; do
+        if [[ $key == NEXT_PUBLIC* ]]; then
+            build_args+=" --build-arg $key=$value"
+        fi
+    done < $env_file
+
+    build_command="docker build $build_args -t $image_tag:$release_name ."
+    print_blue "Executing command:"
+    echo $build_command
+    eval $build_command
+
+    if [ $? -eq 0 ]; then
+        print_green "Container image built successfully."
+    else
+        print_red "Failed to build container image."
+        exit 1
+    fi
+
+    # publish image
+    print_blue "Publishing image..."
+    docker push $image_tag:$release_name
+    if [ $? -eq 0 ]; then
+        print_green "Container image pushed successfully."
+    else
+        print_red "Failed to push container image."
+        exit 1
+    fi
+
+else 
+    print_yellow "No new image will be pushed."
 fi
 
-# publish image
-docker push $image_tag:$release_name
+# ============================== load env and create depl ==============================
 
 # Read .env file and set environment variables
+env_vars=""
 while IFS='=' read -r key value; do
     if [[ ! -z $key && ! $key =~ ^# ]]; then
         env_vars+=" $key=$value"
     fi
-done < .env.prod.local
-echo "Loaded env vars:"
+done < $env_file
+print_blue "Updating container app with env vars:"
 echo $env_vars
 
 # Prompt for confirmation and publish the container to Azure
-if confirm "We're going to update container $container_name in $resource_group. Sounds good?"; then
-    az containerapp update \
-        --name $container_name \
-        --image $image_tag:$release_name \
-        --resource-group $resource_group \
-        --set-env-vars $env_vars
+if confirm "We're going to create/update container $container_name in $resource_group. Sounds good?"; then
+    create_command="az containerapp create  --name $container_name --resource-group $resource_group  --environment $environment  --image $image_tag:$release_name --target-port $port --ingress external --env-vars $env_vars"
+    print_blue "Executing command:"
+    echo $create_command
+    eval $create_command
+
+    print_green "Container app updated successfully."
 else
-    echo "Container app not updated."
+    print_red "Container app not updated."
 fi
