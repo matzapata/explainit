@@ -24,7 +24,7 @@ export function EmptyScreen(props: {
           {props.starters.map((message, index) => (
             <Button
               key={index}
-              variant="link-gray"
+              variant="link"
               className="h-auto p-0 text-base"
               onClick={() => props.setInput(message)}
             >

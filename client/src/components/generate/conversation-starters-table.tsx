@@ -111,7 +111,7 @@ export default function ConversationStartersTable(props: {
                 }
               }}
               className="text-sm dark:text-red-600"
-              variant="link-color"
+              variant="link"
             >
               <XMarkIcon className="h-4 w-4" />
             </Button>
@@ -123,7 +123,7 @@ export default function ConversationStartersTable(props: {
       <div className="flex md:flex-1 py-6">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="text-sm" variant="link-color">
+            <Button className="text-sm text-primary" variant="link">
               Add new
             </Button>
           </DialogTrigger>

@@ -127,7 +127,6 @@ export default function FaqSection() {
           <div className="flex justify-center">
             <Button
               onClick={() => router.push("/contact")}
-              variant="primary"
               className="mx-auto"
             >
               Get in touch

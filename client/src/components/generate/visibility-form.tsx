@@ -101,7 +101,7 @@ export default function VisibilityForm(props: {
 
         <AlertDialog>
           <AlertDialogTrigger
-            className={cn(buttonVariants({ variant: 'link-color' }), 'text-sm')}
+            className={cn(buttonVariants({ variant: 'link' }), 'text-s text-primary')}
             disabled={setVisibilityMutation.isPending}
           >
             {published ? 'Hide' : 'Publish'}

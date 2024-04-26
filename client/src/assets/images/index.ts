@@ -7,6 +7,12 @@ import AvatarSticker05 from "./avatar-sticker-05.jpg"
 import AwsIcon from "./aws.svg"
 import GcpIcon from "./gcp.svg"
 import SupabaseIcon from "./supabase.svg"
+import StripeIcon from "./stripe.png"
+import ReactIcon from "./react.png"
+import MicrosoftIcon from "./microsoft.png"
+import GoogleIcon from "./google.png"
+import DockerIcon from "./docker.png"
+import AmazonIcon from "./amazon.png"
 
 const images = {
     Avatar,
@@ -17,7 +23,13 @@ const images = {
     AvatarSticker05,
     AwsIcon,
     GcpIcon,
-    SupabaseIcon
+    SupabaseIcon,
+    StripeIcon,
+    ReactIcon,
+    MicrosoftIcon,
+    GoogleIcon,
+    DockerIcon,
+    AmazonIcon
 }
 
 export default images;

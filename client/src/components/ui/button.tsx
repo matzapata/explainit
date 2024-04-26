@@ -9,43 +9,29 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "text-white bg-brand-600 hover:bg-brand-700",
-        "secondary-gray": "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50",
-        "secondary-color": "text-brand-700 dark:text-brand-500 bg-white dark:bg-gray-900 border border-brand-300 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900",
-        "tertiary-gray": "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-950 hover:bg-zinc-700 border border-gray-300 dark:border-gray-800",
-        "tertiary-color": "text-brand-700 bg-white  hover:bg-brand-50",
-        "link-gray": "text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 hover:text-gray-950 p-0",
-        "link-color": "text-brand-700 dark:text-brand-600 hover:text-brand-800 p-0",
-        destructive: "bg-red-500 text-gray-50 hover:bg-red-500/90",
-        "destructive-secondary": "bg-white text-red-500 hover:bg-red-50 border border-red-300",
-        "destructive-tertiary": "bg-white text-red-500 hover:bg-red-50",
-        "destructive-link": "bg-white text-red-500 hover:text-red-600",
-        
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        xs: "py-[2px] px-[8px] text-sm",
-        sm: "py-[8px] px-[12px] text-sm",
-        md: "py-[10px] px-[14px]",
-        lg: "py-[12px] px-[16px]",
-        xl: "py-[12px] px-[18px]",
-        "2xl": "py-[16px] px-[24px] text-lg",
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
       },
     },
     compoundVariants: [
-      // Overwrite padding for link variants
-      {
-        variant: "link-color",
-        className: "p-0",
-      },
-      {
-        variant: "link-gray",
-        className: "p-0",
-      }
+ 
     ],
     defaultVariants: {
-      variant: "primary",
-      size: "md",
+      variant: "default",
+      size: "default",
     },
   }
 )

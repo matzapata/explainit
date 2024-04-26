@@ -99,7 +99,7 @@ export default function ResourcesTable(props: {
             <Button
               onClick={() => onDeleteClick(s.id)}
               className="text-sm dark:text-red-600"
-              variant="link-color"
+              variant="link"
             >
               <XMarkIcon className="h-4 w-4" />
             </Button>
@@ -198,7 +198,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="text-sm" variant="link-color">
+        <Button className="text-sm text-primary" variant="link">
           Add with crawling
         </Button>
       </DialogTrigger>
@@ -340,7 +340,7 @@ function AddTextResource(props: { setResources: (r: any) => void }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="text-sm" variant="link-color">
+        <Button className="text-sm text-primary" variant="link">
           Add text
         </Button>
       </DialogTrigger>

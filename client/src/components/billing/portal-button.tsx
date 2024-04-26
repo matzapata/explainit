@@ -31,7 +31,6 @@ export default function PortalButton() {
             });
           });
       }}
-      variant="secondary-gray"
       size="sm"
     >
       Manage

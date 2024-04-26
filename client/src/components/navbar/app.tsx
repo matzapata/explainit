@@ -15,6 +15,8 @@ import {
 import { IconLifeBuoy, IconLogOut, IconSettings } from "../ui/icons";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 export interface NavbarProps {
   items?: NavbarItem[];

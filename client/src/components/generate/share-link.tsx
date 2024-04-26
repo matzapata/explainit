@@ -26,8 +26,8 @@ export default function ShareLinkForm(props: { id: string }) {
         <Button
           disabled={!!isCopied}
           onClick={() => copyToClipboard(sharableLink)}
-          className="text-sm"
-          variant="link-color"
+          className="text-sm text-primary"
+          variant="link"
         >
           {isCopied ? 'Copied!' : 'Copy'}
         </Button>

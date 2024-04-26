@@ -44,20 +44,20 @@ export default function Navbar() {
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
             <Link href={"/generate"}>
-              <Button variant={"secondary-color"} size="sm">
+              <Button size="sm">
                 Dashboard
               </Button>
             </Link>
           ) : (
             <>
               <LoginLink postLoginRedirectURL="/generate">
-                <Button className="bg-transparent" variant="tertiary-gray">
+                <Button className="bg-transparent">
                   Log in
                 </Button>
               </LoginLink>
 
               <RegisterLink postLoginRedirectURL="/generate">
-                <Button variant="primary">Sign up</Button>
+                <Button >Sign up</Button>
               </RegisterLink>
             </>
           )}
@@ -93,20 +93,20 @@ export default function Navbar() {
                 <div className="py-6 px-4 flex flex-col space-y-3">
                   {user ? (
                     <Link href={"/generate"}>
-                      <Button variant={"secondary-gray"} size="sm">
+                      <Button size="sm">
                         Dashboard
                       </Button>
                     </Link>
                   ) : (
                     <>
                       <RegisterLink postLoginRedirectURL="/generate">
-                        <Button variant="primary" className="w-full">
+                        <Button className="w-full">
                           Sign up
                         </Button>
                       </RegisterLink>
 
                       <LoginLink postLoginRedirectURL="/generate">
-                        <Button variant="secondary-gray" className="w-full">
+                        <Button className="w-full">
                           Log in
                         </Button>
                       </LoginLink>

@@ -70,7 +70,7 @@ export default function WebsiteForm(props: { website?: string }) {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="text-sm" variant="link-color">
+            <Button className="text-sm text-primary" variant="link">
               Update
             </Button>
           </DialogTrigger>

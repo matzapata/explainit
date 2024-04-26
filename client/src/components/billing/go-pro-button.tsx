@@ -31,7 +31,6 @@ export default function GoProButton({children, ...props}: ButtonProps) {
           })
           .finally(() => setIsLoading(false));
       }}
-      variant="primary"
       size="sm"
       isLoading={loading}
       {...props}

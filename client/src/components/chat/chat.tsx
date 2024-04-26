@@ -42,7 +42,7 @@ export function Chat({ chat, className }: ChatProps) {
               return;
             setMessages([]);
           }}
-          variant={'link-gray'}
+          variant={'link'}
           size={'sm'}
           className="text-gray-600 dark:text-gray-300"
         >

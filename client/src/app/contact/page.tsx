@@ -156,7 +156,6 @@ export default function Contact() {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  variant="primary"
                   disabled={!user || loading}
                   isLoading={loading}
                 >

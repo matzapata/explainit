@@ -78,11 +78,11 @@ export default async function PricingSection() {
                     ${plans.pro.price}
                   </span>
                   <span className="text-sm font-semibold leading-6 tracking-wide text-gray-600 dark:text-gray-300">
-                    USD / month
+                    USD
                   </span>
                 </p>
 
-                <GoProButton className="mt-10 block w-full rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
+                <GoProButton className="mt-10 block w-full rounded-md  text-center text-sm font-semibold shadow-sm focus-visible:outline">
                   Subscribe
                 </GoProButton>
 
@@ -95,17 +95,17 @@ export default async function PricingSection() {
         </div>
 
         {/* Still access for free */}
-        <div className="bg-white w-full max-w-3xl mx-auto dark:bg-gray-950 mt-16 p-6  rounded-3xl ring-1 ring-gray-200 dark:ring-gray-800 sm:mt-20 space-y-4">
-          <h1 className="text-brand-600 dark:text-brand-500 font-medium text-lg">
-            Not convinced yet? Experiment with the free plan!
+        <div className="bg-white w-full max-w-4xl mx-auto dark:bg-gray-950 mt-16 p-6 rounded-3xl ring-1 ring-gray-200 dark:ring-gray-800 sm:mt-20 space-y-2">
+          <h1 className="text-white font-medium text-lg">
+            Free plan
           </h1>
           <div className="space-y-4">
             <p className="text-gray-600 dark:text-gray-300">
-              Create a chat with a free plan and see how it works. Load up to 10 resources and go pro whenever you're ready to make it public.
+              Load up to 10 resources and go pro whenever you're ready to make it public.
             </p>
             <RegisterLink postLoginRedirectURL="/generate">
               <Button
-                variant={"secondary-color"}
+                variant={"outline"}
                 size={"sm"}
                 className="space-x-2 mt-4"
               >

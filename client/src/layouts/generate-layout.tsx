@@ -50,7 +50,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
               ))}
             </div>
             {props.chatId && (
-              <Button size="xs" variant="secondary-color">
+              <Button size="sm" variant="outline">
                 <Link href={`/chat/${props.chatId}`}>Preview</Link>
               </Button>
             )}
