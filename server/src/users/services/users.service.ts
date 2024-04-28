@@ -14,6 +14,10 @@ export class UsersService {
     return this.repo.findUserById(id, include);
   }
 
+  findOrCreate(email: string): Promise<User> {
+    return this.repo.findOrCreate({ email });
+  }
+
   create(email: string): Promise<User> {
     return this.repo.createUser({ email });
   }

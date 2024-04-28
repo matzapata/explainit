@@ -62,11 +62,13 @@ model WebhookEvent {
 // ============================= chat module ============================= 
 model Chat {
   id                   String  @id @default(auto()) @map("_id") @db.ObjectId
-  name                 String
-  logo                 String
-  url                  String
+  name                 String?
+  logo                 String?
+  url                  String?
+  description          String? 
   conversationStarters String[]
-  published            Boolean
+  published            Boolean @default(false)
+  points               Int     @default(0)
 
   // timestamps
   createdAt DateTime @default(now())

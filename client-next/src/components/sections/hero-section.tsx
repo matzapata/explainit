@@ -35,7 +35,7 @@ export default function HeroSection() {
       <div className="mt-8 md:space-y-0 flex justify-center">
         <RegisterLink>
           <Button  className="w-full md:w-auto px-16">
-            Sign up
+            Create my chat
           </Button>
         </RegisterLink>
       </div>

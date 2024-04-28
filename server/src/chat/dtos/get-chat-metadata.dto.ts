@@ -15,4 +15,8 @@ export class ChatMetadataDto {
   published: boolean;
   @Expose() // TODO: transform here
   resources: { id: string; type: string; data: string }[];
+  @Expose()
+  description: string;
+  @Expose()
+  points: number;
 }

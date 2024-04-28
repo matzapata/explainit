@@ -12,6 +12,6 @@ async function bootstrap() {
   });
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
-  await app.listen(parseInt(process.env.PORT) || 8080);
+  await app.listen(parseInt(process.env.PORT) || 4000);
 }
 bootstrap();

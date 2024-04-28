@@ -3,11 +3,13 @@ import { AxiosInstance, AxiosProgressEvent } from "axios";
 
 export interface ChatMetadataDto {
     id: string;
-    name: string;
-    logo: string;
-    url: string;
+    name?: string;
+    logo?: string;
+    url?: string;
     conversationStarters: string[];
     published: boolean;
+    description?: string;
+    points: number;
     resources: ChatResource[];
 }
 
@@ -37,7 +39,7 @@ export class ChatService {
         return res.data
     }
 
-    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean }): Promise<ChatMetadataDto> {
+    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
         try {
             // name, website, conversation starters, published
             const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })

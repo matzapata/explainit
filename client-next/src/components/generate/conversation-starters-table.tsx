@@ -120,10 +120,10 @@ export default function ConversationStartersTable(props: {
       </ul>
 
       {/* Add new form */}
-      <div className="flex md:flex-1 py-6">
+      <div className="flex md:flex-1 py-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="text-sm text-primary" variant="link">
+            <Button className="text-sm px-0 text-primary" variant="link">
               Add new
             </Button>
           </DialogTrigger>

@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
-import { ChatResource, chatService } from '@/lib/services/chat-service';
+import { ChatMetadataDto, ChatResource, chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 import { Textarea } from '../ui/textarea';
 
@@ -56,6 +56,7 @@ function stringIsAValidUrl(s: string): boolean {
 }
 
 export default function ResourcesTable(props: {
+  initialUrl?: string;
   initialResources: ChatResource[];
 }) {
   const { accessTokenRaw } = useKindeBrowserClient();
@@ -108,7 +109,7 @@ export default function ResourcesTable(props: {
       </ul>
 
       {/* Add new form */}
-      <div className="flex md:flex-1 py-6 space-x-6">
+      <div className="flex md:flex-1 py-4 space-x-6">
         <AddNewWebResource setResources={setResources} />
 
         <AddTextResource setResources={setResources} />
@@ -198,7 +199,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void }) {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="text-sm text-primary" variant="link">
+        <Button className="text-sm text-primary px-0" variant="link">
           Add with crawling
         </Button>
       </DialogTrigger>

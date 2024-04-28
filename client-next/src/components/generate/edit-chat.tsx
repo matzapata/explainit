@@ -1,25 +1,15 @@
-import NameForm from '@/components/generate/name-form';
-import LogoForm from '@/components/generate/logo-form';
 import GenerateLayout from '@/layouts/generate-layout';
-import { paymentsService } from '@/lib/services/payments-service';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import WebsiteForm from '@/components/generate/website-form';
-import GoProBanner from '@/components/billing/go-pro-banner';
-import { chatService } from '@/lib/services/chat-service';
-import ConversationStartersTable from '@/components/generate/conversation-starters-table';
-import VisibilityForm from '@/components/generate/visibility-form';
-import ShareLinkForm from '@/components/generate/share-link';
-import CodeSnippet from '@/components/generate/code-snippet';
+import GoProBanner from '../billing/go-pro-banner';
+import NameForm from './name-form';
+import LogoForm from './logo-form';
+import WebsiteForm from './website-form';
+import DescriptionForm from './description-form';
+import ConversationStartersTable from './conversation-starters-table';
+import VisibilityForm from './visibility-form';
+import ShareLinkForm from './share-link';
+import CodeSnippet from './code-snippet';
 
-export default async function GenerateChat() {
-  const { getAccessTokenRaw } = getKindeServerSession();
-  const accessTokenRaw = await getAccessTokenRaw();
-
-  const [user, chat] = await Promise.all([
-    paymentsService.getSubscription(accessTokenRaw),
-    chatService.getOwnerChat(accessTokenRaw),
-  ]);
-
+export function EditChat({ user, chat }: { user: any; chat: any }) {
   return (
     <GenerateLayout
       user={{ email: user.email, isPro: user.isPro }}
@@ -57,13 +47,16 @@ export default async function GenerateChat() {
             {/* Logo */}
             <LogoForm logo={chat.logo} />
 
+            {/* Description */}
+            <DescriptionForm description={chat.description} />
+
             {/* Website */}
             <WebsiteForm website={chat.url} />
           </div>
         </div>
 
-           {/* Conversation starters */}
-           <div className="md:px-8 px-4 ">
+        {/* Conversation starters */}
+        <div className="md:px-8 px-4 ">
           <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
             <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
               Conversation starters
@@ -90,8 +83,6 @@ export default async function GenerateChat() {
             </p>
           </div>
 
-          
-
           {/* Share */}
           <div className="divide-y divide-gray-200 dark:divide-gray-800">
             <VisibilityForm id={chat.id} published={chat.published} />
@@ -101,8 +92,6 @@ export default async function GenerateChat() {
             <CodeSnippet id={chat.id} />
           </div>
         </div>
-
-     
       </div>
     </GenerateLayout>
   );

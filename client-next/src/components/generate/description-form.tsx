@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { Button } from "../ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from 'react-hook-form';
+import { Button } from '../ui/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
+} from '../ui/dialog';
+import { Input } from '../ui/input';
 import {
   Form,
   FormControl,
@@ -21,38 +21,40 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "../ui/use-toast";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { chatService } from "@/lib/services/chat-service";
+} from '../ui/form';
+import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { toast } from '../ui/use-toast';
+import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { chatService } from '@/lib/services/chat-service';
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+  description: z.string().min(15, {
+    message: 'Description must be at least 15 characters',
+  }).max(100, {
+    message: 'Description must be at most 100 characters',
   }),
 });
 
-export default function NameForm(props: { name?: string }) {
+export default function DescriptionForm(props: { description?: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
-  const [name, setName] = useState<string | undefined>(props.name);
+  const [name, setName] = useState<string | undefined>(props.description);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      description: '',
     },
   });
 
   const setNameMutation = useMutation({
-    mutationFn: (props: { name: string }) => {
-      if (!accessTokenRaw) throw new Error("No access token");
-      return chatService.updateOwnerChat(accessTokenRaw, props)
+    mutationFn: (props: { description: string }) => {
+      if (!accessTokenRaw) throw new Error('No access token');
+      return chatService.updateOwnerChat(accessTokenRaw, props);
     },
     onSuccess: (data) => {
       setName(data.name);
-      toast({ description: "Name updated successfully." });
+      toast({ description: 'Description updated successfully.' });
       setOpen(false);
     },
     onError: (error) => {
@@ -65,10 +67,14 @@ export default function NameForm(props: { name?: string }) {
   }
 
   return (
-    <div className="space-y-2 md:space-y-0 md:flex py-6">
-      <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">Chat name</p>
-      <div className="flex md:flex-1 justify-between">
-        <p className="text-sm text-gray-900 dark:text-gray-300">{name ?? "-"}</p>
+    <div className="space-y-2 md:space-y-0 md:flex py-6 items-center">
+      <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
+        Description
+      </p>
+      <div className="flex md:flex-1 justify-between items-center">
+        <p className="text-sm text-gray-900 dark:text-gray-300">
+          {name ?? '-'}
+        </p>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -78,10 +84,9 @@ export default function NameForm(props: { name?: string }) {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Name</DialogTitle>
+              <DialogTitle>Update Description</DialogTitle>
               <DialogDescription>
-                Make changes to your display name here. Click save when you're
-                done.
+                What does your product do? Click save when you're done.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -91,12 +96,12 @@ export default function NameForm(props: { name?: string }) {
               >
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input placeholder="Name" {...field} />
+                        <Input placeholder="Description" {...field} />
                       </FormControl>
 
                       <FormMessage />

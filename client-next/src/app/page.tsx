@@ -32,9 +32,9 @@ const companies = [
     logo: images.DockerIcon,
   },
   {
-    name: "React",
+    name: 'React',
     logo: images.ReactIcon,
-  }
+  },
 ];
 
 export default function Home() {
@@ -80,70 +80,25 @@ export default function Home() {
         </div>
 
         <div className="w-full border-y border-y-gray-800 py-4 bg-gray-900 px-6 flex justify-between">
-          <Input
-            type="text"
-            placeholder="Search..."
-            className="hidden md:block w-96 py-2 text-sm"
-          />
-          <Button size="sm">Create yours</Button>
+          <div className="max-w-6xl mx-auto w-full px-4">
+            <Input
+              type="text"
+              placeholder="Search..."
+              className="hidden md:block w-full py-2 text-sm"
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-12 bg-background border-b border-b-gray-800">
-          <div className="col-span-3 p-6">
-            <p className="text-white mb-2 ml-1">Sort by</p>
-            <div className="text-white">
-              <ul className="space-y-1">
-                <li className="px-4 py-2 rounded-md text-sm bg-gray-800">
-                  Popularity
-                </li>
-                <li className="px-4 py-2 rounded-md text-sm bg-gray-800">
-                  Recent
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="p-6 col-span-9">
+        <div className=" bg-background w-screen border-b border-b-gray-800">
+          <div className="p-6 max-w-6xl mx-auto">
             <div className="mb-4  divide-y">
               <ChatCard />
               <ChatCard />
               <ChatCard />
             </div>
-            <Button variant={"secondary"}>Explore all</Button>
+            <Button variant={'secondary'}>Explore all</Button>
           </div>
         </div>
-{/* 
-        <div className="mt-24 px-4 md:px-0 gap-4 max-w-6xl mx-auto  items-center grid grid-cols-2">
-          <div className="">
-            <h1 className="text-2xl text-gray-900 dark:text-white text-left font-semibold sm:text-3xl xl:text-[40px]">
-              They already have one
-            </h1>
-            <p className="mt-6 text-sm md:text-base text-gray-600 dark:text-gray-300 text-left">
-              Big companies are already integrating chatbots for their
-              documentation. Aws with Amazon Q, Gcp with Gemini for cloud
-              console, Supabase with Ask AI and many more. This is your 5 minute
-              catch up. Don't stay behind.
-            </p>
-            <div className='mt-6'>
-              <Button>Create mine</Button>
-              <Button variant={"outline"}>Contact</Button>
-            </div>
-          </div>
-          <div className="w-full mx-auto place-items-center grid grid-col-1 md:grid-cols-3 md:gap-10 gap-4 md:gap-x-4 md:gap-y-4">
-            {companies.map((company, i) => (
-              <div
-                className="w-full py-2  flex justify-center items-center  max-w-96 h-full"
-                key={i}
-              >
-                <Image
-                  src={company.logo}
-                  width={70}
-                  height={70}
-                  alt={company.name}
-                />
-              </div>
-            ))}
-          </div>
-        </div> */}
 
         <FeaturesSection />
 

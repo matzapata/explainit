@@ -36,4 +36,24 @@ export class ChatRepository {
       },
     });
   }
+
+  findPublished(
+    limit: number,
+    offset: number,
+    orderBy: Prisma.ChatOrderByWithRelationInput = { points: 'desc' },
+  ) {
+    return this.prisma.chat.findMany({
+      where: { published: true },
+      orderBy,
+      take: limit,
+      skip: offset,
+    });
+  }
+
+  incrementPoints(id: string) {
+    return this.prisma.chat.update({
+      where: { id },
+      data: { points: { increment: 1 } },
+    });
+  }
 }

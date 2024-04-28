@@ -27,4 +27,10 @@ export class UpdateChatMetadataDto {
   @IsOptional()
   @IsBoolean()
   published?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @MinLength(15)
+  description?: string;
 }

@@ -9,6 +9,7 @@ import {
   ParseFilePipeBuilder,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -61,14 +62,7 @@ export class ChatController {
   ): Promise<Chat & { resources: ChatResource[] }> {
     let chat = await this.chatsService.findByOwner(user.id);
     if (!chat) {
-      // Create mock chat
-      chat = await this.chatsService.create(user.id, {
-        name: 'Lorem Ipsum',
-        logo: 'https://lorem.com/ipsum.png',
-        url: 'https://lorem.com',
-        published: false,
-        conversationStarters: [],
-      });
+      chat = await this.chatsService.create(user.id, {});
     }
 
     // get resources
@@ -282,6 +276,18 @@ export class ChatController {
 
   // Public Chat Endpoints ============================================================
 
+  @Get('/')
+  @Serialize(ChatMetadataDto)
+  async getChats(
+    @Query('limit') limit: number,
+    @Query('offset') offset: number,
+  ) {
+    limit = limit || 10;
+    offset = offset || 0;
+    const chats = await this.chatsService.findPublished(limit, offset);
+    return chats;
+  }
+
   // get chat metadata based on the chat id. This is a public endpoint
   @Get('/:id')
   @Serialize(ChatMetadataDto)
@@ -302,6 +308,9 @@ export class ChatController {
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
+
+    // increment chat points
+    await this.chatsService.incrementPoints(chat.id);
 
     // create response for the message
     const response = await this.ragService.invoke(

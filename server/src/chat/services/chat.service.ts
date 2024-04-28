@@ -24,4 +24,12 @@ export class ChatsService {
   findById(id: string) {
     return this.chatRepository.findById(id);
   }
+
+  findPublished(limit: number, offset: number) {
+    return this.chatRepository.findPublished(limit, offset);
+  }
+
+  incrementPoints(id: string) {
+    return this.chatRepository.incrementPoints(id);
+  }
 }
