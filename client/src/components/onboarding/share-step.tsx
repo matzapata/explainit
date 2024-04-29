@@ -8,7 +8,6 @@ import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { paymentsService } from '@/lib/services/payments-service';
 import { toast } from '../ui/use-toast';
 import { useState } from 'react';
-import { UserDto } from '@/lib/services/user-service';
 import { confettiAnimation } from '@/lib/confetti-animation';
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard';
 
@@ -16,7 +15,7 @@ export function ShareStep(props: { chat: ChatMetadataDto; isPro: boolean }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { accessTokenRaw } = useKindeBrowserClient();
-  const [published, setPublished] = useState<boolean>(true); // props.chat.published
+  const [published, setPublished] = useState<boolean>(props.chat.published); 
   const {isCopied, copyToClipboard} = useCopyToClipboard({ timeout: 2000 });
 
   const onPublish = () => {

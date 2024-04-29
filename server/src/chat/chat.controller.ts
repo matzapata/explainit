@@ -276,13 +276,13 @@ export class ChatController {
 
   // Public Chat Endpoints ============================================================
 
-  @Get('/')
+  @Get('/all')
   @Serialize(ChatMetadataDto)
   async getChats(
     @Query('limit') limit: number,
     @Query('offset') offset: number,
   ) {
-    limit = limit || 10;
+    limit = limit || 100;
     offset = offset || 0;
     const chats = await this.chatsService.findPublished(limit, offset);
     return chats;

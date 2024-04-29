@@ -1,7 +1,5 @@
-import images from '@/assets/images';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 export function ChatCard(props: { chat: ChatMetadataDto }) {
@@ -19,10 +17,6 @@ export function ChatCard(props: { chat: ChatMetadataDto }) {
             </AvatarFallback>
           </Avatar>
         </div>
-
-        <p className="text-sm">Updated 1 day ago</p>
-
-        <p className="text-sm">•</p>
 
         <div className="flex items-center space-x-1">
           <ChatBubbleOvalLeftEllipsisIcon className="h-4 w-4" />

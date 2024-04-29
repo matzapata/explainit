@@ -7,37 +7,13 @@ import HeroSection from '@/components/sections/hero-section';
 import Image from 'next/image';
 import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
 import images from '@/assets/images';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import ExploreSection from '@/components/sections/explore-section';
+import { chatService } from '@/lib/services/chat-service';
 
-const companies = [
-  {
-    name: 'AWS',
-    logo: images.AmazonIcon,
-  },
-  {
-    name: 'GCP',
-    logo: images.GoogleIcon,
-  },
-  {
-    name: 'Supabase',
-    logo: images.MicrosoftIcon,
-  },
-  {
-    name: 'Stripe',
-    logo: images.StripeIcon,
-  },
-  {
-    name: 'Docker',
-    logo: images.DockerIcon,
-  },
-  {
-    name: 'React',
-    logo: images.ReactIcon,
-  },
-];
 
-export default function Home() {
+export default async function Home() {
+  const chats = await chatService.getPublicChats();
+
   return (
     <main className="relative">
       <div className=" w-screen bg-[#FF6154] py-1 flex items-center justify-between text-white px-6">
@@ -67,38 +43,7 @@ export default function Home() {
 
         <HeroSection />
 
-        <div className="mx-auto max-w-2xl py-10 mt-20 flex flex-col justify-center items-center sm:text-center">
-          <h1 className="text-2xl text-gray-900 dark:text-white text-center font-semibold sm:text-3xl xl:text-[40px] relative">
-            Explore the best documentation chats
-          </h1>
-          <p className="mt-6 text-sm md:text-base text-gray-600 dark:text-gray-300 text-center">
-            Big companies are already integrating chatbots for their
-            documentation. Aws with Amazon Q, Gcp with Gemini for cloud console,
-            Supabase with Ask AI and many more. This is your 5 minute catch up.
-            Don't stay behind.
-          </p>
-        </div>
-
-        <div className="w-full border-y border-y-gray-800 py-4 bg-gray-900 px-6 flex justify-between">
-          <div className="max-w-6xl mx-auto w-full px-4">
-            <Input
-              type="text"
-              placeholder="Search..."
-              className="hidden md:block w-full py-2 text-sm"
-            />
-          </div>
-        </div>
-
-        <div className=" bg-background w-screen border-b border-b-gray-800">
-          <div className="p-6 max-w-6xl mx-auto">
-            <div className="mb-4  divide-y">
-              <ChatCard />
-              <ChatCard />
-              <ChatCard />
-            </div>
-            <Button variant={'secondary'}>Explore all</Button>
-          </div>
-        </div>
+        <ExploreSection chats={chats} />
 
         <FeaturesSection />
 

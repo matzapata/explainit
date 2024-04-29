@@ -74,6 +74,11 @@ export class ChatService {
         return res.data
     }
 
+    async getPublicChats(): Promise<ChatMetadataDto[]> {
+        const res = await this.client.get("/api/chat/all")
+        return res.data
+    }
+
     async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
         const res = await this.client.post(`/api/chat/${id}`, { question, chatHistory: chatHistory ?? [] })
         return {
@@ -104,7 +109,6 @@ export class ChatService {
             throw new Error(error?.response?.data?.message ?? "")
         }
     }
-
 
     async inspectResource(accessToken: string, url: string): Promise<{ urls: string[] }> {
         const res = await this.client.post("/api/chat/resources/web/inspect", { url }, { headers: { Authorization: `Bearer ${accessToken}` } })

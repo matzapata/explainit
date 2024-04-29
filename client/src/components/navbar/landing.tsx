@@ -99,13 +99,13 @@ export default function Navbar() {
                     </Link>
                   ) : (
                     <>
-                      <RegisterLink postLoginRedirectURL="/generate">
+                      <RegisterLink postLoginRedirectURL="/onboarding">
                         <Button className="w-full">
                           Sign up
                         </Button>
                       </RegisterLink>
 
-                      <LoginLink postLoginRedirectURL="/generate">
+                      <LoginLink postLoginRedirectURL="/onboarding">
                         <Button className="w-full">
                           Log in
                         </Button>
