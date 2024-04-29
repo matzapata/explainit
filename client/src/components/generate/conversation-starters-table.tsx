@@ -41,6 +41,7 @@ const formSchema = z.object({
 });
 
 export default function ConversationStartersTable(props: {
+  chatId: string;
   starters: string[];
 }) {
   const { accessTokenRaw } = useKindeBrowserClient();
@@ -54,10 +55,10 @@ export default function ConversationStartersTable(props: {
   });
 
   const addConversationStarterMutation = useMutation({
-    mutationFn: (props: { starter: string }) => {
+    mutationFn: (mutationProps: { starter: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, {
-        conversationStarters: [...starters, props.starter],
+      return chatService.updateOwnerChat(accessTokenRaw, props.chatId, {
+        conversationStarters: [...starters, mutationProps.starter],
       });
     },
     onSuccess: (data) => {
@@ -71,10 +72,10 @@ export default function ConversationStartersTable(props: {
   });
 
   const deleteConversationStarterMutation = useMutation({
-    mutationFn: (props: { starter: string }) => {
+    mutationFn: (mutationProps: { starter: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, {
-        conversationStarters: starters.filter((s) => s !== props.starter),
+      return chatService.updateOwnerChat(accessTokenRaw, props.chatId, {
+        conversationStarters: starters.filter((s) => s !== mutationProps.starter),
       });
     },
     onSuccess: (data) => {
@@ -95,7 +96,7 @@ export default function ConversationStartersTable(props: {
     <div className="divide-y divide-gray-200 dark:divide-gray-800">
       <ul className="divide-y divide-gray-200 dark:divide-gray-800">
         {starters.map((s, i) => (
-          <div key={i} className="flex md:flex-1 justify-between py-6">
+          <div key={i} className="flex md:flex-1 justify-between py-6 items-center">
             <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
               {s}
             </p>

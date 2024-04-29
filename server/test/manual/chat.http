@@ -1,21 +1,38 @@
 
 # Manual testing http requests with extension REST Client
 
-### GET /api/chat gets the chat for the owner
-GET http://{{host}}/api/chat
+# Admin ========================================================================
+
+### Gets the chat for the owner
+GET http://{{host}}/api/chats/admin
 Authorization: Bearer {{token}}
 
-### PUT /api/chat
-PUT http://{{host}}/api/chat
+### Creates a new chat for the owner. Only admin can have multiple chats
+POST  http://{{host}}/api/chats/admin
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "name": "Chat 1"
+    "name": "New Chat"
 }
 
-### PUT /api/chat/logo Upload a logo for the chat
-PUT http://{{host}}/api/chat/logo
+# Consumer ========================================================================
+
+### GET /api/chat gets the chat for the owner
+GET http://{{host}}/api/chats
+Authorization: Bearer {{token}}
+
+### Update chat metadata
+PUT http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Chat 2"
+}
+
+### Upload a logo for the chat
+PUT http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc/logo
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=----boundary
 
@@ -26,8 +43,8 @@ Content-Type: image/jpg
 < ./data/profile.jpg
 ------boundary--
 
-### POST /api/chat/resources/web/inspect Checks urls that can be added as resources
-POST http://{{host}}/api/chat/resources/web/inspect
+### Checks urls that can be added as resources
+POST http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc/resources/web/inspect
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -35,8 +52,8 @@ Content-Type: application/json
     "url": "https://js.langchain.com/docs/use_cases/question_answering/streaming"
 }
 
-### POST /api/chat/resources/web Add a web resource
-POST http://{{host}}/api/chat/resources/web
+### Add a web resource
+POST http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc/resources/web
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -45,15 +62,20 @@ Content-Type: application/json
     "urls": ["https://js.langchain.com/docs/use_cases/question_answering/streaming"]
 }
 
-### DELETE /api/chat/resouces/:id Delete resource
-DELETE http://{{host}}/api/chat/resources/2126e890-b2f9-40a5-9479-1f417192bb64
+### Delete resource
+DELETE http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc/resources/662fb7a802f5056e3ebd60ff
 Authorization: Bearer {{token}}
 
-### GET /api/chat/:id gets the chat for the consumer
-GET http://{{host}}/api/chat/66261ae48daee07eb34ba3a4
+# Public ========================================================================
 
-### POST /api/chat/:id generate response for question
-POST http://{{host}}/api/chat/66261ae48daee07eb34ba3a4
+### Gets the chat for the consumer
+GET http://{{host}}/api/chats/published
+
+### Gets the chat for the consumer
+GET http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc
+
+### Generate response for question
+POST http://{{host}}/api/chats/662d58385ea8cb08ee16d1cc/messages
 Content-Type: application/json
 
 {

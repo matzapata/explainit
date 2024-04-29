@@ -34,7 +34,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function NameForm(props: { name?: string }) {
+export default function NameForm(props: { chatId: string, name?: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
   const [name, setName] = useState<string | undefined>(props.name);
@@ -46,9 +46,9 @@ export default function NameForm(props: { name?: string }) {
   });
 
   const setNameMutation = useMutation({
-    mutationFn: (props: { name: string }) => {
+    mutationFn: (mutationProps: { name: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, props);
+      return chatService.updateOwnerChat(accessTokenRaw, props.chatId, mutationProps);
     },
     onSuccess: (data) => {
       setName(data.name);

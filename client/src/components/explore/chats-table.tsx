@@ -37,7 +37,7 @@ export function ChatsTable(props: { chats: ChatMetadataDto[] }) {
             <ChatCard chat={c} />
           ))}
 
-          {chats.length === 0 && (
+          {chats.length !== 0 ? null : (
             <div>
               <p className="text-gray-300 text-center">
                 No chats found. Create it yourself in 5 minutes! Or try something else

@@ -25,7 +25,7 @@ export function EmptyScreen(props: {
             <Button
               key={index}
               variant="link"
-              className="h-auto p-0 text-base"
+              className="h-auto p-0 text-base text-white"
               onClick={() => props.setInput(message)}
             >
               <IconArrowRight className="mr-2 text-gray-900 dark:text-gray-300" />

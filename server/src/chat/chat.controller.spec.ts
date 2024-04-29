@@ -65,14 +65,14 @@ describe('ChatController', () => {
           chatId: 'chatId',
         },
       ];
-      chatsService.findByOwner.mockResolvedValue(chat);
+      chatsService.findFirstByOwner.mockResolvedValue(chat);
       resourcesService.findByChatId.mockResolvedValue(resources);
 
       // Act
       const result = await chatController.getChatByOwner(authUser);
 
       // Assert
-      expect(chatsService.findByOwner).toHaveBeenCalledWith(authUser.id);
+      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).not.toHaveBeenCalled();
       expect(resourcesService.findByChatId).toHaveBeenCalledWith(chat.id);
       expect(result).toEqual({ ...chat, resources });
@@ -92,7 +92,7 @@ describe('ChatController', () => {
         ownerId: 'id',
       };
       const resources = [];
-      chatsService.findByOwner.mockResolvedValue(null);
+      chatsService.findFirstByOwner.mockResolvedValue(null);
       chatsService.create.mockResolvedValue(chat);
       resourcesService.findByChatId.mockResolvedValue(resources);
 
@@ -100,7 +100,7 @@ describe('ChatController', () => {
       const result = await chatController.getChatByOwner(authUser);
 
       // Assert
-      expect(chatsService.findByOwner).toHaveBeenCalledWith(authUser.id);
+      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).toHaveBeenCalledWith(authUser.id, {
         name: 'Lorem Ipsum',
         logo: 'https://lorem.com/ipsum.png',
@@ -178,7 +178,7 @@ describe('ChatController', () => {
         ownerId: 'ownerId',
       };
       const file = { filename: 'filename' } as any;
-      chatsService.findByOwner.mockResolvedValue(chat);
+      chatsService.findFirstByOwner.mockResolvedValue(chat);
       storageService.uploadFile.mockResolvedValue(file);
       storageService.deleteFile.mockResolvedValue();
 
@@ -186,7 +186,7 @@ describe('ChatController', () => {
       const result = await chatController.updateChatLogo(authUser, file);
 
       // Assert
-      expect(chatsService.findByOwner).toHaveBeenCalledWith(authUser.id);
+      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(storageService.uploadFile).toHaveBeenCalledWith(file);
       expect(chatsService.update).toHaveBeenCalledWith(authUser.id, {
         logo: file.filename,

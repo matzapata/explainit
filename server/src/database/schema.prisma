@@ -19,7 +19,7 @@ model User {
 
   // realtions
   subscription UserSubscription?
-  chats        Chat?
+  chats        Chat[]
 }
 
 // ============================= payments module ============================= 
@@ -75,7 +75,7 @@ model Chat {
 
   // relations
   owner   User   @relation(fields: [ownerId], references: [id])
-  ownerId String @db.ObjectId @unique
+  ownerId String @db.ObjectId
 
   resources ChatResource[]
 }

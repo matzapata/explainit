@@ -47,7 +47,7 @@ export default function ExploreSection(props: { chats: ChatMetadataDto[] }) {
               <ChatCard chat={c} />
             ))}
 
-            {chats.length === 0 && (
+            {chats.length !== 0 ? null : (
               <div>
                 <p className="text-gray-300 text-center">
                   No chats found. Create it yourself in 5 minutes! Or try
@@ -57,7 +57,7 @@ export default function ExploreSection(props: { chats: ChatMetadataDto[] }) {
             )}
           </div>
 
-          {chats.length && (
+          {chats.length === 0 ? null :  (
             <Link href={'/explore'}>
               <Button variant={'secondary'}>Explore all</Button>
             </Link>

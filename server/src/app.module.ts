@@ -55,6 +55,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
         // auth
         AUTH_JWKS_URI: Joi.string().required(),
+        ADMIN_EMAIL: Joi.string().required(),
 
         // database
         DATABASE_URL: Joi.string().required(),

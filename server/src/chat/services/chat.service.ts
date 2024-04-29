@@ -13,20 +13,28 @@ export class ChatsService {
     });
   }
 
-  update(owner: string, data: Omit<Prisma.ChatUpdateInput, 'owner'>) {
-    return this.chatRepository.update(owner, data);
+  update(
+    owner: string,
+    id: string,
+    data: Omit<Prisma.ChatUpdateInput, 'owner'>,
+  ) {
+    return this.chatRepository.update(owner, id, data);
   }
 
-  findByOwner(ownerId: string) {
-    return this.chatRepository.findByOwner(ownerId);
+  findFirstByOwner(ownerId: string) {
+    return this.chatRepository.findFirstByOwner(ownerId);
   }
 
-  findById(id: string) {
-    return this.chatRepository.findById(id);
+  findManyByOwner(ownerId: string) {
+    return this.chatRepository.findManyByOwner(ownerId);
   }
 
-  findPublished(limit: number, offset: number) {
-    return this.chatRepository.findPublished(limit, offset);
+  findFirstById(id: string) {
+    return this.chatRepository.findFirstById(id);
+  }
+
+  findManyPublished(limit: number, offset: number) {
+    return this.chatRepository.findManyPublished(limit, offset);
   }
 
   incrementPoints(id: string) {

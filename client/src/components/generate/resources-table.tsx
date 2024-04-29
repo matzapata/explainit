@@ -56,6 +56,7 @@ function stringIsAValidUrl(s: string): boolean {
 }
 
 export default function ResourcesTable(props: {
+  chatId: string;
   initialUrl?: string;
   initialResources: ChatResource[];
 }) {
@@ -65,9 +66,9 @@ export default function ResourcesTable(props: {
   );
 
   const deleteResourceMutation = useMutation({
-    mutationFn: (props: { id: string }) => {
+    mutationFn: (mutationProps: { id: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.deleteResource(accessTokenRaw, props.id);
+      return chatService.deleteResource(accessTokenRaw,props.chatId,  mutationProps.id);
     },
     onSuccess: (id) => {
       setResources((r) => r.filter((s) => s.id !== id));
@@ -110,15 +111,15 @@ export default function ResourcesTable(props: {
 
       {/* Add new form */}
       <div className="flex md:flex-1 py-4 space-x-6">
-        <AddNewWebResource setResources={setResources} initialUrl={props.initialUrl} />
+        <AddNewWebResource chatId={props.chatId} setResources={setResources} initialUrl={props.initialUrl} />
 
-        <AddTextResource setResources={setResources} />
+        <AddTextResource chatId={props.chatId} setResources={setResources} />
       </div>
     </div>
   );
 }
 
-function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?: string }) {
+function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?: string, chatId: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
   const [urls, setUrls] = useState<string[]>([]);
@@ -136,9 +137,9 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   });
 
   const inspectResourceMutation = useMutation({
-    mutationFn: async (props: { url: string }) => {
+    mutationFn: async (mutationProps: { url: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.inspectResource(accessTokenRaw, props.url);
+      return chatService.inspectResource(accessTokenRaw, props.chatId, mutationProps.url);
     },
     onSuccess: (data) => {
       setUrls(data.urls);
@@ -150,9 +151,9 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   });
 
   const addResourcesMutation = useMutation({
-    mutationFn: (props: { urls: string[] }) => {
+    mutationFn: (mutationProps: { urls: string[] }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addWebResource(accessTokenRaw, props.urls);
+      return chatService.addWebResource(accessTokenRaw, props.chatId, mutationProps.urls);
     },
     onSuccess: (data) => {
       props.setResources((r: any) => [...r, ...data]);
@@ -291,7 +292,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   );
 }
 
-function AddTextResource(props: { setResources: (r: any) => void }) {
+function AddTextResource(props: { setResources: (r: any) => void, chatId: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
   const inspectForm = useForm<z.infer<typeof addTextFormSchema>>({
@@ -304,13 +305,13 @@ function AddTextResource(props: { setResources: (r: any) => void }) {
   });
 
   const addTextMutation = useMutation({
-    mutationFn: async (props: {
+    mutationFn: async (mutationProps: {
       text: string;
       source: string;
       title: string;
     }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addTextResource(accessTokenRaw, props.text, props.title, props.source);
+      return chatService.addTextResource(accessTokenRaw, props.chatId, mutationProps.text, mutationProps.title, mutationProps.source);
     },
     onSuccess: (data) => {
       console.log("data", data)

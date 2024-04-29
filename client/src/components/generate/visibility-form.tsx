@@ -30,10 +30,10 @@ export default function VisibilityForm(props: {
   const [published, setPublished] = useState<boolean>(props.published);
 
   const setVisibilityMutation = useMutation({
-    mutationFn: async (props: { published: boolean }) => {
+    mutationFn: async (mutationProps: { published: boolean }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, {
-        published: props.published,
+      return chatService.updateOwnerChat(accessTokenRaw, props.id, {
+        published: mutationProps.published,
       });
     },
     onSuccess: (data) => {

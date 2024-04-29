@@ -12,32 +12,35 @@ export class ChatRepository {
     });
   }
 
-  update(owner: string, data: Prisma.ChatUpdateInput) {
+  update(owner: string, id: string, data: Prisma.ChatUpdateInput) {
     return this.prisma.chat.update({
       where: {
+        id,
         ownerId: owner,
       },
       data,
     });
   }
 
-  findByOwner(ownerId: string) {
+  findFirstByOwner(ownerId: string) {
     return this.prisma.chat.findFirst({
-      where: {
-        ownerId,
-      },
+      where: { ownerId },
     });
   }
 
-  findById(id: string) {
-    return this.prisma.chat.findFirst({
-      where: {
-        id,
-      },
+  findManyByOwner(ownerId: string) {
+    return this.prisma.chat.findMany({
+      where: { ownerId },
     });
   }
 
-  findPublished(
+  findFirstById(id: string) {
+    return this.prisma.chat.findFirst({
+      where: { id },
+    });
+  }
+
+  findManyPublished(
     limit: number,
     offset: number,
     orderBy: Prisma.ChatOrderByWithRelationInput = { points: 'desc' },

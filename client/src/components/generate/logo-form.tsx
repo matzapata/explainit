@@ -35,7 +35,7 @@ const formSchema = z.object({
     .refine((file) => file?.length == 1, 'Image is required.'),
 });
 
-export default function LogoForm(props: { logo?: string }) {
+export default function LogoForm(props: { chatId: string, logo?: string }) {
 
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
@@ -49,13 +49,13 @@ export default function LogoForm(props: { logo?: string }) {
   const fileRef = form.register('file');
 
   const uploadPicture = useMutation({
-    mutationFn: (props: { file: FileList }) => {
+    mutationFn: (mutationProps: { file: FileList }) => {
       if (!accessTokenRaw) throw new Error('No access token');
 
-      const file = props.file[0];
+      const file = mutationProps.file[0];
       if (!file.type.includes("image")) throw new Error("Invalid file type");
 
-      return chatService.updateOwnerChatLogo(accessTokenRaw, file)
+      return chatService.updateOwnerChatLogo(accessTokenRaw, props.chatId, file)
     },
     onSuccess: (data) => {
       setLogoUrl(data.logo);

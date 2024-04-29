@@ -35,14 +35,14 @@ export class ChatService {
     constructor(private readonly client: AxiosInstance) { }
 
     async getOwnerChat(accessToken: string): Promise<ChatMetadataDto> {
-        const res = await this.client.get("/api/chat", { headers: { Authorization: `Bearer ${accessToken}` } })
+        const res = await this.client.get("/api/chats", { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
 
-    async updateOwnerChat(accessToken: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
+    async updateOwnerChat(accessToken: string, id: string, data: { name?: string, url?: string, conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
         try {
             // name, website, conversation starters, published
-            const res = await this.client.put("/api/chat", data, { headers: { Authorization: `Bearer ${accessToken}` } })
+            const res = await this.client.put(`/api/chats/${id}`, data, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
             console.error(error)
@@ -50,12 +50,12 @@ export class ChatService {
         }
     }
 
-    async updateOwnerChatLogo(accessToken: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
+    async updateOwnerChatLogo(accessToken: string, id: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
         try {
             const formData = new FormData()
             formData.append("file", file)
 
-            const res = await this.client.put("/api/chat/logo", formData, {
+            const res = await this.client.put(`/api/chats/${id}/logo`, formData, {
                 headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${accessToken}` },
                 onUploadProgress: (progressEvent: AxiosProgressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent?.total ?? 1))
@@ -70,17 +70,17 @@ export class ChatService {
     }
 
     async getChat(id: string): Promise<ChatMetadataDto> {
-        const res = await this.client.get(`/api/chat/${id}`)
+        const res = await this.client.get(`/api/chats/${id}`)
         return res.data
     }
 
     async getPublicChats(): Promise<ChatMetadataDto[]> {
-        const res = await this.client.get("/api/chat/all")
+        const res = await this.client.get("/api/chats/published")
         return res.data
     }
 
     async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chat/${id}`, { question, chatHistory: chatHistory ?? [] })
+        const res = await this.client.post(`/api/chats/${id}`, { question, chatHistory: chatHistory ?? [] })
         return {
             content: res.data.answer,
             role: MessageRole.ai,
@@ -88,10 +88,10 @@ export class ChatService {
         }
     }
 
-    async addWebResource(accessToken: string, urls: string[]): Promise<ChatResource[]> {
+    async addWebResource(accessToken: string, id: string, urls: string[]): Promise<ChatResource[]> {
         try {
             // name, website, conversation starters, published
-            const res = await this.client.post("/api/chat/resources/web", { urls }, { headers: { Authorization: `Bearer ${accessToken}` } })
+            const res = await this.client.post(`/api/chats/${id}/resources/web`, { urls }, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
             console.error(error)
@@ -99,10 +99,10 @@ export class ChatService {
         }
     }
 
-    async addTextResource(accessToken: string, text: string, title: string, source: string): Promise<ChatResource[]> {
+    async addTextResource(accessToken: string, id: string, text: string, title: string, source: string): Promise<ChatResource[]> {
         try {
             // name, website, conversation starters, published
-            const res = await this.client.post("/api/chat/resources/text", { text, title, source }, { headers: { Authorization: `Bearer ${accessToken}` } })
+            const res = await this.client.post(`/api/chats/${id}/resources/text`, { text, title, source }, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
             console.error(error)
@@ -110,13 +110,13 @@ export class ChatService {
         }
     }
 
-    async inspectResource(accessToken: string, url: string): Promise<{ urls: string[] }> {
-        const res = await this.client.post("/api/chat/resources/web/inspect", { url }, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async inspectResource(accessToken: string, id: string, url: string): Promise<{ urls: string[] }> {
+        const res = await this.client.post(`/api/chats/${id}/resources/web/inspect`, { url }, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
 
-    async deleteResource(accessToken: string, id: string): Promise<string> {
-        await this.client.delete(`/api/chat/resources/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    async deleteResource(accessToken: string, id: string, resource_id: string): Promise<string> {
+        await this.client.delete(`/api/chats/${id}/resources/${resource_id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
         return id
     }
 }

@@ -40,8 +40,9 @@ import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
 import { RagLoaderService } from './services/rag-loader.service';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SubscriptionCanceled } from '@src/payments/events/subscription-canceled.event';
+import { AdminGuard } from '@src/users/guards/admin.guard';
 
-@Controller('api/chat')
+@Controller('api/chats')
 export class ChatController {
   constructor(
     private readonly ragService: RagService,
@@ -53,6 +54,30 @@ export class ChatController {
     private readonly crawlerService: CrawlerService,
   ) {}
 
+  // Admin chat endpoints ============================================================
+
+  @Get('/admin')
+  @UseGuards(AdminGuard)
+  @Serialize(ChatMetadataDto)
+  async getAllChatsByOwner(@CurrentUser() user: AuthUser): Promise<Chat[]> {
+    const chats = await this.chatsService.findManyByOwner(user.id);
+
+    return chats;
+  }
+
+  @Post('/admin')
+  @UseGuards(AdminGuard)
+  @Serialize(ChatMetadataDto)
+  async createChat(
+    @CurrentUser() user: AuthUser,
+    @Body() data: UpdateChatMetadataDto,
+  ): Promise<Chat> {
+    const chat = await this.chatsService.create(user.id, data);
+    return chat;
+  }
+
+  // Consumer chat endpoints ============================================================
+
   // get chat metadata based on the owner
   @Get('/')
   @UseGuards(AuthGuard)
@@ -60,7 +85,7 @@ export class ChatController {
   async getChatByOwner(
     @CurrentUser() user: AuthUser,
   ): Promise<Chat & { resources: ChatResource[] }> {
-    let chat = await this.chatsService.findByOwner(user.id);
+    let chat = await this.chatsService.findFirstByOwner(user.id);
     if (!chat) {
       chat = await this.chatsService.create(user.id, {});
     }
@@ -72,23 +97,24 @@ export class ChatController {
   }
 
   // Updates the chat metadata
-  @Put('/')
+  @Put('/:id')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
   async updateChat(
     @CurrentUser() user: AuthUser,
     @Body() data: UpdateChatMetadataDto,
+    @Param('id') id: string,
   ): Promise<Chat> {
     if (data.published) {
       await this.planChecker.canPublishChat(user.id);
     }
 
-    const chat = this.chatsService.update(user.id, data);
+    const chat = this.chatsService.update(user.id, id, data);
     return chat;
   }
 
   // Uploads a logo for the chat
-  @Put('/logo')
+  @Put('/:id/logo')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
   @UseInterceptors(FileInterceptor('file'))
@@ -106,8 +132,9 @@ export class ChatController {
         .build(),
     )
     file: Express.Multer.File,
+    @Param('id') id: string,
   ) {
-    let chat = await this.chatsService.findByOwner(user.id);
+    let chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
@@ -126,7 +153,7 @@ export class ChatController {
     await this.storageService.uploadFile(`logos/${chat.id}.webp`, resized);
 
     // update chat with url
-    chat = await this.chatsService.update(user.id, {
+    chat = await this.chatsService.update(user.id, id, {
       logo: await this.storageService.getFileUrl(`logos/${chat.id}.webp`, true),
     });
 
@@ -134,17 +161,20 @@ export class ChatController {
   }
 
   // loads the urls from a webpage and adds them to the chat
-  @Post('/resources/web')
+  @Post('/:id/resources/web')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
   async loadWebResource(
     @CurrentUser() user: AuthUser,
     @Body() resource: PostWebResourceDto,
+    @Param('id') id: string,
   ) {
     // get chat id for user
-    const chat = await this.chatsService.findByOwner(user.id);
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
+    } else if (chat.ownerId !== user.id) {
+      throw new BadRequestException('Chat not owned by user');
     }
 
     const resources = await this.resourcesService.findByChatId(chat.id);
@@ -189,17 +219,20 @@ export class ChatController {
     return result;
   }
 
-  @Post('/resources/text')
+  @Post('/:id/resources/text')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
   async loadTextResource(
     @CurrentUser() user: AuthUser,
     @Body() resource: PostTextResourceDto,
+    @Param('id') id: string,
   ) {
     // get chat id for user
-    const chat = await this.chatsService.findByOwner(user.id);
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
+    } else if (chat.ownerId !== user.id) {
+      throw new BadRequestException('Chat not owned by user');
     }
 
     // check if user can add more resources
@@ -229,16 +262,19 @@ export class ChatController {
   }
 
   // inspect a webpage and get urls to add to the chat
-  @Post('/resources/web/inspect')
+  @Post('/:id/resources/web/inspect')
   @UseGuards(AuthGuard)
   async inspectWebResource(
     @CurrentUser() user: AuthUser,
     @Body() data: PostResourceInspectDto,
+    @Param('id') id: string,
   ) {
     // get the chat for the user
-    const chat = await this.chatsService.findByOwner(user.id);
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
+    } else if (chat.ownerId !== user.id) {
+      throw new BadRequestException('Chat not owned by user');
     }
 
     // check if the url is already used
@@ -259,11 +295,11 @@ export class ChatController {
   }
 
   //  deletes a resource from the chat including embeddings
-  @Delete('/resources/:id')
+  @Delete('/:id/resources/:resource_id')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
-  async deleteResourcesFromChat(@Param('id') id: string) {
-    const r = await this.resourcesService.findById(id);
+  async deleteResourcesFromChat(@Param('resource_id') resource_id: string) {
+    const r = await this.resourcesService.findById(resource_id);
 
     // delete embeddings
     await this.ragService.deleteDocuments(r.embeddingIds);
@@ -276,7 +312,7 @@ export class ChatController {
 
   // Public Chat Endpoints ============================================================
 
-  @Get('/all')
+  @Get('/published')
   @Serialize(ChatMetadataDto)
   async getChats(
     @Query('limit') limit: number,
@@ -284,7 +320,7 @@ export class ChatController {
   ) {
     limit = limit || 100;
     offset = offset || 0;
-    const chats = await this.chatsService.findPublished(limit, offset);
+    const chats = await this.chatsService.findManyPublished(limit, offset);
     return chats;
   }
 
@@ -292,7 +328,7 @@ export class ChatController {
   @Get('/:id')
   @Serialize(ChatMetadataDto)
   async getChat(@Param('id') id: string) {
-    const chat = await this.chatsService.findById(id);
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
@@ -301,10 +337,10 @@ export class ChatController {
   }
 
   // post a message to the chat. This is a public endpoint
-  @Post('/:id')
+  @Post('/:id/messages')
   @UseGuards(ChatMessagesRateLimit)
   async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
-    const chat = await this.chatsService.findById(id);
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
@@ -327,6 +363,13 @@ export class ChatController {
 
   @OnEvent(SubscriptionCanceled.type)
   async onSubscriptionCanceled(payload: SubscriptionCanceled) {
-    await this.chatsService.update(payload.userId, { published: false });
+    const findManyByOwner = await this.chatsService.findManyByOwner(
+      payload.userId,
+    );
+    await Promise.all(
+      findManyByOwner.map((chat) =>
+        this.chatsService.update(payload.userId, chat.id, { published: false }),
+      ),
+    );
   }
 }

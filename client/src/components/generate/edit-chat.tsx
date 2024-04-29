@@ -42,16 +42,16 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
           {/* Name table */}
           <div className="divide-y divide-gray-200 dark:divide-gray-800">
             {/* Name */}
-            <NameForm name={chat.name} />
+            <NameForm chatId={chat.id} name={chat.name} />
 
             {/* Logo */}
-            <LogoForm logo={chat.logo} />
+            <LogoForm chatId={chat.id} logo={chat.logo} />
 
             {/* Description */}
-            <DescriptionForm description={chat.description} />
+            <DescriptionForm chatId={chat.id} description={chat.description} />
 
             {/* Website */}
-            <WebsiteForm website={chat.url} />
+            <WebsiteForm chatId={chat.id} website={chat.url} />
           </div>
         </div>
 
@@ -68,7 +68,7 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
           </div>
 
           {/* Conversation starters */}
-          <ConversationStartersTable starters={chat.conversationStarters} />
+          <ConversationStartersTable chatId={chat.id} starters={chat.conversationStarters} />
         </div>
 
         {/* Share chat */}

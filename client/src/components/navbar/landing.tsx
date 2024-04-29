@@ -43,20 +43,20 @@ export default function Navbar() {
         {/* login / signup / dashboard buttons */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <Link href={"/generate"}>
+            <Link href={"/onboarding"}>
               <Button size="sm">
                 Dashboard
               </Button>
             </Link>
           ) : (
             <>
-              <LoginLink postLoginRedirectURL="/generate">
+              <LoginLink postLoginRedirectURL="/onboarding">
                 <Button className="bg-transparent">
                   Log in
                 </Button>
               </LoginLink>
 
-              <RegisterLink postLoginRedirectURL="/generate">
+              <RegisterLink postLoginRedirectURL="/onboarding">
                 <Button >Sign up</Button>
               </RegisterLink>
             </>
@@ -92,7 +92,7 @@ export default function Navbar() {
                 </div>
                 <div className="py-6 px-4 flex flex-col space-y-3">
                   {user ? (
-                    <Link href={"/generate"}>
+                    <Link href={"/onboarding"}>
                       <Button size="sm">
                         Dashboard
                       </Button>

@@ -32,7 +32,7 @@ const formSchema = z.object({
   website: z.string().url({ message: "Website must be a url" }),
 });
 
-export default function WebsiteForm(props: { website?: string }) {
+export default function WebsiteForm(props: { chatId: string, website?: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
   const [website, setWebsite] = useState<string | undefined>(props.website);
@@ -44,9 +44,9 @@ export default function WebsiteForm(props: { website?: string }) {
   });
 
   const setNameMutation = useMutation({
-    mutationFn: (props: { website: string }) => {
+    mutationFn: (mutationProps: { website: string }) => {
       if (!accessTokenRaw) throw new Error("No access token");
-      return chatService.updateOwnerChat(accessTokenRaw, { url: props.website });
+      return chatService.updateOwnerChat(accessTokenRaw, props.chatId, { url: mutationProps.website });
     },
     onSuccess: (data) => {
       setWebsite(data.url);
