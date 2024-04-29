@@ -5,5 +5,5 @@ export default function middleware(req: any) {
 }
 export const config = {
     // set protected pages
-    matcher: ['/generate/:path*', '/settings/:path*']
+    matcher: ['/generate/:path*', '/settings/:path*', '/onboarding/:path*']
 };

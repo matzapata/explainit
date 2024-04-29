@@ -1,9 +1,7 @@
 import { Chat } from '@/components/chat/chat';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ChatNavBar } from '@/components/chat/chat-navbar';
 import { chatService } from '@/lib/services/chat-service';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { XIcon } from 'lucide-react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 interface ChatPageProps {
@@ -19,24 +17,10 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
   if (!authenticated && !chat.published) {
     return redirect('/not-found');
-  } 
+  }
   return (
     <div>
-      <div
-        className={`${authenticated ? 'justify-between' : 'justify-center'} sticky z-50 top-0 w-screen bg-gray-950 border-b h-16  px-4 md:px-8 items-center dark:bg-gray-950 border-b-gray-200 dark:border-b-gray-800 flex `}
-      >
-        {/* Enterprise logo */}
-        <Avatar>
-          <AvatarImage src={chat.logo} alt={chat.name} />
-          <AvatarFallback>{chat.name.slice(0,1).toUpperCase()}</AvatarFallback>
-        </Avatar>
-
-        {authenticated && (
-          <Link href="/generate">
-            <XIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
-          </Link>
-        )}
-      </div>
+      <ChatNavBar authenticated={authenticated} chat={chat} />
       <Chat chat={chat} />;
     </div>
   );

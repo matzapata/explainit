@@ -110,7 +110,7 @@ export default function ResourcesTable(props: {
 
       {/* Add new form */}
       <div className="flex md:flex-1 py-4 space-x-6">
-        <AddNewWebResource setResources={setResources} />
+        <AddNewWebResource setResources={setResources} initialUrl={props.initialUrl} />
 
         <AddTextResource setResources={setResources} />
       </div>
@@ -118,7 +118,7 @@ export default function ResourcesTable(props: {
   );
 }
 
-function AddNewWebResource(props: { setResources: (r: any) => void }) {
+function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?: string }) {
   const { accessTokenRaw } = useKindeBrowserClient();
   const [open, setOpen] = useState<boolean>(false);
   const [urls, setUrls] = useState<string[]>([]);
@@ -200,7 +200,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void }) {
     >
       <DialogTrigger asChild>
         <Button className="text-sm text-primary px-0" variant="link">
-          Add with crawling
+          Add website
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px]">

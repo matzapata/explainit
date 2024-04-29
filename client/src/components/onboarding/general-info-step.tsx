@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button } from '../ui/button';
+import { Button, buttonVariants } from '../ui/button';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
@@ -20,6 +20,9 @@ import {
   FormLabel,
   FormMessage,
 } from '../ui/form';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -40,10 +43,10 @@ const formSchema = z.object({
 
 export function GeneralInfoStep(props: {
   chat: ChatMetadataDto;
-  next: () => void;
-  back: () => void;
 }) {
+  const router = useRouter()
   const { accessTokenRaw } = useKindeBrowserClient();
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(props.chat.logo);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -63,7 +66,7 @@ export function GeneralInfoStep(props: {
       return chatService.updateOwnerChat(accessTokenRaw, props);
     },
     onSuccess: (data) => {
-      props.next();
+      router.push('/onboarding/resources')
     },
     onError: (error) => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
@@ -71,8 +74,29 @@ export function GeneralInfoStep(props: {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    generalInfoMutation.mutate(values);
+    if (values.name !== props.chat.name || values.description !== props.chat.description || values.url !== props.chat.url) {
+      generalInfoMutation.mutate(values);
+    } else {
+      router.push('/onboarding/resources')
+    }
   }
+
+  const uploadPicture = useMutation({
+    mutationFn: (props: { file: FileList }) => {
+      if (!accessTokenRaw) throw new Error('No access token');
+
+      const file = props.file[0];
+      if (!file.type.includes("image")) throw new Error("Invalid file type");
+
+      return chatService.updateOwnerChatLogo(accessTokenRaw, file)
+    },
+    onSuccess: (data) => {
+      setLogoUrl(data.logo);
+    },
+    onError: (error) => {
+      toast({ description: `Sorry, something went wrong. Please try again.${error.message? " Error" + error.message : ""}` });
+    },
+  });
 
   return (
     <>
@@ -91,13 +115,19 @@ export function GeneralInfoStep(props: {
           <Label>Logo</Label>
           <div className="flex items-center space-x-4">
             <Avatar className="h-16 w-16 rounded-md">
-              <AvatarImage className="rounded-md" src={props.chat.logo} />
+              <AvatarImage className="rounded-md" src={logoUrl} />
               <AvatarFallback className="rounded-md">C</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <Button variant={'outline'} size={'sm'}>
-                Upload image
-              </Button>
+              <label htmlFor="logo" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "cursor-pointer")}>
+                {uploadPicture.isPending ? 'Uploading...' : 'Upload logo'}
+              </label>
+              <Input id='logo' disabled={uploadPicture.isPending} className='hidden' type="file" accept=".jpg, .png, .jpeg" onChange={(e) => {
+                const file = e.target.files;
+                if (file) {
+                  uploadPicture.mutate({ file });
+                }
+              }} />
               <p className="text-gray-500 text-xs">
                 .png, .jpeg files up to 1MB. Recommended size is 50x50px
               </p>
@@ -130,7 +160,7 @@ export function GeneralInfoStep(props: {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea className='text-sm' {...field} />
                     </FormControl>
 
                     <FormMessage />

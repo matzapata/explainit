@@ -1,12 +1,15 @@
+"use client";
+
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import ConversationStartersTable from '../generate/conversation-starters-table';
 import { Button } from '../ui/button';
+import { useRouter } from 'next/navigation';
 
 export function ConversationStartersStep(props: {
   chat: ChatMetadataDto;
-  next: () => void;
-  back: () => void;
 }) {
+  const router = useRouter();
+
   return (
     <>
       <div className="mb-6">
@@ -23,10 +26,10 @@ export function ConversationStartersStep(props: {
       </div>
 
       <div className="justify-center space-x-2 flex w-full mt-6">
-        <Button variant={'outline'} onClick={props.back}>
+        <Button variant={'outline'} onClick={() => router.back()}>
           Back
         </Button>
-        <Button variant={'outline'} onClick={props.next}>
+        <Button variant={'outline'} onClick={() => router.push("/onboarding/share")}>
           Next
         </Button>
       </div>

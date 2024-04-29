@@ -1,7 +1,7 @@
 import { apiService } from "@/lib/services/api-service"
 import { AxiosInstance } from "axios"
 
-interface UserDto {
+export interface UserDto {
     id: string;
     email: string;
     name?: string;

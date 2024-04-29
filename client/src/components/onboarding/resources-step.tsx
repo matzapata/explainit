@@ -1,12 +1,13 @@
+'use client';
+
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import ResourcesTable from '../generate/resources-table';
 import { Button } from '../ui/button';
+import { useRouter } from 'next/navigation';
 
-export function AddResourcesStep(props: {
-  chat: ChatMetadataDto;
-  next: () => void;
-  back: () => void;
-}) {
+export function ResourcesStep(props: { chat: ChatMetadataDto }) {
+  const router = useRouter();
+
   return (
     <>
       <div className="mb-6">
@@ -25,12 +26,14 @@ export function AddResourcesStep(props: {
         />
       </div>
 
-
       <div className="justify-center space-x-2 flex w-full mt-6">
-        <Button variant={'outline'} onClick={props.back}>
+        <Button variant={'outline'} onClick={() => router.back()}>
           Back
         </Button>
-        <Button variant={'outline'} onClick={props.next}>
+        <Button
+          variant={'outline'}
+          onClick={() => router.push('/onboarding/starters')}
+        >
           Next
         </Button>
       </div>
