@@ -36,13 +36,13 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
         {/* Submenu */}
         {nestedItems && (
           <div className="border-b px-2 md:px-8  py-2 h-10 border-b-gray-200 flex justify-center items-center bg-white dark:bg-gray-950 dark:border-b-gray-800">
-            <div className=" w-full flex items-center">
+            <div className=" w-full flex items-center space-x-6">
               {nestedItems.map((item, i) => (
                 <Link
                   key={i}
                   href={item.link}
                   className={
-                    `${item.link == pathname? "dark:text-white" : "dark:text-gray-300"} px-3 py-2 text-sm font-semibold text-gray-700 rounded`
+                    `${item.link == pathname? "dark:text-white" : "dark:text-gray-300"} py-2 text-sm font-semibold text-gray-700 rounded`
                   }
                 >
                   {item.title}
@@ -50,9 +50,9 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
               ))}
             </div>
             {props.chatId && (
-              <Button size="sm" variant="outline">
+              <button className='text-sm bg-primary text-primary-foreground hover:bg-primary/90 h-7 rounded-md px-3'>
                 <Link href={`/chat/${props.chatId}`}>Preview</Link>
-              </Button>
+              </button>
             )}
           </div>
         )}

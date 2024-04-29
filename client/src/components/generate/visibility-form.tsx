@@ -58,18 +58,18 @@ export default function VisibilityForm(props: {
   });
 
   return (
-    <div className="space-y-2 md:space-y-0 md:flex py-6">
+    <div className="space-y-2 md:space-y-0 md:flex py-6 items-center">
       <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
         Visibility
       </p>
-      <div className="flex md:flex-1 justify-between">
+      <div className="flex md:flex-1 justify-between items-center">
         <p className="text-sm text-gray-900 dark:text-gray-300">
           {published ? 'Visible' : 'Hidden'}
         </p>
 
         <AlertDialog>
           <AlertDialogTrigger
-            className={cn(buttonVariants({ variant: 'link' }), 'text-s text-primary')}
+            className={cn(buttonVariants({ variant: 'link' }), 'text-sm text-primary')}
             disabled={setVisibilityMutation.isPending}
           >
             {published ? 'Hide' : 'Publish'}

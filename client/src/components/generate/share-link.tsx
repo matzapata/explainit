@@ -15,11 +15,11 @@ export default function ShareLinkForm(props: { id: string }) {
   }, [props.id]);
 
   return (
-    <div className="space-y-2 md:space-y-0 md:flex py-6">
+    <div className="space-y-2 md:space-y-0 md:flex py-6 items-center">
       <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
         Sharable link
       </p>
-      <div className="flex md:flex-1 justify-between">
+      <div className="flex md:flex-1 justify-between items-center">
         <p className="text-sm text-gray-900 dark:text-gray-300">
           {sharableLink}
         </p>
