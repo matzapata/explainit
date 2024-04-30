@@ -27,7 +27,7 @@ export function ShareStep(props: { chat: ChatMetadataDto; isPro: boolean }) {
     if (props.isPro) {
       setIsLoading(true);
       chatService
-        .updateOwnerChat(accessTokenRaw, { published: true })
+        .updateOwnerChat(accessTokenRaw, props.chat.id, { published: true })
         .then(() => {
           setPublished(true);
           toast({

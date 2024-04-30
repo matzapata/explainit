@@ -1,11 +1,14 @@
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import Link from 'next/link';
 
 export function ChatCard(props: { chat: ChatMetadataDto }) {
   return (
     <div className="text-white py-6">
-      <p className="hover:underline cursor-pointer ">{props.chat.name}</p>
+      <Link href={`${process.env.NEXT_PUBLIC_DOMAIN}/chat/${props.chat.id}`}>
+        <p className="hover:underline cursor-pointer">{props.chat.name}</p>
+      </Link>
       <p>{props.chat.description}</p>
 
       <div className="flex items-center space-x-3 mt-2">

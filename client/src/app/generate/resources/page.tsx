@@ -40,7 +40,7 @@ export default async function ChatResources() {
               </div>
             </div>
 
-            <ResourcesTable initialResources={chat.resources} />
+            <ResourcesTable chatId={chat.id} initialResources={chat.resources} />
           </div>
         </div>
       </main>

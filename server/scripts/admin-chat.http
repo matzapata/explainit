@@ -1,0 +1,126 @@
+
+# Manual testing http requests with extension REST Client
+
+# Admin ========================================================================
+
+### Gets the chat for the owner
+GET http://{{host}}/api/chats/admin
+Authorization: Bearer {{token}}
+
+### Creates a new chat for the owner. Only admin can have multiple chats
+POST  http://{{host}}/api/chats/admin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Hardhat",
+    "description": "Hardhat is a development environment for Ethereum software. It consists of different components for editing, compiling, debugging and deploying your smart contracts and dApps, all of which work together to create a complete development environment",
+    "conversationStarters": [
+        "What is hardhat?", 
+        "How to create a hardhat project with typescript?", 
+        "How to compile my project?"
+    ],
+    "url": "https://hardhat.org/hardhat-runner/docs"
+}
+
+### Update chat metadata
+PUT http://{{host}}/api/chats/{{chat_id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Chat 2"
+}
+
+### Upload a logo for the chat
+PUT http://{{host}}/api/chats/{{chat_id}}/logo
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="example.txt"
+Content-Type: image/jpg
+
+< ./data/logo.jpg
+------boundary--
+
+### Checks urls that can be added as resources
+POST http://{{host}}/api/chats/{{chat_id}}/resources/web/inspect
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "url": "https://docs.trychroma.com/embeddings"
+}
+
+
+    # "https://docs.trychroma.com/",
+    # "https://docs.trychroma.com/getting-started",
+    # "https://docs.trychroma.com/usage-guide",
+    # "https://docs.trychroma.com/embeddings",
+    # "https://docs.trychroma.com/multi-modal",
+    # "https://docs.trychroma.com/api-reference",
+    # "https://docs.trychroma.com/troubleshooting",
+    # "https://docs.trychroma.com/integrations",
+    # "https://docs.trychroma.com/deployment",
+    # "https://docs.trychroma.com/migration",
+    # "https://docs.trychroma.com/observability",
+    # "https://docs.trychroma.com/telemetry",
+    # "https://docs.trychroma.com/roadmap",
+    # "https://docs.trychroma.com/contributing",
+    # "https://docs.trychroma.com/about",
+    # "https://docs.trychroma.com/api"
+    # "https://docs.trychroma.com/integrations",
+
+
+    # "https://docs.trychroma.com/integrations/langchain",
+    # "https://docs.trychroma.com/integrations/llama-index",
+    # "https://docs.trychroma.com/integrations/braintrust",
+    # "https://docs.trychroma.com/integrations/openllmetry",
+    # "https://docs.trychroma.com/integrations/streamlit",
+    # "https://docs.trychroma.com/integrations/haystack"
+### Add a web resource
+POST http://{{host}}/api/chats/{{chat_id}}/resources/web
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "type": "web",
+    "urls": [
+ "https://docs.trychroma.com/embeddings/openai",
+    "https://docs.trychroma.com/embeddings/google-gemini",
+    "https://docs.trychroma.com/embeddings/cohere",
+    "https://docs.trychroma.com/embeddings/hugging-face",
+    "https://docs.trychroma.com/embeddings/google-palm",
+    "https://docs.trychroma.com/embeddings/hugging-face-embedding-server",
+    "https://docs.trychroma.com/embeddings/instructor",
+    "https://docs.trychroma.com/embeddings/roboflow-api",
+    "https://docs.trychroma.com/embeddings/jinaai"
+    
+    
+    
+    
+    
+  ]
+}
+
+### Delete resource
+DELETE http://{{host}}/api/chats/{{chat_id}}/resources/662fb7a802f5056e3ebd60ff
+Authorization: Bearer {{token}}
+
+# Test ========================================================================
+
+### Gets the chat for the consumer
+GET http://{{host}}/api/chats/published
+
+### Gets the chat for the consumer
+GET http://{{host}}/api/chats/{{chat_id}}
+
+### Generate response for question
+POST http://{{host}}/api/chats/{{chat_id}}/messages
+Content-Type: application/json
+
+{
+    "question": "What is chromadb?",
+    "chatHistory": []
+}

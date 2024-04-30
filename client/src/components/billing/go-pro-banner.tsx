@@ -10,7 +10,7 @@ export default function GoProBanner() {
               Add more resources and make your chats public to the world
             </p>
           </div>
-          <GoProButton variant={"secondary-gray"} size="sm" />
+          <GoProButton variant={"secondary"} size="sm" />
         </div>
     )
 }

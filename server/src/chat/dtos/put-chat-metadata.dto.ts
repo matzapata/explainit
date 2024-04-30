@@ -13,10 +13,6 @@ export class UpdateChatMetadataDto {
 
   @IsOptional()
   @IsString()
-  logo?: string;
-
-  @IsOptional()
-  @IsString()
   url?: string;
 
   @IsOptional()
@@ -30,7 +26,7 @@ export class UpdateChatMetadataDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(150)
   @MinLength(15)
   description?: string;
 }

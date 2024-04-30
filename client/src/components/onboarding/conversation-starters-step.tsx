@@ -22,7 +22,7 @@ export function ConversationStartersStep(props: {
       </div>
 
       <div className="border-t border-t-gray-800 divide-gray-800">
-        <ConversationStartersTable starters={props.chat.conversationStarters} />
+        <ConversationStartersTable chatId={props.chat.id} starters={props.chat.conversationStarters} />
       </div>
 
       <div className="justify-center space-x-2 flex w-full mt-6">

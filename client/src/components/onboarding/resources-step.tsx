@@ -21,6 +21,7 @@ export function ResourcesStep(props: { chat: ChatMetadataDto }) {
 
       <div className="border-t border-t-gray-800 divide-gray-800">
         <ResourcesTable
+          chatId={props.chat.id}
           initialUrl={props.chat.url}
           initialResources={props.chat.resources}
         />

@@ -25,7 +25,7 @@ export function Chat({ chat, className }: ChatProps) {
     <div className="relative">
       <div className="h-10 bg-white dark:bg-gray-950 border-b dark:border-b-gray-800 sticky top-16 z-50 left-0 w-screen px-4 md:px-8 flex items-center justify-between">
         <Link
-          href={chat.url}
+          href={chat.url ?? "#"}
           className="text-sm font-medium text-gray-600 dark:text-gray-300"
         >
           Documentation
@@ -58,7 +58,7 @@ export function Chat({ chat, className }: ChatProps) {
         ) : (
           <EmptyScreen
             setInput={setInput}
-            chatName={chat.name}
+            chatName={chat.name ?? "Untitled Chat"}
             starters={chat.conversationStarters}
           />
         )}

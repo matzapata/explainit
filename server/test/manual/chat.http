@@ -1,6 +1,14 @@
 
 # Manual testing http requests with extension REST Client
 
+# Instructions ========================================================================
+
+# Create new chat
+# 1. create
+# 2. add logo
+# 3. add resources
+# 4. test
+
 # Admin ========================================================================
 
 ### Gets the chat for the owner
@@ -13,7 +21,10 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "name": "New Chat"
+    "name": "New Chat",
+    "description": "This is a new chat",
+    "conversationStarters": ["Hello", "Hi"],
+    "url": "https://js.langchain.com/docs/use_cases/question_answering/streaming",
 }
 
 # Consumer ========================================================================

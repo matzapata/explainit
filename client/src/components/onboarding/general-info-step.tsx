@@ -57,13 +57,13 @@ export function GeneralInfoStep(props: {
   });
 
   const generalInfoMutation = useMutation({
-    mutationFn: (props: {
+    mutationFn: (mutationProps: {
       name: string;
       url: string;
       description: string;
     }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, props);
+      return chatService.updateOwnerChat(accessTokenRaw, props.chat.id, mutationProps);
     },
     onSuccess: (data) => {
       router.push('/onboarding/resources')
@@ -82,13 +82,13 @@ export function GeneralInfoStep(props: {
   }
 
   const uploadPicture = useMutation({
-    mutationFn: (props: { file: FileList }) => {
+    mutationFn: (mutationProps: { file: FileList }) => {
       if (!accessTokenRaw) throw new Error('No access token');
 
-      const file = props.file[0];
+      const file = mutationProps.file[0];
       if (!file.type.includes("image")) throw new Error("Invalid file type");
 
-      return chatService.updateOwnerChatLogo(accessTokenRaw, file)
+      return chatService.updateOwnerChatLogo(accessTokenRaw, props.chat.id, file)
     },
     onSuccess: (data) => {
       setLogoUrl(data.logo);

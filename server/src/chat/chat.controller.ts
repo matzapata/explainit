@@ -277,20 +277,13 @@ export class ChatController {
       throw new BadRequestException('Chat not owned by user');
     }
 
-    // check if the url is already used
-    const resources = await this.resourcesService.findByChatId(chat.id);
-    const urls = resources.map((r) => r.data);
-    if (urls.includes(data.url)) {
-      throw new BadRequestException(
-        `Resource with url ${data.url} already exists`,
-      );
-    }
-
     const crawledUrls = await this.crawlerService.inspect({
       url: data.url,
     });
 
     // filter out already existing urls
+    const resources = await this.resourcesService.findByChatId(chat.id);
+    const urls = resources.map((r) => r.data);
     return { urls: crawledUrls.filter((r) => !urls.includes(r)) };
   }
 
