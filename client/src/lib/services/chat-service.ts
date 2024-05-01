@@ -80,7 +80,7 @@ export class ChatService {
     }
 
     async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chats/${id}`, { question, chatHistory: chatHistory ?? [] })
+        const res = await this.client.post(`/api/chats/${id}/messages`, { question, chatHistory: chatHistory ?? [] })
         return {
             content: res.data.answer,
             role: MessageRole.ai,

@@ -6,8 +6,6 @@ import {
   UsersIcon,
 } from '@heroicons/react/24/solid';
 import { IconOpenAI } from '../ui/icons';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 const features = [
   {
@@ -73,7 +71,7 @@ export default function FeaturesSection() {
   return (
     <div
       id="features"
-      className="py-16 mt-20 md:py-24 space-y-12 md:space-y-20"
+      className="py-16 mt-20 md:py-24 space-y-12 md:space-y-20 px-4 md:px-0"
     >
       <div className="mx-auto max-w-2xl flex flex-col justify-center items-center">
         <h1 className="text-2xl text-center font-semibold sm:text-3xl xl:text-[40px] relative text-gray-900 dark:text-white">

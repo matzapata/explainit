@@ -44,7 +44,7 @@ export function Chat({ chat, className }: ChatProps) {
           }}
           variant={'link'}
           size={'sm'}
-          className="text-gray-600 dark:text-gray-300"
+          className="text-gray-600 dark:text-gray-300 text-sm px-0"
         >
           Delete messages
         </Button>
@@ -57,7 +57,7 @@ export function Chat({ chat, className }: ChatProps) {
           </>
         ) : (
           <EmptyScreen
-            setInput={setInput}
+            append={append}
             chatName={chat.name ?? "Untitled Chat"}
             starters={chat.conversationStarters}
           />

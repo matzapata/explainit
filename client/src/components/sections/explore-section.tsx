@@ -12,7 +12,7 @@ export default function ExploreSection(props: { chats: ChatMetadataDto[] }) {
 
   return (
     <div>
-      <div className="mx-auto max-w-2xl py-10 mt-20 flex flex-col justify-center items-center sm:text-center">
+      <div className="px-4 mx-auto max-w-2xl py-10 mt-20 flex flex-col justify-center items-center sm:text-center">
         <h1 className="text-2xl text-gray-900 dark:text-white text-center font-semibold sm:text-3xl xl:text-[40px] relative">
           Explore the best documentation chats
         </h1>
@@ -24,12 +24,12 @@ export default function ExploreSection(props: { chats: ChatMetadataDto[] }) {
         </p>
       </div>
 
-      <div className="w-full border-y border-y-gray-800 py-4 bg-gray-900 px-6 flex justify-between">
+      <div className="w-full border-y border-y-gray-800 py-4 bg-gray-900 md:px-6 flex justify-between">
         <div className="max-w-6xl mx-auto w-full px-4">
           <Input
             type="text"
             placeholder="Search..."
-            className="hidden md:block w-full py-2 text-sm"
+            className="w-full py-2 text-sm"
             onChange={(e) => {
               const filteredChats = props.chats.filter((c) =>
                 c.name?.toLowerCase().includes(e.target.value.toLowerCase()),

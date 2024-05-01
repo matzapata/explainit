@@ -26,7 +26,7 @@ export default function FaqSection() {
   const [openFaqId, setOpenFaqId] = useState<number | null>(null);
 
   return (
-    <div id="faq" className="py-16 space-y-20 w-full">
+    <div id="faq" className="py-16 space-y-20 w-full px-4 md:px-0">
       {/* Title */}
       <div className="mx-auto max-w-2xl flex flex-col justify-center items-center sm:text-center">
         <h1 className="text-2xl text-gray-900 dark:text-white text-center font-semibold sm:text-3xl xl:text-[40px] relative">
@@ -86,7 +86,7 @@ export default function FaqSection() {
       </div>
 
       {/* Contact us */}
-      <div className="max-w-3xl w-full mx-auto px-4">
+      <div className="max-w-3xl w-full mx-auto">
         <div className="bg-gray-50 dark:bg-gray-950 dark:border-gray-800 dark:border max-w-6xl mx-auto rounded-2xl space-y-6 px-6 py-8">
           {/* Team avatars */}
           <div className="flex items-baseline justify-center">

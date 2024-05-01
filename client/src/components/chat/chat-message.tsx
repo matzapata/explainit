@@ -26,10 +26,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
     >
       <div
         className={cn(
-          'flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border dark:border-gray-800 shadow',
-          message.role === MessageRole.user
-            ? 'bg-white dark:bg-gray-950'
-            : 'bg-primary text-primary-foreground',
+          'flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border dark:border-gray-800 shadow bg-white dark:bg-gray-950'
         )}
       >
         {message.role === MessageRole.user ? (

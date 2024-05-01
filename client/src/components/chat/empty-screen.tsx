@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { IconArrowRight } from "@/components/ui/icons";
 
 
 export function EmptyScreen(props: {
-  setInput: (value: string) => void;
+  append: (value: string) => void;
   chatName: string;
   starters: string[];
 }) {
@@ -22,15 +21,14 @@ export function EmptyScreen(props: {
         ) : null}
         <div className="mt-4 flex flex-col items-start space-y-2">
           {props.starters.map((message, index) => (
-            <Button
+            <button
               key={index}
-              variant="link"
-              className="h-auto p-0 text-base text-white"
-              onClick={() => props.setInput(message)}
+              className="h-auto p-0 text-base text-start text-white font-medium"
+              onClick={() => props.append(message)}
             >
-              <IconArrowRight className="mr-2 text-gray-900 dark:text-gray-300" />
-              {message}
-            </Button>
+              <span className="">{message}</span>
+              <IconArrowRight className="ml-2 h-4 w-4 inline-block text-gray-900 dark:text-gray-300" />
+            </button>
           ))}
         </div>
       </div>
