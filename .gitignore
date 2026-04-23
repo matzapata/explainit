@@ -3,3 +3,7 @@ node_modules
 build
 ./data
 *.bkp
+.env
+.env.*
+!.env.example
+!.env.*.example

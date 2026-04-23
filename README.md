@@ -1,92 +1,54 @@
 
-# Intro
+# Explainit
 
-Explainit. Create sharable chats with your documentation. Let developers get quickly what they want from you by creating powerful llm agents with your data. Upload some sources and get it up in minutes.
+Explainit helps teams create shareable AI chats powered by their own documentation. It combines a web client, an API, and document ingestion so developers can ask questions and get grounded answers quickly.
 
-- Run dev with `docker-compose up --build`
+## Features
 
-# TODO
+- Ingest documentation content and make it searchable through chat
+- Share chat experiences for internal or public use cases
+- Run locally with Docker for full-stack development
+- Run client and server separately for faster local iteration
+- Extend with your own auth, storage, and deployment setup
 
-deployment
+## Quick Start
 
-development-product
+### Docker (recommended)
 
+1. Create required environment files:
+   - `server/.env.development`
+   - `client/.env.local`
+2. Build and start all services:
+   - `docker-compose up --build`
+3. Access the app and API:
+   - Client: `http://localhost:3000`
+   - API: `http://localhost:4000`
 
-development-improvements
+### Local development
 
-TODO: - implement events for stuff like, plan cancelled and so on, so far just email to manually do it
-TODO: - chat-controller test
-TODO: - Deployment, get it toghether, supabase db, storage and auth? railway for deployments? 
-    - Ideally all aws ses, s3, hosting, plus railway for server and db
+1. Start Postgres (or use your own database), then configure environment files:
+   - `server/.env.development`
+   - `client/.env.local`
+2. Install dependencies:
+   - `cd server && npm install`
+   - `cd ../client && npm install`
+3. Run the backend:
+   - `cd ../server && npm run dev`
+4. Run the frontend in a second terminal:
+   - `cd ../client && npm run dev`
 
+## Documentation
 
-# Deployment
+- [Project overview](docs/overview.md)
+- [Architecture](docs/architecture.md)
+- [Development](docs/development.md)
+- [Deployment](docs/deployment.md)
+- [Roadmap](docs/roadmap.md)
 
-Setup env variables
-- resend
-- gcp storage
-- openai
-- postgress db with vercel
-- domain
+## Contributing
 
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening issues or pull requests.
 
-0. Create empty services in railway and pgvector db
-1. `cd client && railway link && railway up`
-2. `cd server && railway link && railway up`
+## License
 
-
-
-# Usage
-
-1. Create postgres db
-2. Update prisma schema and run first migration
-3. Get resend and gcp storage credentials
-4. Update payments plans
-5. Configure kinde, add email to token with hasura mapping
-6. Remove unused modules
-
-# Indie hackers / reddit
-
-## I build a ai chatbot generator for documentation sites in seconds
-
-If you have a developer documentation and want to boost your community with ai this is for you! Just pull in the base url of the site add some customization and get a sharable link for your chat, link it anywhere you want.
-
-I saw this trend in some places like gcp with gemini, or langchain or supabase ask ai, but they're all custom implemented solutions, not everyone wants to advocate developer resources to create the rag, deploy it and maintain it, you just want devs to build with your stuff, the more they can do the better, the quicker the better, and if they get a smooth experience while doing it that's legendary already.
-
-Just some clicks!! With one base url you are half way through. Check it out at https://explainit.mzslabs.com
-
-Any feedback is welcomed! Thanks!
-
-## Chat bubble snippet
-
-```html
-<html>
-    <head>
-        <style>
-            /* Style for the chat bubble */
-            .chat-bubble {
-                z-index: 1000;
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background-color: #007bff;
-                color: #ffffff;
-                padding: 10px 20px;
-                border-radius: 20px 20px 0px 20px;
-                cursor: pointer;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-                transition: all 0.3s ease;
-            }
-
-            /* Style for the chat bubble when hovered */
-            .chat-bubble:hover {
-                background-color: #0056b3;
-            }
-        </style>
-    </head>
-    <body>
-        <a className="chat-bubble" href="https://explainit.mzslabs.com/chat/{your-id}">Ask AI</a>
-        <!-- ... -->
-    </body>
-</html>
-```
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

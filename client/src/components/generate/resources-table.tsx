@@ -314,7 +314,6 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
       return chatService.addTextResource(accessTokenRaw, props.chatId, mutationProps.text, mutationProps.title, mutationProps.source);
     },
     onSuccess: (data) => {
-      console.log("data", data)
       props.setResources((r: any) => [...r, ...data]);
       toast({ description: 'Successfully added resource.' });
       setOpen(false);
