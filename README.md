@@ -16,7 +16,7 @@ Explainit helps teams create shareable AI chats powered by their own documentati
 ### Docker (recommended)
 
 1. Create required environment files:
-   - `server/.env.development`
+   - `server/.env.local`
    - `client/.env.local`
 2. Build and start all services:
    - `docker-compose up --build`
@@ -27,7 +27,7 @@ Explainit helps teams create shareable AI chats powered by their own documentati
 ### Local development
 
 1. Start Postgres (or use your own database), then configure environment files:
-   - `server/.env.development`
+   - `server/.env.local`
    - `client/.env.local`
 2. Install dependencies:
    - `cd server && npm install`
@@ -39,11 +39,8 @@ Explainit helps teams create shareable AI chats powered by their own documentati
 
 ## Documentation
 
-- [Project overview](docs/overview.md)
 - [Architecture](docs/architecture.md)
-- [Development](docs/development.md)
-- [Deployment](docs/deployment.md)
-- [Roadmap](docs/roadmap.md)
+- [Contributing and local/deployment workflows](CONTRIBUTING.md)
 
 ## Contributing
 
