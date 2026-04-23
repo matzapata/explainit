@@ -2,28 +2,28 @@ version: '3'
 services:
   api:
     build: 
-      context: ./server
-      dockerfile: Dockerfile.dev
+      context: ./apps/server
+      dockerfile: Dockerfile
     environment:
       - PORT=4000
       - NODE_ENV=development
     env_file:
-      - ./server/.env.local
+      - ./apps/server/.env.local
     volumes:
-      - ./server:/app
+      - ./apps/server:/app
       - /app/node_modules
     depends_on:
       - postgres
   client:
     build:
-      context: ./client
-      dockerfile: Dockerfile.dev
+      context: ./apps/client
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
     env_file:
-      - ./client/.env.local
+      - ./apps/client/.env.local
     volumes:
-      - ./client:/app
+      - ./apps/client:/app
       - /app/node_modules
     depends_on:
       - api
@@ -33,5 +33,5 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     env_file:
-      - ./server/.env.local
+      - ./apps/server/.env.local
   

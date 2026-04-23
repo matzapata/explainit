@@ -1,13 +1,19 @@
 # Architecture
 
-Explainit is organized as a web client, an API layer, and a Postgres datastore with vector search support.
+Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
+
+1. `client` (Next.js) for user interaction
+2. `server` (NestJS) for orchestration and policy
+3. `postgres` (Postgres + pgvector) for transactional and semantic data
+
+External providers supply language model inference, embedding generation, and optional storage integrations.
 
 ## System context
 
-- `client`: Next.js UI for chat, workspace setup, and resource management
-- `server`: NestJS API for auth, ingestion, retrieval orchestration, and chat responses
-- `postgres`: relational data + pgvector embeddings for semantic retrieval
-- External providers: model APIs, storage, and other integrations configured by environment variables
+- `client`: chat UX, workspace/resource setup, and response rendering
+- `server`: auth, ingestion pipeline, retrieval, prompt assembly, and response generation
+- `postgres`: source records, chats/messages, chunk metadata, and vector indexes
+- Providers: model APIs and other environment-configured dependencies
 
 ```mermaid
 flowchart LR
@@ -17,18 +23,47 @@ flowchart LR
   API --> Providers[External Providers]
 ```
 
-## Why this architecture
+## Server infrastructure layer
 
-This project is built as a Retrieval-Augmented Generation (RAG) system. The core goal is to generate answers grounded in project documentation instead of relying only on model pretraining.
+`apps/server/src/infrastructure` follows a provider-selection pattern:
 
-- Separation of concerns keeps iteration fast:
-  - `client` focuses on UX and interaction latency
-  - `server` handles orchestration, retrieval, and policy
-  - `postgres` stores both transactional records and semantic indexes
-- RAG reduces hallucinations by attaching relevant source context to each model call.
-- Keeping vectors in Postgres (via pgvector) simplifies operations: one datastore for both app data and semantic search.
+- Each domain has a `<domain>.module.ts` Nest module.
+- A `<domain>.service.ts` file re-exports the active provider implementation.
+- `providers/` contains abstract contracts and one or more concrete adapters.
 
-## Request lifecycle
+Current infrastructure folders and responsibilities:
+
+- `auth`: token verification via JWKS-backed provider (`JwksProvider`)
+- `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
+- `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`)
+- `llm`: text generation model binding (`OpenAILlmProvider`)
+- `vectorstore`: vector add/search/delete over database persistence (`PrismaVectorStoreProvider`)
+- `storage`: file/object storage and image resize (`GcpStorageProvider`)
+- `emails`: transactional email delivery (`ResendEmailProvider`, optional NodeMailer provider)
+- `payments`: subscriptions, checkout, and webhooks (`LemonSqueezyPaymentProvider`)
+
+## Architecture goals
+
+- Ground answers in ingested project content, not only model pretraining
+- Keep end-user latency low for interactive chat workloads
+- Preserve source traceability so responses can be audited and trusted
+- Minimize operational complexity for the current product stage
+- Allow independent evolution of UI, orchestration logic, and storage strategy
+
+## Why this shape works
+
+- **Separation of concerns**
+  - `client` optimizes UX and perceived latency
+  - `server` centralizes retrieval logic, policy enforcement, and provider coordination
+  - `postgres` is the source of truth for both business entities and embeddings
+- **Grounded generation**
+  - Retrieved chunks are attached to each model call, reducing hallucination risk
+  - Source metadata can be surfaced as citations in final answers
+- **Single-datastore operations**
+  - pgvector keeps semantic retrieval close to relational data and metadata filters
+  - Fewer moving pieces than introducing an additional vector service early
+
+## Request lifecycle (chat path)
 
 ```mermaid
 sequenceDiagram
@@ -38,78 +73,128 @@ sequenceDiagram
   participant D as Postgres/pgvector
   participant M as Model Provider
 
-  U->>C: Ask a question
+  U->>C: Ask question
   C->>A: POST /chat message
-  A->>D: Load chat context + top matching chunks
-  D-->>A: Relevant context
-  A->>M: Generate grounded response
+  A->>D: Load chat/workspace scope
+  A->>D: Vector search for relevant chunks
+  D-->>A: Ranked context candidates
+  A->>A: Apply filters, rank, trim to token budget
+  A->>M: Send prompt + grounded context
   M-->>A: Completion
-  A-->>C: Response payload
+  A-->>C: Response + citation metadata
   C-->>U: Render answer
 ```
 
-
-
-## Embeddings and vector search
-
-An embedding is a dense numeric representation of text where semantically similar text appears close in vector space. Explainit generates embeddings for document chunks at ingestion time and embeddings for user queries at request time.
-
-### Why embeddings are used
-
-- Keyword search is brittle for paraphrased questions.
-- Embeddings support semantic matching (intent similarity rather than literal term overlap).
-- The system can retrieve useful context even when user wording differs from source docs.
-
-### Why a vector database (pgvector)
-
-- Fast approximate nearest-neighbor search over high-dimensional vectors.
-- SQL-native filtering lets retrieval combine semantic similarity with metadata constraints.
-- Operationally simpler than running a separate vector service for this project size and stage.
-
-### Typical retrieval pattern
-
-1. Embed the incoming user query.
-2. Run vector similarity search to get top-k chunks.
-3. Apply metadata guards (workspace/chat/resource constraints).
-4. Rank and trim context to fit model token budget.
-5. Send prompt + retrieved context to the model provider.
-
-## Ingestion flow
+## Ingestion lifecycle (indexing path)
 
 ```mermaid
 flowchart TD
   Source[Source URL or content] --> Fetch[Fetch and normalize content]
-  Fetch --> Chunk[Split into chunks]
-  Chunk --> Embed[Create embeddings]
-  Embed --> Store[Store metadata + vectors in Postgres]
-  Store --> Ready[Available for retrieval]
+  Fetch --> Crawl[Crawler provider (inspect/crawl/scrape)]
+  Crawl --> Chunk[Split content into chunks]
+  Chunk --> Embed[Embeddings provider]
+  Embed --> Store[Persist metadata + vectors in Postgres]
+  Store --> Ready[Ready for retrieval]
 ```
 
+Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability.
 
+### Crawler infrastructure
+
+Crawler responsibilities are implemented under `apps/server/src/infrastructure/crawler`:
+
+- `CrawlerProvider` defines three capabilities:
+  - `inspect`: discover in-domain URLs from a seed page
+  - `crawl`: recursively collect HTML pages up to `maxRequests`
+  - `scrape`: fetch and extract specific URL lists
+- Active implementation uses Puppeteer with headless Chromium.
+- Output contract (`ScrapeResult`) includes `url`, `title`, and raw `html`.
+
+This design keeps crawling provider-specific details isolated while exposing a stable API to ingestion use-cases.
+
+### Embeddings infrastructure
+
+Embedding responsibilities are implemented under `apps/server/src/infrastructure/embeddings`:
+
+- `EmbeddingsProvider` contract exposes `generateEmbeddings(text: string)`.
+- Active implementation (`OpenAiEmbeddingsProvider`) uses `@langchain/openai`.
+- Text is normalized before embedding (newlines replaced with spaces).
+- The same service is reused by vector ingestion (`addDocuments`) and query-time similarity search.
+
+This keeps embedding-model changes isolated to the infrastructure layer without changing retrieval business logic.
+
+## Retrieval design
+
+An embedding is a dense numeric representation where semantically related text is nearby in vector space. Explainit computes:
+
+- chunk embeddings during ingestion
+- query embeddings during chat requests
+
+### Why embeddings
+
+- Handles paraphrasing better than pure keyword matching
+- Improves recall when users use different wording from source documents
+- Enables relevance ranking by semantic intent
+
+### Why pgvector
+
+- Supports efficient nearest-neighbor search over high-dimensional vectors
+- Allows SQL-native filtering (`workspace`, `chat`, `resource`, visibility)
+- Reduces operational overhead at current scale compared to a separate vector tier
+
+### Retrieval pipeline
+
+1. Embed user query text
+2. Fetch top-k semantically similar chunks
+3. Apply metadata and authorization constraints
+4. Re-rank and trim to model token budget
+5. Build grounded prompt and request completion
 
 ## Data model notes
 
-- Relational tables hold workspaces, chats, resources, and chunk metadata.
-- Vector columns store chunk embeddings used for semantic retrieval.
-- Metadata references allow traceable citations from responses back to original sources.
-
-## Design tradeoffs and decisions
-
-- **Postgres + pgvector vs dedicated vector DB**
-  - Chosen for lower operational overhead and tighter integration with existing relational data.
-  - Can be revisited if corpus size or query QPS outgrows current performance envelope.
-- **Chunk size and overlap**
-  - Smaller chunks improve precision but can lose context.
-  - Overlap improves continuity but increases storage and retrieval cost.
-- **Top-k retrieval**
-  - Larger k improves recall but adds latency and token cost.
-  - Practical tuning balances answer quality with response time.
-- **Grounded prompting**
-  - Retrieved context is preferred over unrestricted generation to improve factuality and trust.
+- Relational entities: users, workspaces, chats, resources, messages, ingestion jobs
+- Retrieval entities: chunk rows, embedding vectors, and provenance metadata
+- Citation support: chunk-to-resource references to trace model outputs back to source material
 
 ## Reliability and observability
 
-- Ingestion is separated from chat-time retrieval so indexing failures do not block all interactions.
-- Critical stages (fetch, chunk, embed, store, retrieve, generate) should emit structured logs for diagnosis.
-- Deployment validation should include end-to-end smoke tests for ingestion and question answering.
+- Each stage should emit structured logs: fetch, parse, chunk, embed, store, retrieve, generate
+- Distinguish transient provider failures (retryable) from deterministic content failures (non-retryable)
+- Maintain metrics for:
+  - chat request latency (p50/p95/p99)
+  - retrieval hit quality (e.g., similarity score distribution)
+  - provider error rates and timeouts
+  - ingestion throughput and failure counts
+- Validate deployments with end-to-end smoke tests for ingestion and Q&A
+
+## Security and tenancy boundaries
+
+- Enforce workspace-level authorization in all retrieval queries
+- Never trust client-supplied scope without server-side validation
+- Keep provider credentials in environment-managed secrets
+- Redact sensitive fields from logs and telemetry payloads
+
+## Key tradeoffs and tuning knobs
+
+- **Postgres + pgvector vs dedicated vector database**
+  - Current choice favors simplicity and tight metadata joins
+  - Revisit when corpus size, concurrency, or latency targets exceed limits
+- **Chunk size and overlap**
+  - Smaller chunks increase precision; larger chunks preserve context
+  - Overlap improves continuity but increases index size and retrieval cost
+- **Top-k and context window allocation**
+  - Larger k improves recall but increases latency and token spend
+  - Practical tuning balances answer quality against response time and cost
+- **Prompt strictness**
+  - Strong grounding instructions improve factuality
+  - Over-constrained prompts can reduce fluency or useful synthesis
+
+## Evolution path
+
+Likely future upgrades as load and corpus size grow:
+
+- Background queues/workers for ingestion retries and backpressure control
+- Caching layers for hot retrieval results or prompt scaffolds
+- Hybrid retrieval (keyword + semantic + reranker)
+- Optional move to a dedicated vector service if pgvector no longer meets SLOs
 
