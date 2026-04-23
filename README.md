@@ -1,7 +1,8 @@
-
 # Explainit
 
-Explainit helps teams create shareable AI chats powered by their own documentation. It combines a web client, an API, and document ingestion so developers can ask questions and get grounded answers quickly.
+Explainit helps teams create shareable AI chats powered by their own documentation. It combines a web client, an API, and document ingestion so developers can ask questions and get grounded answers quickly. 
+
+Watch a short demo of Explainit in action [here](https://www.loom.com/share/4f5aac7836f44e27a3cdd1854b566d46).
 
 ## Features
 
@@ -10,32 +11,6 @@ Explainit helps teams create shareable AI chats powered by their own documentati
 - Run locally with Docker for full-stack development
 - Run client and server separately for faster local iteration
 - Extend with your own auth, storage, and deployment setup
-
-## Quick Start
-
-### Docker (recommended)
-
-1. Create required environment files:
-   - `server/.env.local`
-   - `client/.env.local`
-2. Build and start all services:
-   - `docker-compose up --build`
-3. Access the app and API:
-   - Client: `http://localhost:3000`
-   - API: `http://localhost:4000`
-
-### Local development
-
-1. Start Postgres (or use your own database), then configure environment files:
-   - `server/.env.local`
-   - `client/.env.local`
-2. Install dependencies:
-   - `cd server && npm install`
-   - `cd ../client && npm install`
-3. Run the backend:
-   - `cd ../server && npm run dev`
-4. Run the frontend in a second terminal:
-   - `cd ../client && npm run dev`
 
 ## Documentation
 
