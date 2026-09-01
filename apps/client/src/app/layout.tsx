@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from '@/lib/providers/provider';
 import { Toaster } from '@/components/ui/toaster';
+import { getAccessToken, getAuthMode } from '@/lib/auth/session';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,13 +17,18 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const accessToken = await getAccessToken();
+  const authMode = getAuthMode();
+
   return (
     <html lang="en" className="dark">
       <body
         className={`${inter.className} dark:bg-gray-950 min-h-screen`}
         suppressHydrationWarning={true}
       >
-        <Providers>{children}</Providers>
+        <Providers accessToken={accessToken} authMode={authMode}>
+          {children}
+        </Providers>
         <Toaster />
 
         {/* Cloudflare Web Analytics */}

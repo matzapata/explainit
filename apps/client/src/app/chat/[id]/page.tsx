@@ -1,7 +1,7 @@
 import { Chat } from '@/components/chat/chat';
 import { ChatNavBar } from '@/components/chat/chat-navbar';
 import { chatService } from '@/lib/services/chat-service';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { isAuthenticated } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 
 interface ChatPageProps {
@@ -11,7 +11,6 @@ interface ChatPageProps {
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
-  const { isAuthenticated } = getKindeServerSession();
   const authenticated = await isAuthenticated();
   const chat = await chatService.getChat(params.id);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { RegisterLink } from '@kinde-oss/kinde-auth-nextjs';
+import { RegisterLink } from '@/lib/auth/links';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { ChatMetadataDto } from '@/lib/services/chat-service';

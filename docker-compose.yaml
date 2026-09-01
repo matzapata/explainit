@@ -7,6 +7,8 @@ services:
       PORT: '4000'
       NODE_ENV: development
       DATABASE_URL: postgresql://explainit:explainit@postgres:5432/explainit
+      AUTH_MODE: none
+      ADMIN_EMAIL: admin@example.com
     env_file:
       - ./apps/server/.env.local
     volumes:
@@ -24,6 +26,7 @@ services:
       dockerfile: Dockerfile
     environment:
       NODE_ENV: development
+      NEXT_PUBLIC_AUTH_MODE: none
     env_file:
       - ./apps/client/.env.local
     volumes:

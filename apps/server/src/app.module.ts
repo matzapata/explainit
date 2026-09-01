@@ -6,10 +6,12 @@ import { APP_PIPE } from '@nestjs/core';
 import { ChatModule } from './chat/chat.module';
 import { ContactModule } from './contact/contact.module';
 import { LoggerModule } from 'nestjs-pino';
+import { AuthModule } from './infrastructure/auth/auth.module';
 
 @Module({
   imports: [
     // main controller modules
+    AuthModule,
     UsersModule,
     ChatModule,
     ContactModule,
@@ -42,8 +44,27 @@ import { LoggerModule } from 'nestjs-pino';
         GCP_STORAGE_BUCKET: Joi.string().required(),
 
         // auth
-        AUTH_JWKS_URI: Joi.string().required(),
+        AUTH_MODE: Joi.string()
+          .valid('none', 'oidc', 'password')
+          .default('none'),
         ADMIN_EMAIL: Joi.string().required(),
+        AUTH_JWKS_URI: Joi.when('AUTH_MODE', {
+          is: 'oidc',
+          then: Joi.string().uri().required(),
+          otherwise: Joi.string().optional(),
+        }),
+        AUTH_ISSUER: Joi.string().optional(),
+        AUTH_AUDIENCE: Joi.string().optional(),
+        AUTH_SECRET: Joi.when('AUTH_MODE', {
+          is: 'password',
+          then: Joi.string().min(16).required(),
+          otherwise: Joi.string().optional(),
+        }),
+        ADMIN_PASSWORD: Joi.when('AUTH_MODE', {
+          is: 'password',
+          then: Joi.string().min(1).required(),
+          otherwise: Joi.string().optional(),
+        }),
 
         // database
         DATABASE_URL: Joi.string().required(),

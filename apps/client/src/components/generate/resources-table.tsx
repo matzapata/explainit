@@ -25,7 +25,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { ChatMetadataDto, ChatResource, chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 import { Textarea } from '../ui/textarea';
@@ -60,7 +60,7 @@ export default function ResourcesTable(props: {
   initialUrl?: string;
   initialResources: ChatResource[];
 }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [resources, setResources] = useState<ChatResource[]>(
     props.initialResources,
   );
@@ -120,7 +120,7 @@ export default function ResourcesTable(props: {
 }
 
 function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?: string, chatId: string }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const [urls, setUrls] = useState<string[]>([]);
   const inspectForm = useForm<z.infer<typeof inspectFormSchema>>({
@@ -293,7 +293,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
 }
 
 function AddTextResource(props: { setResources: (r: any) => void, chatId: string }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const inspectForm = useForm<z.infer<typeof addTextFormSchema>>({
     resolver: zodResolver(addTextFormSchema),

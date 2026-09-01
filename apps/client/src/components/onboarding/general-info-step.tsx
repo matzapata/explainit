@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button, buttonVariants } from '../ui/button';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '../ui/use-toast';
@@ -45,7 +45,7 @@ export function GeneralInfoStep(props: {
   chat: ChatMetadataDto;
 }) {
   const router = useRouter()
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [logoUrl, setLogoUrl] = useState<string | undefined>(props.chat.logo);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

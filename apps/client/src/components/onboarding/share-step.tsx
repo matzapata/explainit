@@ -4,7 +4,7 @@ import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
 import { Button } from '../ui/button';
 import { ChatCard } from '../explore/chat-card';
 import { useRouter } from 'next/navigation';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { toast } from '../ui/use-toast';
 import { useState } from 'react';
 import { confettiAnimation } from '@/lib/confetti-animation';
@@ -13,7 +13,7 @@ import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard';
 export function ShareStep(props: { chat: ChatMetadataDto }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [published, setPublished] = useState<boolean>(props.chat.published); 
   const {isCopied, copyToClipboard} = useCopyToClipboard({ timeout: 2000 });
 

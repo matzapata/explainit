@@ -7,9 +7,9 @@ import Link from "next/link";
 import {
   RegisterLink,
   LoginLink,
-} from "@kinde-oss/kinde-auth-nextjs/components";
+} from "@/lib/auth/links";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useSession } from "@/lib/auth/use-session";
 
 const navbarItems = [
   { title: "Home", href: "/" },
@@ -18,7 +18,7 @@ const navbarItems = [
 ];
 
 export default function Navbar() {
-  const { user } = useKindeBrowserClient();
+  const { user } = useSession();
 
   return (
     <div className="flex justify-center w-full">

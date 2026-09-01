@@ -4,7 +4,7 @@ import { buttonVariants } from '../ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from '../ui/use-toast';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { chatService } from '@/lib/services/chat-service';
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ export default function VisibilityForm(props: {
   published: boolean;
   id: string;
 }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [published, setPublished] = useState<boolean>(props.published);
 
   const setVisibilityMutation = useMutation({

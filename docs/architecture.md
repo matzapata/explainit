@@ -33,7 +33,7 @@ flowchart LR
 
 Current infrastructure folders and responsibilities:
 
-- `auth`: token verification via JWKS-backed provider (`JwksProvider`)
+- `auth`: `AUTH_MODE=none|oidc|password`. `NoneProvider` bootstraps `ADMIN_EMAIL`; `JwksProvider` verifies standard `sub` + `email` (any OIDC issuer, including Kinde); `PasswordProvider` issues/verifies a local HS256 JWT
 - `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
 - `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`)
 - `llm`: text generation model binding (`OpenAILlmProvider`)

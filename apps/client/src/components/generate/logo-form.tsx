@@ -25,7 +25,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from '../ui/use-toast';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { chatService } from '@/lib/services/chat-service';
 
@@ -37,7 +37,7 @@ const formSchema = z.object({
 
 export default function LogoForm(props: { chatId: string, logo?: string }) {
 
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(props.logo);
   const form = useForm<z.infer<typeof formSchema>>({
