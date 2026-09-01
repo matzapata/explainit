@@ -7,6 +7,7 @@ import { VectorStoreService } from '@src/infra/vectorstore/vectorstore.service';
 import { LlmService } from '@src/infra/llm/llm.service';
 import { Document } from 'langchain/document';
 import { EmbeddingHit } from '@src/infra/vectorstore/providers/vectorstore.provider';
+import { Span } from '@src/infra/observability/decorators/span.decorator';
 import { MessageAgent } from '../domain/message';
 
 export { MessageAgent };
@@ -20,6 +21,7 @@ export class RagService {
 
   // load ========================================
 
+  @Span({ name: 'ingest' })
   public async addDocuments(
     documents: {
       content: string;
@@ -50,14 +52,10 @@ export class RagService {
       chatHistory,
     );
 
-    const context = await this.vectorStoreService.similaritySearch(
-      standaloneQuestion,
-      k,
-      namespace,
-    );
+    const context = await this.retrieve(standaloneQuestion, k, namespace);
 
     // TODO: add stream here
-    const answer = await this.buildAnswerQuestion(standaloneQuestion, context);
+    const answer = await this.generate(standaloneQuestion, context);
 
     return {
       context,
@@ -118,6 +116,16 @@ export class RagService {
       chatHistory: chatHistory,
     });
     return standaloneQuestion;
+  }
+
+  @Span({ name: 'retrieve' })
+  public async retrieve(question: string, k: number, namespace: string) {
+    return this.vectorStoreService.similaritySearch(question, k, namespace);
+  }
+
+  @Span({ name: 'generate' })
+  public async generate(question: string, context: EmbeddingHit[]) {
+    return this.buildAnswerQuestion(question, context);
   }
 
   private async buildAnswerQuestion(question: string, context: EmbeddingHit[]) {
