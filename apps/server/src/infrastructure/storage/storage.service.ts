@@ -1,5 +1,5 @@
 // Select the storage provider to use
-export { GcpStorageProvider as StorageService } from './providers/gcp.provider';
+export { S3StorageProvider as StorageService } from './providers/s3.provider';
 
 // Export types
-export * from './providers/gcp.provider';
+export * from './providers/storage.provider';

@@ -38,8 +38,8 @@ Current infrastructure folders and responsibilities:
 - `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`)
 - `llm`: text generation model binding (`OpenAILlmProvider`)
 - `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
-- `storage`: file/object storage and image resize (`GcpStorageProvider`)
-- `emails`: transactional email delivery (`ResendEmailProvider`, optional NodeMailer provider)
+- `storage`: file/object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production)
+- `emails`: optional transactional email (`ResendEmailProvider` when `RESEND_API_KEY` is set, otherwise `NoneEmailProvider`)
 
 ## Architecture goals
 

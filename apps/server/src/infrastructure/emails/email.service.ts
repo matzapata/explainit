@@ -1,5 +1,3 @@
-// Select a provider from the providers folder
-export { ResendEmailProvider as EmailService } from './providers/resend.provider';
+export { EmailProvider as EmailService } from './providers/email.provider';
 
-// Export types
 export * from './providers/email.provider';
