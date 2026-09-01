@@ -27,7 +27,7 @@ export default async function Profile() {
               Personal info
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              This is how others will see you on the site.
+              Your profile on this instance.
             </p>
           </div>
 

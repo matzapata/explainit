@@ -19,11 +19,11 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
   const navbarItems = props.navbarItems ?? [];
   const nestedItems = props.nestedItems ?? [
     {
-      link: '/generate',
+      link: '/',
       title: 'General',
     },
     {
-      link: '/generate/resources',
+      link: '/resources',
       title: 'Resources',
     },
   ];

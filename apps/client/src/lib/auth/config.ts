@@ -13,7 +13,7 @@ export function getAuthMode(): AuthMode {
 
 export function safeReturnTo(
   value?: string | null,
-  fallback = '/generate',
+  fallback = '/',
 ): string {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
     return fallback;
@@ -21,7 +21,7 @@ export function safeReturnTo(
   return value;
 }
 
-export function loginHref(returnTo = '/generate'): string {
+export function loginHref(returnTo = '/'): string {
   const target = safeReturnTo(returnTo);
   if (getAuthMode() === 'none') {
     return target;

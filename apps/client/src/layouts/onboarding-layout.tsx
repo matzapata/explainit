@@ -18,7 +18,7 @@ export function OnboardingLayout(props: ChatLayoutProps) {
         <Logo />
 
         <div className="flex items-center space-x-2">
-          <Link href={'/generate'} className="text-gray-500 hover:underline">
+          <Link href={'/'} className="text-gray-500 hover:underline">
             Skip
           </Link>
 

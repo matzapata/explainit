@@ -30,13 +30,6 @@ export default async function RootLayout({
           {children}
         </Providers>
         <Toaster />
-
-        {/* Cloudflare Web Analytics */}
-        <script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "65484acb9faa47bb9ea65760673ef182"}'
-        ></script>
       </body>
     </html>
   );

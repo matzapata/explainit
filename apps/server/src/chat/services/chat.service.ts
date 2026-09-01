@@ -33,10 +33,6 @@ export class ChatsService {
     return this.chatRepository.findFirstById(id);
   }
 
-  findManyPublished(limit: number, offset: number) {
-    return this.chatRepository.findManyPublished(limit, offset);
-  }
-
   incrementPoints(id: string) {
     return this.chatRepository.incrementPoints(id);
   }

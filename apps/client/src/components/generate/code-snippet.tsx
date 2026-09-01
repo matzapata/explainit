@@ -44,7 +44,7 @@ export default function CodeSnippet(props: { id: string }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setCodeSnippet(generateCodeSnippet(`https://${window.location.host}/chat/${props.id}`));
+      setCodeSnippet(generateCodeSnippet(`${window.location.origin}/chat/${props.id}`));
     }
   }, [props.id]);
 
