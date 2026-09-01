@@ -40,7 +40,6 @@ Current infrastructure folders and responsibilities:
 - `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
 - `storage`: file/object storage and image resize (`GcpStorageProvider`)
 - `emails`: transactional email delivery (`ResendEmailProvider`, optional NodeMailer provider)
-- `payments`: subscriptions, checkout, and webhooks (`LemonSqueezyPaymentProvider`)
 
 ## Architecture goals
 
@@ -158,7 +157,6 @@ An embedding is a dense numeric representation where semantically related text i
 - **ChatResource**: belongs to a chat; stores source type/data and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
 - **ChatRateLimit**: per-chat message throttle rows
-- **UserSubscription** / **WebhookEvent**: payment records (still present until payments are stripped)
 
 Primary keys are UUID. There is no Mongo/Atlas dependency.
 

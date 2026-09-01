@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ChatController } from './chat.controller';
 import { RagService } from './services/rag.service';
 import { ChatsService } from './services/chat.service';
-import { PaymentsModule } from '@src/payments/payments.module';
 import { PrismaModule } from '@src/database/prisma.module';
 import { ChatRepository } from './repositories/chat.repository';
 import { ResourcesService } from './services/resources.service';
@@ -24,7 +23,6 @@ import { RagLoaderService } from './services/rag-loader.service';
   ],
   imports: [
     PrismaModule,
-    PaymentsModule,
     VectorStoreModule,
     LlmModule,
     StorageModule,

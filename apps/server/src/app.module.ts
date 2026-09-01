@@ -3,21 +3,16 @@ import { UsersModule } from './users/users.module';
 import * as Joi from 'joi';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
-import { PaymentsModule } from './payments/payments.module';
 import { ChatModule } from './chat/chat.module';
 import { ContactModule } from './contact/contact.module';
 import { LoggerModule } from 'nestjs-pino';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     // main controller modules
     UsersModule,
-    PaymentsModule,
     ChatModule,
     ContactModule,
-    // events
-    EventEmitterModule.forRoot(),
     // logger
     LoggerModule.forRoot({
       pinoHttp: {
@@ -36,13 +31,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
           .valid('development', 'production', 'test')
           .default('production'),
         PORT: Joi.number().default(3000),
-
-        // payments
-        LEMONSQUEEZY_PRO_VARIANT_ID: Joi.string().required(),
-        LEMONSQUEEZY_STORE_ID: Joi.string().required(),
-        LEMONSQUEEZY_API_KEY: Joi.string().required(),
-        LEMONSQUEEZY_WEBHOOK_SECRET: Joi.string().required(),
-        LEMONSQUEEZY_REDIRECT_URL: Joi.string().required(),
 
         // llm
         OPENAI_API_KEY: Joi.string().required(),

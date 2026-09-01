@@ -15,12 +15,10 @@ import {
 import { IconLifeBuoy, IconLogOut, IconSettings } from "../ui/icons";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
 
 export interface NavbarProps {
   items?: NavbarItem[];
-  user: { email?: string; isPro?: boolean; picture?: string };
+  user: { email?: string; picture?: string };
 }
 export interface NavbarItem {
   title: string;
@@ -50,14 +48,6 @@ export default function Navbar(props: NavbarProps) {
         </div>
 
         <div className="hidden md:flex items-center space-x-4">
-          <div>
-            {props.user.isPro && (
-              <div className="bg-brand-200 text-xs px-2 py-0.5 rounded-full text-brand-600 font-medium border border-brand-600">
-                PRO
-              </div>
-            )}
-          </div>
-
           <Link
             href={"/settings"}
             className="rounded-md py-2 px-[10px] hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -97,14 +87,6 @@ export default function Navbar(props: NavbarProps) {
 
         {/* Mobile burger and menu */}
         <div className="md:hidden flex space-x-4 items-center">
-          <div>
-            {props.user.isPro && (
-              <div className="bg-brand-200 text-xs px-2 py-0.5 rounded-full text-brand-600 font-medium border border-brand-600">
-                PRO
-              </div>
-            )}
-          </div>
-
           <Sheet>
             <SheetTrigger asChild>
               <button className="items-center h-9 w-9 p-0 flex justify-center text-gray-900 dark:text-white">

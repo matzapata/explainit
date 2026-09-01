@@ -15,7 +15,6 @@ const navbarItems = [
   { title: "Home", href: "/" },
   { title: "Features", href: "/#features" },
   { title: "FAQ", href: "/#faq" },
-  { title: "Pricing", href: "/#pricing" },
 ];
 
 export default function Navbar() {

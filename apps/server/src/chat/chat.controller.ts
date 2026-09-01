@@ -34,12 +34,9 @@ import { ResourcesService } from './services/resources.service';
 import { Chat, ChatResource } from '@prisma/client';
 import { GetResourceDto } from './dtos/get-resource.dto';
 import { PostResourceInspectDto } from './dtos/post-resource-inspect.dto';
-import { PlanCheckerService } from '@src/payments/services/plan-checker.service';
 import { ChatMessagesRateLimit } from './guards/chat-messages-rate-limit.guard';
 import { CrawlerService } from '@src/infrastructure/crawler/crawler.service';
 import { RagLoaderService } from './services/rag-loader.service';
-import { OnEvent } from '@nestjs/event-emitter';
-import { SubscriptionCanceled } from '@src/payments/events/subscription-canceled.event';
 import { AdminGuard } from '@src/users/guards/admin.guard';
 
 @Controller('api/chats')
@@ -50,7 +47,6 @@ export class ChatController {
     private readonly chatsService: ChatsService,
     private readonly storageService: StorageService,
     private readonly resourcesService: ResourcesService,
-    private readonly planChecker: PlanCheckerService,
     private readonly crawlerService: CrawlerService,
   ) {}
 
@@ -105,10 +101,6 @@ export class ChatController {
     @Body() data: UpdateChatMetadataDto,
     @Param('id') id: string,
   ): Promise<Chat> {
-    if (data.published) {
-      await this.planChecker.canPublishChat(user.id);
-    }
-
     const chat = this.chatsService.update(user.id, id, data);
     return chat;
   }
@@ -186,12 +178,6 @@ export class ChatController {
       throw new BadRequestException('No new urls to add');
     }
 
-    // check if user can add more resources
-    await this.planChecker.withinResourcesLimit(
-      user.id,
-      resources.length + newUrls.length,
-    );
-
     // scrape the urls content
     const scrappedHtml = await this.crawlerService.scrape({
       urls: resource.urls,
@@ -234,10 +220,6 @@ export class ChatController {
     } else if (chat.ownerId !== user.id) {
       throw new BadRequestException('Chat not owned by user');
     }
-
-    // check if user can add more resources
-    const resources = await this.resourcesService.findByChatId(chat.id);
-    await this.planChecker.withinResourcesLimit(user.id, resources.length + 1);
 
     // load documents and resources
     // Create documents for rag, one per page. We'll do one resource per page
@@ -350,19 +332,5 @@ export class ChatController {
     );
 
     return response;
-  }
-
-  // Handle events ============================================================
-
-  @OnEvent(SubscriptionCanceled.type)
-  async onSubscriptionCanceled(payload: SubscriptionCanceled) {
-    const findManyByOwner = await this.chatsService.findManyByOwner(
-      payload.userId,
-    );
-    await Promise.all(
-      findManyByOwner.map((chat) =>
-        this.chatsService.update(payload.userId, chat.id, { published: false }),
-      ),
-    );
   }
 }
