@@ -23,11 +23,7 @@ describe('CurrentUserMiddleware', () => {
     get: jest.fn().mockReturnValue('admin@example.com'),
   } as unknown as EnvService;
 
-  const middleware = new CurrentUserMiddleware(
-    usersService,
-    authService,
-    env,
-  );
+  const middleware = new CurrentUserMiddleware(usersService, authService, env);
 
   beforeEach(() => {
     jest.clearAllMocks();

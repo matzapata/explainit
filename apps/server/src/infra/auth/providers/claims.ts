@@ -4,16 +4,12 @@ export function emailFromClaims(
   decoded: Record<string, unknown>,
 ): string | undefined {
   const email =
-    decoded.email ??
-    decoded.preferred_username ??
-    decoded['x-hasura-email'];
+    decoded.email ?? decoded.preferred_username ?? decoded['x-hasura-email'];
 
   return typeof email === 'string' && email.length > 0 ? email : undefined;
 }
 
-export function payloadFromClaims(
-  decoded: unknown,
-): JwtPayload | null {
+export function payloadFromClaims(decoded: unknown): JwtPayload | null {
   if (!decoded || typeof decoded !== 'object') {
     return null;
   }

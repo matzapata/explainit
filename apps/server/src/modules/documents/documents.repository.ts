@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@src/infra/database/prisma.service';
 
 @Injectable()
-export class ResourcesRepository {
+export class DocumentsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   create(data: Prisma.ChatResourceCreateInput) {
@@ -33,6 +33,13 @@ export class ResourcesRepository {
           mode: 'insensitive',
         },
       },
+    });
+  }
+
+  update(id: string, data: Prisma.ChatResourceUpdateInput) {
+    return this.prisma.chatResource.update({
+      where: { id },
+      data,
     });
   }
 

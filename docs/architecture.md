@@ -11,8 +11,10 @@ External providers supply language model inference, embedding generation, and op
 ## System context
 
 - `client`: chat UX, workspace/resource setup, and response rendering
-- `server`: auth, ingestion pipeline, retrieval, prompt assembly, and response generation
+- `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation
+- `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
+- `redis`: BullMQ job queue
 - Providers: model APIs and other environment-configured dependencies
 
 ```mermaid
@@ -20,6 +22,10 @@ flowchart LR
   User[User] --> Client[Next.js Client]
   Client --> API[NestJS API]
   API --> DB[(Postgres + pgvector)]
+  API --> Redis[(Redis / BullMQ)]
+  Worker[Ingest worker] --> Redis
+  Worker --> DB
+  Worker --> Crawler[Crawler / embeddings]
   API --> Providers[External Providers]
 ```
 
@@ -37,10 +43,11 @@ Current infrastructure folders and responsibilities:
 
 - `auth`: `AUTH_MODE=none|oidc|password`. `NoneProvider` bootstraps `ADMIN_EMAIL`; `JwksProvider` verifies standard `sub` + `email` (any OIDC issuer, including Kinde); `PasswordProvider` issues/verifies a local HS256 JWT
 - `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
-- `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`)
-- `llm`: text generation model binding (`OpenAILlmProvider`)
+- `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
+- `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`; OpenAI-compatible via `OPENAI_BASE_URL`)
+- `llm`: text generation model binding (`OpenAILlmProvider` / `ChatOpenAI`; OpenAI-compatible via `OPENAI_BASE_URL`)
 - `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
-- `storage`: file/object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production)
+- `storage`: file/object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the bucket; the app does not.
 
 ## Architecture goals
 
@@ -89,15 +96,28 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-  Source[Source URL or content] --> Fetch[Fetch and normalize content]
-  Fetch --> Crawl[Crawler provider (inspect/crawl/scrape)]
+  Source[Source URL or content] --> API[API creates pending ChatResource]
+  API --> Queue[BullMQ ingest queue]
+  Queue --> Worker[Ingest worker]
+  Worker --> Crawl[Crawler provider scrape]
   Crawl --> Chunk[Split content into chunks]
   Chunk --> Embed[Embeddings provider]
   Embed --> Store[Persist metadata + vectors in Postgres]
-  Store --> Ready[Ready for retrieval]
+  Store --> Ready[ChatResource status ready]
 ```
 
-Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability.
+Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability. Website ingest is asynchronous: `POST /api/chats/:id/resources/web` enqueues one BullMQ job per URL and returns `202` with `pending` resources. A worker processor scrapes, chunks, embeds, and marks the row `ready` or `failed`. URL inspect stays synchronous on the API. Text resources are still ingested inline.
+
+### Queue infrastructure
+
+Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across the two process roots:
+
+- `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
+- `modules/chat/application/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `IngestJob` payload type), since it's part of the ingestion use case, not generic infra. `ChatModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
+- `IngestWebResourceService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk`. Payload is `{ resourceId, chatId, url }` — never HTML.
+- `infra/worker/ingest.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process.
+- Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.
+- Compose runs Redis. `infra/worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.
 
 ### Crawler infrastructure
 
@@ -117,7 +137,7 @@ This design keeps crawling provider-specific details isolated while exposing a s
 Embedding responsibilities are implemented under `apps/server/src/infra/embeddings`:
 
 - `EmbeddingsProvider` contract exposes `generateEmbeddings(text: string)`.
-- Active implementation (`OpenAiEmbeddingsProvider`) uses `@langchain/openai`.
+- Active implementation (`OpenAiEmbeddingsProvider`) uses `@langchain/openai`. Optional `OPENAI_BASE_URL` targets OpenRouter or other OpenAI-compatible APIs; `OPENAI_EMBEDDING_MODEL` must remain 1536 dimensions.
 - Text is normalized before embedding (newlines replaced with spaces).
 - The same service is reused by vector ingestion (`addDocuments`) and query-time similarity search.
 
@@ -155,7 +175,7 @@ An embedding is a dense numeric representation where semantically related text i
 
 - **User**: `id` UUID, unique `email`, optional `name`
 - **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points
-- **ChatResource**: belongs to a chat; stores source type/data and `embeddingIds` for the chunks it produced
+- **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
 - **ChatRateLimit**: per-chat message throttle rows
 
@@ -197,7 +217,6 @@ Distinguish transient provider failures (retryable) from deterministic content f
 
 Likely future upgrades as load and corpus size grow:
 
-- Background queues/workers for ingestion retries and backpressure control
 - Caching layers for hot retrieval results or prompt scaffolds
 - Hybrid retrieval (keyword + semantic + reranker)
 - Optional move to a dedicated vector service if pgvector no longer meets SLOs

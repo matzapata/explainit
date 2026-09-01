@@ -8,5 +8,9 @@ export class GetResourceDto {
   @Expose()
   data: string;
   @Expose()
+  status: string;
+  @Expose()
+  error: string | null;
+  @Expose()
   urls: string[];
 }

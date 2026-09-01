@@ -14,7 +14,13 @@ export class ChatMetadataDto {
   @Expose()
   published: boolean;
   @Expose() // TODO: transform here
-  resources: { id: string; type: string; data: string }[];
+  resources: {
+    id: string;
+    type: string;
+    data: string;
+    status: string;
+    error: string | null;
+  }[];
   @Expose()
   description: string;
   @Expose()

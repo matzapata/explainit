@@ -28,6 +28,8 @@ export interface ChatResource {
     id: string;
     type: string;
     data: string;
+    status?: 'pending' | 'processing' | 'ready' | 'failed';
+    error?: string | null;
 }
 
 export class ChatService {

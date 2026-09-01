@@ -17,7 +17,10 @@ describe('PasswordProvider', () => {
   it('issues a JWT for the bootstrap admin', () => {
     const token = provider.login('admin@example.com', 'secret');
     expect(token).toBeTruthy();
-    const decoded = jwt.verify(token, 'test-secret-at-least-16-chars') as jwt.JwtPayload;
+    const decoded = jwt.verify(
+      token,
+      'test-secret-at-least-16-chars',
+    ) as jwt.JwtPayload;
     expect(decoded.sub).toBe('local');
     expect(decoded.email).toBe('admin@example.com');
   });

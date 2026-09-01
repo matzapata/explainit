@@ -107,28 +107,6 @@ describe('S3StorageProvider', () => {
     await expect(provider.deleteFile('missing.webp')).resolves.toBeUndefined();
   });
 
-  it('creates the bucket when HeadBucket returns 404', async () => {
-    send
-      .mockRejectedValueOnce({
-        name: 'NotFound',
-        $metadata: { httpStatusCode: 404 },
-      })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
-
-    const provider = new S3StorageProvider(
-      config({ S3_BUCKET: 'explainit', AWS_REGION: 'us-east-1' }),
-      client,
-    );
-
-    await provider.onModuleInit();
-
-    expect(send).toHaveBeenCalledTimes(3);
-    expect(send.mock.calls[1][0].input).toMatchObject({
-      Bucket: 'explainit',
-    });
-  });
-
   it('returns listed object keys', async () => {
     send.mockResolvedValueOnce({
       Contents: [{ Key: 'a.webp' }, { Key: 'b.webp' }, {}],

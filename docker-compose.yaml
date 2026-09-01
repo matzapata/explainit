@@ -18,6 +18,9 @@ services:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
     env_file:
       - path: ./apps/server/.env.local
         required: false
@@ -26,12 +29,44 @@ services:
       - /app/node_modules
     ports:
       - '4000:4000'
+    shm_size: '1gb'
     command: sh -c "npx prisma migrate deploy && npm run dev"
     depends_on:
       postgres:
         condition: service_healthy
-      floci:
+      redis:
+        condition: service_healthy
+      floci-init:
+        condition: service_completed_successfully
+      jaeger:
         condition: service_started
+  worker:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://explainit:explainit@postgres:5432/explainit
+      AUTH_MODE: none
+      ADMIN_EMAIL: admin@example.com
+      OTEL_SERVICE_NAME: explainit-worker
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+    env_file:
+      - path: ./apps/server/.env.local
+        required: false
+    volumes:
+      - ./apps/server:/app
+      - /app/node_modules
+    shm_size: '1gb'
+    command: sh -c "npx prisma migrate deploy && npm run worker"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       jaeger:
         condition: service_started
   client:
@@ -67,6 +102,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
   floci:
     image: floci/floci:latest
     restart: unless-stopped
@@ -80,6 +127,22 @@ services:
       FLOCI_STORAGE_MODE: persistent
       FLOCI_STORAGE_PERSISTENT_PATH: /app/data
       FLOCI_DEFAULT_REGION: us-east-1
+      FLOCI_ACCOUNT_ID: '000000000000'
+  floci-init:
+    image: amazon/aws-cli:latest
+    restart: 'no'
+    entrypoint: ['/bin/sh', '/init.sh']
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://floci:4566
+      S3_BUCKET: explainit
+    volumes:
+      - ./config/floci/init.sh:/init.sh:ro
+      - ./config/floci/cors.json:/cors.json:ro
+    depends_on:
+      - floci
   jaeger:
     image: jaegertracing/all-in-one:latest
     environment:
@@ -123,6 +186,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   floci_data:
   prometheus_data:
   grafana_data:
