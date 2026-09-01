@@ -37,11 +37,14 @@ import { AuthModule } from './infrastructure/auth/auth.module';
         // llm
         OPENAI_API_KEY: Joi.string().required(),
 
-        // storage
-        GCP_PROJECT_ID: Joi.string().required(),
-        GCP_CLIENT_EMAIL: Joi.string().required(),
-        GCP_PRIVATE_KEY: Joi.string().required(),
-        GCP_STORAGE_BUCKET: Joi.string().required(),
+        // storage (S3 / Floci / MinIO). Defaults match docker compose.
+        S3_BUCKET: Joi.string().default('explainit'),
+        S3_ENDPOINT: Joi.string().optional(),
+        S3_PUBLIC_ENDPOINT: Joi.string().optional(),
+        S3_FORCE_PATH_STYLE: Joi.boolean().optional(),
+        AWS_REGION: Joi.string().default('us-east-1'),
+        AWS_ACCESS_KEY_ID: Joi.string().optional(),
+        AWS_SECRET_ACCESS_KEY: Joi.string().optional(),
 
         // auth
         AUTH_MODE: Joi.string()
@@ -69,12 +72,10 @@ import { AuthModule } from './infrastructure/auth/auth.module';
         // database
         DATABASE_URL: Joi.string().required(),
 
-        // emails
-        // NODEMAILER_EMAIL_USER: Joi.string().required(),
-        // NODEMAILER_EMAIL_PASSWORD: Joi.string().required(),
-        RESEND_FROM_EMAIL: Joi.string().required(),
-        RESEND_API_KEY: Joi.string().required(),
-        CONTACT_EMAIL: Joi.string().required(),
+        // emails — optional. Resend is used when RESEND_API_KEY is set.
+        RESEND_API_KEY: Joi.string().optional().allow(''),
+        RESEND_FROM_EMAIL: Joi.string().optional().allow(''),
+        CONTACT_EMAIL: Joi.string().optional().allow(''),
       }),
     }),
   ],

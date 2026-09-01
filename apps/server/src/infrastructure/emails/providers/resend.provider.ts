@@ -13,6 +13,10 @@ export class ResendEmailProvider extends EmailProvider {
     this.client = new Resend(this.configService.get('RESEND_API_KEY'));
   }
 
+  isEnabled(): boolean {
+    return true;
+  }
+
   async sendEmail(props: {
     to: string;
     from?: string;

@@ -22,6 +22,10 @@ export class NodeMailerEmailProvider extends EmailProvider {
     });
   }
 
+  isEnabled(): boolean {
+    return true;
+  }
+
   async sendEmail(props: {
     to: string;
     from?: string;
