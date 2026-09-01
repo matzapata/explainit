@@ -163,14 +163,13 @@ Primary keys are UUID. There is no Mongo/Atlas dependency.
 
 ## Reliability and observability
 
-- Each stage should emit structured logs: fetch, parse, chunk, embed, store, retrieve, generate
-- Distinguish transient provider failures (retryable) from deterministic content failures (non-retryable)
-- Maintain metrics for:
-  - chat request latency (p50/p95/p99)
-  - retrieval hit quality (e.g., similarity score distribution)
-  - provider error rates and timeouts
-  - ingestion throughput and failure counts
-- Validate deployments with end-to-end smoke tests for ingestion and Q&A
+The API emits the three observability signals used in Compose:
+
+- **Traces** — OpenTelemetry SDK (`infra/observability/tracing.ts`) exports OTLP/HTTP to Jaeger. HTTP auto-instrumentation creates the root span; `@Span()` on ingest, retrieve, and generate adds child spans. `/health` and `/metrics` are not traced.
+- **Logs** — Pino injects `traceId` / `spanId` from the active span. Auth cookies and authorization headers are redacted.
+- **Metrics** — Prometheus scrapes `/metrics`. Grafana is provisioned with Prometheus and Jaeger datasources (`admin` / `admin` on port 3001 so it does not collide with the Next.js client).
+
+Distinguish transient provider failures (retryable) from deterministic content failures (non-retryable). Validate deployments with end-to-end smoke tests for ingestion and Q&A.
 
 ## Security and tenancy boundaries
 

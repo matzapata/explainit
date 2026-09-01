@@ -47,6 +47,12 @@ export const envSchema = z
     ADMIN_PASSWORD: z.string().optional(),
 
     DATABASE_URL: z.string().min(1),
+
+    OTEL_SERVICE_NAME: z.string().default('explainit'),
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: z
+      .string()
+      .url()
+      .default('http://localhost:4318/v1/traces'),
   })
   .superRefine((env, ctx) => {
     if (env.AUTH_MODE === 'oidc' && !env.AUTH_JWKS_URI) {
