@@ -6,8 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write \"src/**/*.tsc\"",
-    "deploy": "vercel deploy --prod"
+    "format": "prettier --write \"src/**/*.tsc\""
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",

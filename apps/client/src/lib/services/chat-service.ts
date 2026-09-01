@@ -74,11 +74,6 @@ export class ChatService {
         return res.data
     }
 
-    async getPublicChats(): Promise<ChatMetadataDto[]> {
-        const res = await this.client.get("/api/chats/published")
-        return res.data
-    }
-
     async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
         const res = await this.client.post(`/api/chats/${id}/messages`, { question, chatHistory: chatHistory ?? [] })
         return {

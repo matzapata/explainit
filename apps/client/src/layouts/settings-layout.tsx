@@ -18,7 +18,7 @@ export default function SettingsLayout(props: SettingsLayoutProps) {
     {
       title: "Generate",
       icon: <IconHome className="h-5 w-5 text-gray-500" />,
-      link: "/generate",
+      link: "/",
     },
   ];
   const nestedItems = props.nestedItems ?? [];

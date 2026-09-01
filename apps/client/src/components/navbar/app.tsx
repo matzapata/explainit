@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconLifeBuoy, IconLogOut, IconSettings } from "../ui/icons";
+import { IconLogOut, IconSettings } from "../ui/icons";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
@@ -114,11 +114,6 @@ export default function Navbar(props: NavbarProps) {
 
               <div className="divide-y dark:divide-gray-800">
                 <div className="mb-6 space-y-2">
-                  <SidebarNavItem
-                    href="/contact"
-                    title="Support"
-                    icon={<IconLifeBuoy className="h-5 w-5 text-gray-500" />}
-                  />
                   <SidebarNavItem
                     title="Settings"
                     href="/settings"

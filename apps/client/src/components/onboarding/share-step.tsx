@@ -2,7 +2,7 @@
 
 import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
 import { Button } from '../ui/button';
-import { ChatCard } from '../explore/chat-card';
+import { ChatCard } from './chat-card';
 import { useRouter } from 'next/navigation';
 import { useAccessToken } from '@/lib/auth/use-session';
 import { toast } from '../ui/use-toast';
@@ -102,7 +102,7 @@ export function ShareStep(props: { chat: ChatMetadataDto }) {
             </button>
           </div>
 
-          <Button variant={"outline"} onClick={() => router.push('/generate')}>Edit</Button>
+          <Button variant={"outline"} onClick={() => router.push('/')}>Edit</Button>
         </div>
       ) : (
         <div className="flex justify-between w-full items-center mt-6">

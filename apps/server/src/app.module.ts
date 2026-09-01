@@ -4,7 +4,6 @@ import * as Joi from 'joi';
 import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { ChatModule } from './chat/chat.module';
-import { ContactModule } from './contact/contact.module';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './infrastructure/auth/auth.module';
 
@@ -14,7 +13,6 @@ import { AuthModule } from './infrastructure/auth/auth.module';
     AuthModule,
     UsersModule,
     ChatModule,
-    ContactModule,
     // logger
     LoggerModule.forRoot({
       pinoHttp: {
@@ -33,6 +31,7 @@ import { AuthModule } from './infrastructure/auth/auth.module';
           .valid('development', 'production', 'test')
           .default('production'),
         PORT: Joi.number().default(3000),
+        CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
 
         // llm
         OPENAI_API_KEY: Joi.string().required(),
@@ -71,11 +70,6 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 
         // database
         DATABASE_URL: Joi.string().required(),
-
-        // emails — optional. Resend is used when RESEND_API_KEY is set.
-        RESEND_API_KEY: Joi.string().optional().allow(''),
-        RESEND_FROM_EMAIL: Joi.string().optional().allow(''),
-        CONTACT_EMAIL: Joi.string().optional().allow(''),
       }),
     }),
   ],

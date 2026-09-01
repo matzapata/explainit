@@ -6,7 +6,7 @@ import Link from 'next/link';
 export function ChatCard(props: { chat: ChatMetadataDto }) {
   return (
     <div className="text-white py-6">
-      <Link href={`${process.env.NEXT_PUBLIC_DOMAIN}/chat/${props.chat.id}`}>
+      <Link href={`/chat/${props.chat.id}`}>
         <p className="hover:underline cursor-pointer">{props.chat.name}</p>
       </Link>
       <p>{props.chat.description}</p>

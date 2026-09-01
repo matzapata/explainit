@@ -9,7 +9,6 @@ import {
   ParseFilePipeBuilder,
   Post,
   Put,
-  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -286,18 +285,6 @@ export class ChatController {
   }
 
   // Public Chat Endpoints ============================================================
-
-  @Get('/published')
-  @Serialize(ChatMetadataDto)
-  async getChats(
-    @Query('limit') limit: number,
-    @Query('offset') offset: number,
-  ) {
-    limit = limit || 100;
-    offset = offset || 0;
-    const chats = await this.chatsService.findManyPublished(limit, offset);
-    return chats;
-  }
 
   // get chat metadata based on the chat id. This is a public endpoint
   @Get('/:id')

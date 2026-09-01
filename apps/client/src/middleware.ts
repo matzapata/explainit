@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { TOKEN_COOKIE } from '@/lib/auth/config';
 
-const PROTECTED_PREFIXES = ['/generate', '/settings', '/onboarding'];
+function isProtectedPath(pathname: string): boolean {
+  if (pathname === '/') {
+    return true;
+  }
+
+  return ['/resources', '/settings', '/onboarding'].some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export function middleware(req: NextRequest) {
   const mode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'none';
@@ -11,11 +19,8 @@ export function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get(TOKEN_COOKIE)?.value;
-  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
-    req.nextUrl.pathname.startsWith(prefix),
-  );
 
-  if (isProtected && !token) {
+  if (isProtectedPath(req.nextUrl.pathname) && !token) {
     const login = new URL('/login', req.url);
     login.searchParams.set('returnTo', req.nextUrl.pathname);
     return NextResponse.redirect(login);
@@ -25,5 +30,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/generate/:path*', '/settings/:path*', '/onboarding/:path*'],
+  matcher: ['/', '/resources/:path*', '/settings/:path*', '/onboarding/:path*'],
 };
