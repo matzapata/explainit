@@ -25,7 +25,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "../ui/use-toast";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAccessToken } from "@/lib/auth/use-session";
 import { chatService } from "@/lib/services/chat-service";
 
 const formSchema = z.object({
@@ -33,7 +33,7 @@ const formSchema = z.object({
 });
 
 export default function WebsiteForm(props: { chatId: string, website?: string }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const [website, setWebsite] = useState<string | undefined>(props.website);
   const form = useForm<z.infer<typeof formSchema>>({

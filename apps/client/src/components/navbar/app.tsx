@@ -3,7 +3,7 @@
 import { Bars4Icon } from "@heroicons/react/24/solid";
 import Logo from "../brand/logo";
 import Link from "next/link";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
+import { LogoutLink } from "@/lib/auth/links";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -12,7 +12,6 @@
   "dependencies": {
     "@heroicons/react": "^2.1.1",
     "@hookform/resolvers": "^3.3.4",
-    "@kinde-oss/kinde-auth-nextjs": "^2.1.15",
     "@prisma/client": "^5.11.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",

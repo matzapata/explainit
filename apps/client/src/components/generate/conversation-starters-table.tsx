@@ -25,7 +25,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { useAccessToken } from '@/lib/auth/use-session';
 import { chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 
@@ -44,7 +44,7 @@ export default function ConversationStartersTable(props: {
   chatId: string;
   starters: string[];
 }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [starters, setStarters] = useState<string[]>(props.starters);
   const [open, setOpen] = useState<boolean>(false);
   const form = useForm<z.infer<typeof formSchema>>({

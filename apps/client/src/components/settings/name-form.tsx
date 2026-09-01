@@ -26,7 +26,7 @@ import { useMutation } from "@tanstack/react-query";
 import { userService } from "@/lib/services/user-service";
 import { useState } from "react";
 import { toast } from "../ui/use-toast";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAccessToken } from "@/lib/auth/use-session";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -38,7 +38,7 @@ const formSchema = z.object({
 });
 
 export default function NameForm(props: { name?: string }) {
-  const { accessTokenRaw } = useKindeBrowserClient();
+  const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const [name, setName] = useState<string | undefined>(props.name);
   const form = useForm<z.infer<typeof formSchema>>({

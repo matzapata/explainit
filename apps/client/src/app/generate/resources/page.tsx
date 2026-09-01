@@ -2,11 +2,10 @@ import ResourcesTable from '@/components/generate/resources-table';
 import GenerateLayout from '@/layouts/generate-layout';
 import { chatService } from '@/lib/services/chat-service';
 import { userService } from '@/lib/services/user-service';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { getAccessToken } from '@/lib/auth/session';
 
 export default async function ChatResources() {
-  const { getAccessTokenRaw } = getKindeServerSession();
-  const accessTokenRaw = await getAccessTokenRaw();
+  const accessTokenRaw = await getAccessToken();
 
   const [user, chat] = await Promise.all([
     userService.get(accessTokenRaw),

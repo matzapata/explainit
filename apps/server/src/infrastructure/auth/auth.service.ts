@@ -1,5 +1,2 @@
-// Select a provider to use
-export { JwksProvider as AuthService } from './providers/jwks.provider';
-
-// Export types
+export { AuthService } from './providers/auth.provider';
 export * from './providers/auth.provider';

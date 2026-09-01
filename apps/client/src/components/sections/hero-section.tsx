@@ -1,4 +1,4 @@
-import { RegisterLink } from '@kinde-oss/kinde-auth-nextjs/server';
+import { RegisterLink } from '@/lib/auth/links';
 import { Button } from '../ui/button';
 import { Avatar, AvatarImage } from '../ui/avatar';
 import images from '@/assets/images';

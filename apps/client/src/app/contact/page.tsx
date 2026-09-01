@@ -17,7 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { contactService } from '@/lib/services/contact-service';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginLink, useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { LoginLink } from '@/lib/auth/links';
+import { useSession } from '@/lib/auth/use-session';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useState } from 'react';
@@ -34,7 +35,7 @@ const FormSchema = z.object({
 });
 
 export default function Contact() {
-  const { user, accessTokenRaw } = useKindeBrowserClient();
+  const { user, accessToken: accessTokenRaw } = useSession();
   const [loading, setLoading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
