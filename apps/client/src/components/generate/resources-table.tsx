@@ -2,7 +2,7 @@
 
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import { Button } from '../ui/button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useAccessToken } from '@/lib/auth/use-session';
-import { ChatMetadataDto, ChatResource, chatService } from '@/lib/services/chat-service';
+import { ChatResource, chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 import { Textarea } from '../ui/textarea';
 
@@ -65,6 +65,27 @@ export default function ResourcesTable(props: {
     props.initialResources,
   );
 
+  const inflight = resources.some(
+    (resource) => resource.status === 'pending' || resource.status === 'processing',
+  );
+
+  useEffect(() => {
+    if (!inflight || !accessTokenRaw) {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const chat = await chatService.getOwnerChat(accessTokenRaw);
+        setResources(chat.resources);
+      } catch {
+        // ignore transient poll errors
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [inflight, accessTokenRaw]);
+
   const deleteResourceMutation = useMutation({
     mutationFn: (mutationProps: { id: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
@@ -94,9 +115,12 @@ export default function ResourcesTable(props: {
       <ul className="divide-y divide-gray-200 dark:divide-gray-800">
         {resources.map((s, i) => (
           <div key={i} className="flex md:flex-1 justify-between py-6">
-            <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-              {s.data}
-            </p>
+            <div>
+              <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
+                {s.data}
+              </p>
+              <ResourceStatusLabel resource={s} />
+            </div>
 
             <Button
               onClick={() => onDeleteClick(s.id)}
@@ -116,6 +140,31 @@ export default function ResourcesTable(props: {
         <AddTextResource chatId={props.chatId} setResources={setResources} />
       </div>
     </div>
+  );
+}
+
+function ResourceStatusLabel(props: { resource: ChatResource }) {
+  const status = props.resource.status ?? 'ready';
+  if (status === 'ready') {
+    return null;
+  }
+  if (status === 'pending') {
+    return (
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Queued</p>
+    );
+  }
+  if (status === 'processing') {
+    return (
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Indexing…</p>
+    );
+  }
+  return (
+    <p
+      className="text-xs text-red-600 mt-1"
+      title={props.resource.error ?? undefined}
+    >
+      Failed{props.resource.error ? `: ${props.resource.error}` : ''}
+    </p>
   );
 }
 
@@ -157,7 +206,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
     },
     onSuccess: (data) => {
       props.setResources((r: any) => [...r, ...data]);
-      toast({ description: 'Successfully added resource.' });
+      toast({ description: 'Queued for indexing.' });
       setOpen(false);
     },
     onError: (error) => {

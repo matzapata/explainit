@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ChatResource } from '@prisma/client';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { NodeHtmlMarkdown } from 'node-html-markdown';
+import { createRecursiveCharMarkdownSplitter } from './strategies/recursive-char.strategy';
 
 interface RagDocument {
   content: string;
@@ -10,7 +9,7 @@ interface RagDocument {
 }
 
 @Injectable()
-export class RagLoaderService {
+export class ChunkingService {
   async generateDocsFromHtml(
     doc: {
       html: string;
@@ -20,12 +19,8 @@ export class RagLoaderService {
     namespace: string,
     metadata?: Record<string, any>,
   ): Promise<RagDocument[]> {
-    // split the documents into chunks
     const nhm = new NodeHtmlMarkdown();
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-      chunkSize: 3000,
-      chunkOverlap: 100,
-    });
+    const splitter = createRecursiveCharMarkdownSplitter();
 
     const mdText = nhm.translate(doc.html);
     const documents = await splitter.createDocuments([mdText]);
@@ -50,12 +45,7 @@ export class RagLoaderService {
     namespace: string,
     metadata?: Record<string, any>,
   ): Promise<RagDocument[]> {
-    // split the documents into chunks
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-      chunkSize: 3000,
-      chunkOverlap: 100,
-    });
-
+    const splitter = createRecursiveCharMarkdownSplitter();
     const documents = await splitter.createDocuments([data.text]);
 
     return documents.map((d) => ({

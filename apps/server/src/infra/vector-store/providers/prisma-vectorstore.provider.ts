@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { VectorStoreProvider, EmbeddingHit } from './vectorstore.provider';
 import { PrismaService } from '@src/infra/database/prisma.service';
-import { EmbeddingsService } from '@src/infra/embeddings/embeddings.service';
+import { EmbeddingsService } from '@src/infra/llm/embeddings.service';
 
 function toSqlVector(values: number[]): string {
   if (

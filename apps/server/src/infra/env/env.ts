@@ -29,6 +29,13 @@ export const envSchema = z
     CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
     OPENAI_API_KEY: z.string().min(1),
+    OPENAI_BASE_URL: z.preprocess(
+      (value) =>
+        typeof value === 'string' && value.trim() === '' ? undefined : value,
+      z.string().url().optional(),
+    ),
+    OPENAI_MODEL: z.string().min(1).default('gpt-3.5-turbo-0125'),
+    OPENAI_EMBEDDING_MODEL: z.string().min(1).default('text-embedding-ada-002'),
 
     S3_BUCKET: z.string().default('explainit'),
     S3_ENDPOINT: z.string().optional(),
@@ -37,6 +44,9 @@ export const envSchema = z
     AWS_REGION: z.string().default('us-east-1'),
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
+
+    REDIS_HOST: z.string().default('localhost'),
+    REDIS_PORT: z.coerce.number().default(6379),
 
     AUTH_MODE: z.enum(['none', 'oidc', 'password']).default('none'),
     ADMIN_EMAIL: z.string().min(1),

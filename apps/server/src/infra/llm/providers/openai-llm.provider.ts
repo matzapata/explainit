@@ -1,19 +1,22 @@
-import { OpenAI } from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
 import { EnvService } from '@src/infra/env/env.service';
-import { BaseLLM } from 'langchain/llms/base';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { LlmProvider } from './llm.provider';
 
 @Injectable()
 export class OpenAILlmProvider implements LlmProvider {
-  public model: BaseLLM;
+  public model: BaseChatModel;
 
   constructor(private readonly env: EnvService) {
-    this.model = new OpenAI({
-      modelName: 'gpt-3.5-turbo-0125',
+    const baseURL = this.env.get('OPENAI_BASE_URL');
+
+    this.model = new ChatOpenAI({
+      modelName: this.env.get('OPENAI_MODEL'),
       temperature: 0.8,
       openAIApiKey: this.env.get('OPENAI_API_KEY'),
       cache: false,
+      configuration: baseURL ? { baseURL } : undefined,
     });
   }
 }

@@ -1,49 +1,37 @@
 import { TestBed } from '@automock/jest';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { ChatController } from './chat.controller';
-import { RagService } from '@src/modules/chat/application/rag.service';
-import { ChatsService } from '@src/modules/chat/application/chat.service';
+import { ChatsService } from '@src/modules/chat/chat.service';
 import { StorageService } from '@src/infra/storage/storage.service';
-import { ResourcesService } from '@src/modules/chat/application/resources.service';
+import { DocumentsService } from '@src/modules/documents/documents.service';
+import { ResourceStatus } from '@prisma/client';
 
 describe('ChatController', () => {
-  // Declare the unit under test
   let chatController: ChatController;
-
-  // Declare the mocks
-  let ragService: jest.Mocked<RagService>;
   let chatsService: jest.Mocked<ChatsService>;
   let storageService: jest.Mocked<StorageService>;
-  let resourcesService: jest.Mocked<ResourcesService>;
+  let documentsService: jest.Mocked<DocumentsService>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(ChatController).compile();
-
-    // Assign the unit under test
     chatController = unit;
-
-    // Retrieve mocks from the unit reference and assign
-    ragService = unitRef.get(RagService);
     chatsService = unitRef.get(ChatsService);
     storageService = unitRef.get(StorageService);
-    resourcesService = unitRef.get(ResourcesService);
+    documentsService = unitRef.get(DocumentsService);
   });
 
   describe('getChatByOwner', () => {
     it('should require authentication to get a chat', () => {
-      // Arrange
       const guards = Reflect.getMetadata(
         '__guards__',
         ChatController.prototype.getChatByOwner,
       );
       const guard = new guards[0]();
 
-      // Assert
       expect(guard).toBeInstanceOf(AuthGuard);
     });
 
     it('should return the chat and its resources', async () => {
-      // Arrange
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
@@ -62,21 +50,21 @@ describe('ChatController', () => {
           id: 'id',
           type: 'type',
           data: 'data',
+          status: ResourceStatus.ready,
+          error: null,
           embeddingIds: ['embedding-id'],
           createdAt: new Date(),
           chatId: 'chatId',
         },
       ];
       chatsService.findFirstByOwner.mockResolvedValue(chat);
-      resourcesService.findByChatId.mockResolvedValue(resources);
+      documentsService.findByChatId.mockResolvedValue(resources);
 
-      // Act
       const result = await chatController.getChatByOwner(authUser);
 
-      // Assert
       expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).not.toHaveBeenCalled();
-      expect(resourcesService.findByChatId).toHaveBeenCalledWith(chat.id);
+      expect(documentsService.findByChatId).toHaveBeenCalledWith(chat.id);
       expect(result).toEqual({
         ...chat,
         logo: expect.stringContaining(chat.logo),
@@ -85,7 +73,6 @@ describe('ChatController', () => {
     });
 
     it('should create an example chat for the user if none exists', async () => {
-      // Arrange
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
@@ -102,15 +89,13 @@ describe('ChatController', () => {
       const resources = [];
       chatsService.findFirstByOwner.mockResolvedValue(null);
       chatsService.create.mockResolvedValue(chat);
-      resourcesService.findByChatId.mockResolvedValue(resources);
+      documentsService.findByChatId.mockResolvedValue(resources);
 
-      // Act
       const result = await chatController.getChatByOwner(authUser);
 
-      // Assert
       expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).toHaveBeenCalledWith(authUser.id, {});
-      expect(resourcesService.findByChatId).toHaveBeenCalledWith(chat.id);
+      expect(documentsService.findByChatId).toHaveBeenCalledWith(chat.id);
       expect(result).toEqual({
         ...chat,
         logo: expect.stringContaining(chat.logo),
@@ -121,19 +106,16 @@ describe('ChatController', () => {
 
   describe('updateChat', () => {
     it('should require authentication to update a chat', () => {
-      // Arrange
       const guards = Reflect.getMetadata(
         '__guards__',
         ChatController.prototype.updateChat,
       );
       const guard = new guards[0]();
 
-      // Assert
       expect(guard).toBeInstanceOf(AuthGuard);
     });
 
     it('should update the chat', async () => {
-      // Arrange
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const data = { name: 'name', logo: 'logo', url: 'url' };
       const chat = {
@@ -150,10 +132,8 @@ describe('ChatController', () => {
       };
       chatsService.update.mockResolvedValue(chat);
 
-      // Act
       const result = await chatController.updateChat(authUser, data, chat.id);
 
-      // Assert
       expect(chatsService.update).toHaveBeenCalledWith(
         authUser.id,
         chat.id,
@@ -192,19 +172,16 @@ describe('ChatController', () => {
 
   describe('updateChatLogo', () => {
     it('should require authentication to update a chat logo', () => {
-      // Arrange
       const guards = Reflect.getMetadata(
         '__guards__',
         ChatController.prototype.updateChatLogo,
       );
       const guard = new guards[0]();
 
-      // Assert
       expect(guard).toBeInstanceOf(AuthGuard);
     });
 
     it('should update the chat logo', async () => {
-      // Arrange
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
@@ -231,14 +208,12 @@ describe('ChatController', () => {
         logo: 'https://cdn.example/logo.webp',
       });
 
-      // Act
       const result = await chatController.updateChatLogo(
         authUser,
         file,
         chat.id,
       );
 
-      // Assert
       expect(chatsService.findFirstById).toHaveBeenCalledWith(chat.id);
       expect(storageService.uploadFile).toHaveBeenCalled();
       expect(chatsService.update).toHaveBeenCalledWith(authUser.id, chat.id, {

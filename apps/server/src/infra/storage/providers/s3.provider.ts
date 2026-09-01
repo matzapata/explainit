@@ -1,12 +1,9 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { EnvService } from '@src/infra/env/env.service';
 import {
-  CreateBucketCommand,
   DeleteObjectCommand,
   GetObjectCommand,
-  HeadBucketCommand,
   ListObjectsV2Command,
-  PutBucketCorsCommand,
   PutObjectAclCommand,
   PutObjectCommand,
   S3Client,
@@ -24,7 +21,6 @@ export class S3StorageProvider implements StorageProvider {
   private readonly region: string;
   private readonly endpoint?: string;
   private readonly publicEndpoint?: string;
-  private readonly usingInjectedClient: boolean;
 
   constructor(
     private readonly env: EnvService,
@@ -37,18 +33,6 @@ export class S3StorageProvider implements StorageProvider {
       this.env.get('S3_PUBLIC_ENDPOINT') ?? this.endpoint,
     );
     this.client = client ?? new S3Client(this.buildClientConfig());
-    this.usingInjectedClient = Boolean(client);
-  }
-
-  async onModuleInit(): Promise<void> {
-    if (
-      this.env.get('NODE_ENV') === 'test' &&
-      !this.usingInjectedClient
-    ) {
-      return;
-    }
-
-    await this.ensureBucket();
   }
 
   async uploadFile(path: string, file: Buffer): Promise<void> {
@@ -167,74 +151,6 @@ export class S3StorageProvider implements StorageProvider {
           : undefined,
     };
   }
-
-  private async ensureBucket(): Promise<void> {
-    let lastError: unknown;
-
-    for (let attempt = 0; attempt < 10; attempt++) {
-      try {
-        await this.headOrCreateBucket();
-        return;
-      } catch (error) {
-        if (isFatalBucketError(error)) {
-          throw error;
-        }
-        lastError = error;
-        await sleep(1000);
-      }
-    }
-
-    throw lastError;
-  }
-
-  private async headOrCreateBucket(): Promise<void> {
-    try {
-      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
-    } catch (error) {
-      if (!isNotFound(error)) {
-        throw error;
-      }
-
-      try {
-        await this.client.send(
-          new CreateBucketCommand({
-            Bucket: this.bucket,
-            ...(this.region === 'us-east-1'
-              ? {}
-              : {
-                  CreateBucketConfiguration: {
-                    LocationConstraint: this.region as never,
-                  },
-                }),
-          }),
-        );
-      } catch (createError) {
-        if (!isBucketAlreadyExists(createError)) {
-          throw createError;
-        }
-      }
-    }
-
-    try {
-      await this.client.send(
-        new PutBucketCorsCommand({
-          Bucket: this.bucket,
-          CORSConfiguration: {
-            CORSRules: [
-              {
-                AllowedHeaders: ['*'],
-                AllowedMethods: ['GET', 'HEAD'],
-                AllowedOrigins: ['*'],
-                ExposeHeaders: ['ETag', 'Content-Type'],
-              },
-            ],
-          },
-        }),
-      );
-    } catch {
-      // CORS is best-effort for browser logo loads against local emulators.
-    }
-  }
 }
 
 function trimSlash(value: string | undefined): string | undefined {
@@ -278,22 +194,7 @@ function isNotFound(error: unknown): boolean {
   );
 }
 
-function isBucketAlreadyExists(error: unknown): boolean {
-  const name = (error as { name?: string })?.name;
-  return name === 'BucketAlreadyOwnedByYou' || name === 'BucketAlreadyExists';
-}
-
 function isAclNotSupported(error: unknown): boolean {
   const name = (error as { name?: string })?.name;
   return name === 'AccessControlListNotSupported' || name === 'InvalidArgument';
-}
-
-function isFatalBucketError(error: unknown): boolean {
-  const status = (error as { $metadata?: { httpStatusCode?: number } })
-    ?.$metadata?.httpStatusCode;
-  return status === 401 || status === 403;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

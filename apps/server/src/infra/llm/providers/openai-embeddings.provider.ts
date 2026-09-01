@@ -8,8 +8,12 @@ export class OpenAiEmbeddingsProvider implements EmbeddingsProvider {
   private readonly openAiEmbeddings: OpenAIEmbeddings;
 
   constructor(private readonly env: EnvService) {
+    const baseURL = this.env.get('OPENAI_BASE_URL');
+
     this.openAiEmbeddings = new OpenAIEmbeddings({
       openAIApiKey: this.env.get('OPENAI_API_KEY'),
+      modelName: this.env.get('OPENAI_EMBEDDING_MODEL'),
+      configuration: baseURL ? { baseURL } : undefined,
     });
   }
 

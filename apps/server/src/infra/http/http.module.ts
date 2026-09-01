@@ -11,10 +11,12 @@ import { CrawlerModule } from '@src/infra/crawler/crawler.module';
 import { PrismaModule } from '@src/infra/database/prisma.module';
 import { StorageModule } from '@src/infra/storage/storage.module';
 import { ChatModule } from '@src/modules/chat/chat.module';
+import { DocumentsModule } from '@src/modules/documents/documents.module';
 import { UserModule } from '@src/modules/user/user.module';
 import { HealthController } from './controllers/app/health.controller';
 import { AuthController } from './controllers/auth/auth.controller';
 import { ChatController } from './controllers/chat/chat.controller';
+import { DocumentsController } from './controllers/documents/documents.controller';
 import { UsersController } from './controllers/user/users.controller';
 import { ChatMessagesRateLimit } from './guards/chat-messages-rate-limit.guard';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
@@ -24,6 +26,7 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
     AuthModule,
     UserModule,
     ChatModule,
+    DocumentsModule,
     StorageModule,
     CrawlerModule,
     PrismaModule,
@@ -32,6 +35,7 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
     HealthController,
     AuthController,
     ChatController,
+    DocumentsController,
     UsersController,
   ],
   providers: [

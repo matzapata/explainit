@@ -19,29 +19,36 @@ Thanks for your interest in contributing to Explainit.
 
 ## Run locally
 
-- Backend: `cd server && npm run dev`
-- Frontend: `cd client && npm run dev`
+Website ingest uses BullMQ (Redis). Run Redis on `localhost:6379` (or via Compose), then:
+
+- API: `cd apps/server && npm run dev`
+- Worker: `cd apps/server && npm run worker`
+- Frontend: `cd apps/client && npm run dev`
+
+The API enqueues website jobs; the worker process scrapes and embeds. Text ingest stays on the API.
 
 ## Run with Docker
 
 - From repo root: `docker-compose up --build`
+- Compose starts Postgres, Redis, Floci (S3), the API, the ingest worker, and the client.
 
 ## Common commands
 
-- Backend tests: `cd server && npm test`
-- Backend lint: `cd server && npm run lint`
-- Frontend lint: `cd client && npm run lint`
+- Backend tests: `cd apps/server && npm test`
+- Backend lint: `cd apps/server && npm run lint`
+- Frontend lint: `cd apps/client && npm run lint`
 
 ## Deployment basics
 
 Use this as a lightweight release checklist for production-like environments.
 
 1. Provision a Postgres database with pgvector support.
-2. Configure all required environment variables for server and client.
-3. Build and deploy the API service.
-4. Build and deploy the web client.
-5. Run database migrations before serving traffic.
-6. Verify auth, ingestion, and chat flows after deployment.
+2. Provision Redis for BullMQ (`REDIS_HOST` / `REDIS_PORT`).
+3. Configure all required environment variables for server and client.
+4. Build and deploy the API (`node dist/infra/main`) and ingest worker (`node dist/infra/worker`).
+5. Build and deploy the web client.
+6. Run database migrations before serving traffic.
+7. Verify auth, ingestion, and chat flows after deployment.
 
 Keep secrets in your platform secret manager instead of repository files.
 
