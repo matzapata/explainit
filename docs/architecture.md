@@ -25,11 +25,13 @@ flowchart LR
 
 ## Server infrastructure layer
 
-`apps/server/src/infrastructure` follows a provider-selection pattern:
+`apps/server/src/infra` follows a provider-selection pattern:
 
 - Each domain has a `<domain>.module.ts` Nest module.
 - A `<domain>.service.ts` file re-exports the active provider implementation.
 - `providers/` contains abstract contracts and one or more concrete adapters.
+
+HTTP controllers live in `infra/http`. Chat and user use-cases live in `modules/{chat,user}/application`. Environment is validated with Zod (`infra/env`).
 
 Current infrastructure folders and responsibilities:
 
@@ -99,7 +101,7 @@ Ingestion is intentionally decoupled from chat-time generation so indexing failu
 
 ### Crawler infrastructure
 
-Crawler responsibilities are implemented under `apps/server/src/infrastructure/crawler`:
+Crawler responsibilities are implemented under `apps/server/src/infra/crawler`:
 
 - `CrawlerProvider` defines three capabilities:
   - `inspect`: discover in-domain URLs from a seed page
@@ -112,7 +114,7 @@ This design keeps crawling provider-specific details isolated while exposing a s
 
 ### Embeddings infrastructure
 
-Embedding responsibilities are implemented under `apps/server/src/infrastructure/embeddings`:
+Embedding responsibilities are implemented under `apps/server/src/infra/embeddings`:
 
 - `EmbeddingsProvider` contract exposes `generateEmbeddings(text: string)`.
 - Active implementation (`OpenAiEmbeddingsProvider`) uses `@langchain/openai`.

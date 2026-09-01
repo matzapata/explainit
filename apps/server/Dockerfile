@@ -19,7 +19,7 @@ COPY package.json .
 COPY package-lock.json .
 
 # Copy Prisma schema and migrations for generate / migrate deploy
-COPY src/database ./src/database
+COPY src/infra/database ./src/infra/database
 
 RUN npm install
 
@@ -32,5 +32,5 @@ RUN npm prune --production
 ENV NODE_ENV=production
 EXPOSE $PORT
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/infra/main.js"]
 
