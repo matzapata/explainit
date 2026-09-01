@@ -25,10 +25,9 @@ export class UsersRepository {
     });
   }
 
-  async findUserByEmail(email: string, includeSubscription = true) {
+  async findUserByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      include: { subscription: includeSubscription },
     });
   }
 

@@ -161,6 +161,33 @@ describe('ChatController', () => {
       );
       expect(result).toEqual(chat);
     });
+
+    it('should allow any authenticated user to publish a chat', async () => {
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const data = { published: true };
+      const chat = {
+        id: 'id',
+        name: 'name',
+        logo: 'logo',
+        url: 'url',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'id',
+      };
+      chatsService.update.mockResolvedValue(chat);
+
+      const result = await chatController.updateChat(authUser, data, chat.id);
+
+      expect(chatsService.update).toHaveBeenCalledWith(
+        authUser.id,
+        chat.id,
+        data,
+      );
+      expect(result).toEqual(chat);
+    });
   });
 
   describe('updateChatLogo', () => {

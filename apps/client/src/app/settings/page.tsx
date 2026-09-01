@@ -1,15 +1,15 @@
 import EmailForm from "@/components/settings/email-form";
 import NameForm from "@/components/settings/name-form";
 import SettingsLayout from "@/layouts/settings-layout";
-import { paymentsService } from "@/lib/services/payments-service";
+import { userService } from "@/lib/services/user-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 export default async function Profile() {
   const { getAccessTokenRaw } = getKindeServerSession();
-  const user = await paymentsService.getSubscription(await getAccessTokenRaw());
+  const user = await userService.get(await getAccessTokenRaw());
 
   return (
-    <SettingsLayout user={{ email: user.email, isPro: user.isPro }}>
+    <SettingsLayout user={{ email: user.email }}>
       <div className="py-8 md:py-12 space-y-8 max-w-6xl mx-auto">
         {/* Heading */}
         <div className="px-4 md:px-8">

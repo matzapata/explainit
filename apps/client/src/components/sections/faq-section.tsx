@@ -10,14 +10,14 @@ import { IconMinusCircle, IconPlusCircle } from "../ui/icons";
 
 const faq = [
   {
-    question: 'Is there a free trial available?',
+    question: 'What sources can I add to a chat?',
     answer:
-      'No, we do not offer a free trial. However, you can cancel your subscription at any time. You can checkout our demo.',
+      'You can add public websites, documentation pages, and text. Your chat answers only from the resources you provide.',
   },
   {
-    question: 'Can I cancel my subscription?',
+    question: 'Can I publish a chat for others to use?',
     answer:
-      'Yes, you can cancel your subscription at any time. You can also pause your subscription for up to 3 months.',
+      'Yes. Any authenticated user can publish a chat. Share the public URL or embed the snippet on your site.',
   },
 ]
 
@@ -50,7 +50,7 @@ export default function FaqSection() {
           </svg>
         </h1>
         <p className="mt-6 text-sm md:text-base text-gray-600 dark:text-gray-300 text-center">
-          Everything you need to know about the product and billing.
+          Everything you need to know about the product.
         </p>
       </div>
 

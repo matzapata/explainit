@@ -5,13 +5,12 @@ import { Button } from '../ui/button';
 import { ChatCard } from '../explore/chat-card';
 import { useRouter } from 'next/navigation';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
-import { paymentsService } from '@/lib/services/payments-service';
 import { toast } from '../ui/use-toast';
 import { useState } from 'react';
 import { confettiAnimation } from '@/lib/confetti-animation';
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard';
 
-export function ShareStep(props: { chat: ChatMetadataDto; isPro: boolean }) {
+export function ShareStep(props: { chat: ChatMetadataDto }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { accessTokenRaw } = useKindeBrowserClient();
@@ -20,42 +19,28 @@ export function ShareStep(props: { chat: ChatMetadataDto; isPro: boolean }) {
 
   const onPublish = () => {
     if (!accessTokenRaw) {
-      alert('You need to be logged in to subscribe to a plan.');
+      alert('You need to be logged in to publish your chat.');
       return window.location.assign('/api/auth/login');
     }
 
-    if (props.isPro) {
-      setIsLoading(true);
-      chatService
-        .updateOwnerChat(accessTokenRaw, props.chat.id, { published: true })
-        .then(() => {
-          setPublished(true);
-          toast({
-            description:
-              'Congratulations your chat is now accessible by the world!',
-          });
-          confettiAnimation();
-        })
-        .catch(() => {
-          toast({
-            variant: 'destructive',
-            description: 'Something went wrong. Please try again.',
-          });
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(true);
-      paymentsService
-        .createCheckout(accessTokenRaw)
-        .then((url) => window.location.assign(url))
-        .catch(() => {
-          toast({
-            variant: 'destructive',
-            description: 'Something went wrong. Please try again.',
-          });
-        })
-        .finally(() => setIsLoading(false));
-    }
+    setIsLoading(true);
+    chatService
+      .updateOwnerChat(accessTokenRaw, props.chat.id, { published: true })
+      .then(() => {
+        setPublished(true);
+        toast({
+          description:
+            'Congratulations your chat is now accessible by the world!',
+        });
+        confettiAnimation();
+      })
+      .catch(() => {
+        toast({
+          variant: 'destructive',
+          description: 'Something went wrong. Please try again.',
+        });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (

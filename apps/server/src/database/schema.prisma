@@ -18,42 +18,7 @@ model User {
 
   createdAt DateTime @default(now())
 
-  subscription UserSubscription?
-  chats        Chat[]
-}
-
-// ============================= payments module =============================
-model UserSubscription {
-  id             String    @id @default(uuid()) @db.Uuid
-  subscriptionId String
-  variantId      String
-  orderId        String
-  provider       String
-  status         String
-  renewsAt       DateTime
-  endsAt         DateTime?
-  trialEndsAt    DateTime?
-  pauseMode      String?
-  pauseResumesAt DateTime?
-  cancelled      Boolean
-  billingAnchor  Int
-  testMode       Boolean
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique @db.Uuid
-}
-
-model WebhookEvent {
-  id              String  @id @default(uuid()) @db.Uuid
-  eventName       String
-  processed       Boolean @default(false)
-  body            String
-  processingError String?
-
-  createdAt DateTime @default(now())
+  chats Chat[]
 }
 
 // ============================= chat module =============================

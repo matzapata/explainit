@@ -21,16 +21,7 @@ export default function SettingsLayout(props: SettingsLayoutProps) {
       link: "/generate",
     },
   ];
-  const nestedItems = props.nestedItems ?? [
-    {
-      link: "/settings",
-      title: "General",
-    },
-    {
-      link: "/settings/billing",
-      title: "Billing",
-    },
-  ];
+  const nestedItems = props.nestedItems ?? [];
 
   return (
     <>
@@ -38,7 +29,7 @@ export default function SettingsLayout(props: SettingsLayoutProps) {
         <Navbar items={navbarItems} user={props.user} />
 
         {/* Submenu */}
-        {nestedItems && (
+        {nestedItems.length > 0 && (
           <div className="border-b h-10 border-b-gray-200 flex justify-center bg-white dark:bg-gray-950 dark:border-b-gray-800">
             <div className="px-2 md:px-8 w-full flex py-2 items-center">
               {nestedItems.map((item, i) => (

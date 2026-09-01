@@ -1,5 +1,4 @@
 import GenerateLayout from '@/layouts/generate-layout';
-import GoProBanner from '../billing/go-pro-banner';
 import NameForm from './name-form';
 import LogoForm from './logo-form';
 import WebsiteForm from './website-form';
@@ -12,12 +11,10 @@ import CodeSnippet from './code-snippet';
 export function EditChat({ user, chat }: { user: any; chat: any }) {
   return (
     <GenerateLayout
-      user={{ email: user.email, isPro: user.isPro }}
+      user={{ email: user.email }}
       chatId={chat.id}
     >
       <div className="py-8 md:py-12 space-y-8 max-w-6xl mx-auto">
-        {!user.isPro && <GoProBanner />}
-
         {/* Heading */}
         <div className="px-4 md:px-8">
           <div>
