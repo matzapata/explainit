@@ -18,8 +18,8 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 
-# Copy schema for prisma generator in post install
-COPY src/database/schema.prisma ./src/database/schema.prisma
+# Copy Prisma schema and migrations for generate / migrate deploy
+COPY src/database ./src/database
 
 RUN npm install
 
@@ -32,5 +32,5 @@ RUN npm prune --production
 ENV NODE_ENV=production
 EXPOSE $PORT
 
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
 

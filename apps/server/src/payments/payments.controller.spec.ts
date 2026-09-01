@@ -368,7 +368,7 @@ describe('PaymentsController', () => {
         id: body.meta.custom_data.user_id,
       } as User);
       webhookEventsService.create.mockResolvedValue({
-        id: 1,
+        id: '00000000-0000-0000-0000-000000000001',
       } as WebhookEvent);
       paymentService.findPlanById.mockResolvedValue({
         variantId: data.variantId,
@@ -412,7 +412,7 @@ describe('PaymentsController', () => {
         email: user.email,
       } as User);
       webhookEventsService.create.mockResolvedValue({
-        id: 1,
+        id: '00000000-0000-0000-0000-000000000001',
       } as WebhookEvent);
       paymentService.findPlanById.mockResolvedValue({
         variantId: data.variantId,
@@ -440,7 +440,7 @@ describe('PaymentsController', () => {
         id: body.meta.custom_data.user_id,
       } as User);
       webhookEventsService.create.mockResolvedValue({
-        id: 1,
+        id: '00000000-0000-0000-0000-000000000001',
       } as WebhookEvent);
       paymentService.findPlanById.mockResolvedValue({
         variantId: data.variantId,

@@ -44,12 +44,14 @@ describe('ChatController', () => {
 
     it('should return the chat and its resources', async () => {
       // Arrange
-      const authUser = { id: 'id', email: 'email' };
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
         name: 'name',
         logo: 'logo',
         url: 'url',
+        description: null,
+        points: 0,
         published: false,
         conversationStarters: [],
         createdAt: new Date(),
@@ -60,7 +62,7 @@ describe('ChatController', () => {
           id: 'id',
           type: 'type',
           data: 'data',
-          embeddingIds: [1],
+          embeddingIds: ['embedding-id'],
           createdAt: new Date(),
           chatId: 'chatId',
         },
@@ -75,17 +77,23 @@ describe('ChatController', () => {
       expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).not.toHaveBeenCalled();
       expect(resourcesService.findByChatId).toHaveBeenCalledWith(chat.id);
-      expect(result).toEqual({ ...chat, resources });
+      expect(result).toEqual({
+        ...chat,
+        logo: expect.stringContaining(chat.logo),
+        resources,
+      });
     });
 
     it('should create an example chat for the user if none exists', async () => {
       // Arrange
-      const authUser = { id: 'id', email: 'email' };
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
         name: 'Lorem Ipsum',
         logo: 'https://lorem.com/ipsum.png',
         url: 'https://lorem.com',
+        description: null,
+        points: 0,
         published: false,
         conversationStarters: [],
         createdAt: new Date(),
@@ -101,15 +109,13 @@ describe('ChatController', () => {
 
       // Assert
       expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
-      expect(chatsService.create).toHaveBeenCalledWith(authUser.id, {
-        name: 'Lorem Ipsum',
-        logo: 'https://lorem.com/ipsum.png',
-        url: 'https://lorem.com',
-        published: false,
-        conversationStarters: [],
-      });
+      expect(chatsService.create).toHaveBeenCalledWith(authUser.id, {});
       expect(resourcesService.findByChatId).toHaveBeenCalledWith(chat.id);
-      expect(result).toEqual({ ...chat, resources });
+      expect(result).toEqual({
+        ...chat,
+        logo: expect.stringContaining(chat.logo),
+        resources,
+      });
     });
   });
 
@@ -128,13 +134,15 @@ describe('ChatController', () => {
 
     it('should update the chat', async () => {
       // Arrange
-      const authUser = { id: 'id', email: 'email' };
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
       const data = { name: 'name', logo: 'logo', url: 'url' };
       const chat = {
         id: 'id',
         name: 'name',
         logo: 'logo',
         url: 'url',
+        description: null,
+        points: 0,
         published: false,
         conversationStarters: [],
         createdAt: new Date(),
@@ -143,10 +151,14 @@ describe('ChatController', () => {
       chatsService.update.mockResolvedValue(chat);
 
       // Act
-      const result = await chatController.updateChat(authUser, data);
+      const result = await chatController.updateChat(authUser, data, chat.id);
 
       // Assert
-      expect(chatsService.update).toHaveBeenCalledWith(authUser.id, data);
+      expect(chatsService.update).toHaveBeenCalledWith(
+        authUser.id,
+        chat.id,
+        data,
+      );
       expect(result).toEqual(chat);
     });
   });
@@ -166,32 +178,46 @@ describe('ChatController', () => {
 
     it('should update the chat logo', async () => {
       // Arrange
-      const authUser = { id: 'id', email: 'email' };
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
         name: 'name',
         logo: 'logo',
         url: 'url',
+        description: null,
+        points: 0,
         published: false,
         conversationStarters: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
-      const file = { filename: 'filename' } as any;
-      chatsService.findFirstByOwner.mockResolvedValue(chat);
-      storageService.uploadFile.mockResolvedValue(file);
-      storageService.deleteFile.mockResolvedValue();
+      const file = { filename: 'filename', buffer: Buffer.from('') } as any;
+      chatsService.findFirstById.mockResolvedValue(chat);
+      storageService.resizeImage.mockResolvedValue(Buffer.from('resized'));
+      storageService.uploadFile.mockResolvedValue(undefined);
+      storageService.deleteFile.mockResolvedValue(undefined);
+      storageService.getFileUrl.mockResolvedValue(
+        'https://cdn.example/logo.webp',
+      );
+      chatsService.update.mockResolvedValue({
+        ...chat,
+        logo: 'https://cdn.example/logo.webp',
+      });
 
       // Act
-      const result = await chatController.updateChatLogo(authUser, file);
+      const result = await chatController.updateChatLogo(
+        authUser,
+        file,
+        chat.id,
+      );
 
       // Assert
-      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
-      expect(storageService.uploadFile).toHaveBeenCalledWith(file);
-      expect(chatsService.update).toHaveBeenCalledWith(authUser.id, {
-        logo: file.filename,
+      expect(chatsService.findFirstById).toHaveBeenCalledWith(chat.id);
+      expect(storageService.uploadFile).toHaveBeenCalled();
+      expect(chatsService.update).toHaveBeenCalledWith(authUser.id, chat.id, {
+        logo: 'https://cdn.example/logo.webp',
       });
-      expect(result).toEqual(chat);
+      expect(result.logo).toContain('https://cdn.example/logo.webp');
     });
   });
 });

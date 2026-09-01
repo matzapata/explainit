@@ -1,37 +1,54 @@
-version: '3'
 services:
   api:
-    build: 
+    build:
       context: ./apps/server
       dockerfile: Dockerfile
     environment:
-      - PORT=4000
-      - NODE_ENV=development
+      PORT: '4000'
+      NODE_ENV: development
+      DATABASE_URL: postgresql://explainit:explainit@postgres:5432/explainit
     env_file:
       - ./apps/server/.env.local
     volumes:
       - ./apps/server:/app
       - /app/node_modules
+    ports:
+      - '4000:4000'
+    command: sh -c "npx prisma migrate deploy && npm run dev"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
   client:
     build:
       context: ./apps/client
       dockerfile: Dockerfile
     environment:
-      - NODE_ENV=development
+      NODE_ENV: development
     env_file:
       - ./apps/client/.env.local
     volumes:
       - ./apps/client:/app
       - /app/node_modules
+    ports:
+      - '3000:3000'
     depends_on:
       - api
   postgres:
-    image: ankane/pgvector
-    restart: on-failure
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: explainit
+      POSTGRES_PASSWORD: explainit
+      POSTGRES_DB: explainit
     volumes:
-      - ./data:/var/lib/postgresql/data
-    env_file:
-      - ./apps/server/.env.local
-  
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U explainit -d explainit']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
