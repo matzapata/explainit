@@ -1,8 +1,19 @@
+import { randomUUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
-import { VectorStoreProvider } from './vectorstore.provider';
+import { VectorStoreProvider, EmbeddingHit } from './vectorstore.provider';
 import { PrismaService } from '@src/database/prisma.service';
 import { EmbeddingsService } from '@src/infrastructure/embeddings/embeddings.service';
-import { Embedding } from '@prisma/client';
+
+function toSqlVector(values: number[]): string {
+  if (
+    !Array.isArray(values) ||
+    values.length === 0 ||
+    values.some((n) => typeof n !== 'number' || !Number.isFinite(n))
+  ) {
+    throw new Error('Invalid embedding vector');
+  }
+  return `[${values.join(',')}]`;
+}
 
 @Injectable()
 export class PrismaVectorStoreProvider implements VectorStoreProvider {
@@ -17,30 +28,34 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
       namespace: string;
       metadata: Record<string, any>;
     }[],
-  ): Promise<Embedding['id'][]> {
-    // returns ids of the added documents
+  ): Promise<string[]> {
     documents = documents.filter((d) => d.content.length > 0);
 
-    const ids: Embedding['id'][] = [];
+    const ids: string[] = [];
     for (const doc of documents) {
       const embedding = await this.embeddings.generateEmbeddings(doc.content);
+      const id = randomUUID();
+      const namespace = doc.namespace ?? 'public';
 
-      const record = await this.prisma.embedding.create({
-        data: {
-          content: doc.content,
-          namespace: doc.namespace ?? 'public',
-          metadata: { ...doc.metadata },
-          embedding: embedding,
-        },
-      });
+      await this.prisma.$executeRaw`
+        INSERT INTO "Embedding" (id, content, namespace, metadata, embedding)
+        VALUES (
+          ${id}::uuid,
+          ${doc.content},
+          ${namespace},
+          ${JSON.stringify({ ...doc.metadata })}::jsonb,
+          ${toSqlVector(embedding)}::vector
+        )
+      `;
 
-      ids.push(record.id);
+      ids.push(id);
     }
 
     return ids;
   }
 
-  async deleteDocuments(ids: Embedding['id'][]) {
+  async deleteDocuments(ids: string[]) {
+    if (ids.length === 0) return;
     await this.prisma.embedding.deleteMany({
       where: { id: { in: ids } },
     });
@@ -50,43 +65,25 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
     query: string,
     k: number,
     namespace: string,
-  ): Promise<Array<Embedding & { similarity: number }>> {
+  ): Promise<EmbeddingHit[]> {
     if (query.trim().length === 0) return [];
     namespace = namespace ?? 'public';
-    k = k ?? 5;
+    const limit = Math.max(1, Math.trunc(Number(k) || 5));
 
     const embedding = await this.embeddings.generateEmbeddings(query);
+    const vector = toSqlVector(embedding);
 
-    const docs = await this.prisma.embedding.aggregateRaw({
-      pipeline: [
-        {
-          $vectorSearch: {
-            index: 'embeddings_index', // name of the index
-            path: 'embedding', // name of the field that contains the vector
-            queryVector: embedding,
-            numCandidates: 100,
-            limit: 10,
-            filter: { namespace },
-          },
-        },
-        {
-          $project: {
-            // Mapping _id to id
-            _id: 0,
-            id: { $toString: '$_id' },
-            content: 1,
-            metadata: 1,
-            namespace: 1,
-            similarity: {
-              $meta: 'vectorSearchScore',
-            },
-          },
-        },
-      ],
-    });
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return docs as Array<Embedding & { similarity: number }>;
+    return this.prisma.$queryRaw<EmbeddingHit[]>`
+      SELECT
+        id::text AS id,
+        content,
+        namespace,
+        metadata,
+        1 - (embedding <=> ${vector}::vector) AS similarity
+      FROM "Embedding"
+      WHERE namespace = ${namespace}
+      ORDER BY embedding <=> ${vector}::vector
+      LIMIT ${limit}
+    `;
   }
 }

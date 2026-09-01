@@ -1,4 +1,12 @@
-import { Embedding } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+export type EmbeddingHit = {
+  id: string;
+  content: string;
+  namespace: string;
+  metadata: Prisma.JsonValue;
+  similarity: number;
+};
 
 export enum DocumentLoader {
   github = 'github',
@@ -15,7 +23,7 @@ export abstract class VectorStoreProvider {
     query: string,
     k: number,
     namespace: string,
-  ): Promise<Array<Embedding & { similarity: number }>>;
+  ): Promise<EmbeddingHit[]>;
 
   abstract addDocuments(
     documents: {
@@ -23,7 +31,7 @@ export abstract class VectorStoreProvider {
       namespace: string;
       metadata: Record<string, any>;
     }[],
-  ): Promise<Embedding['id'][]>;
+  ): Promise<string[]>;
 
-  abstract deleteDocuments(ids: Embedding['id'][]): Promise<void>;
+  abstract deleteDocuments(ids: string[]): Promise<void>;
 }

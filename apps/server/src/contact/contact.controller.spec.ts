@@ -34,7 +34,7 @@ describe('ContactController', () => {
   it("should send an email from 'contact@mzslabs.com' to 'CONTACT_EMAIL' including user id, email, subject and message ", async () => {
     // Arrange
     const contactEmail = 'CONTACT_EMAIL';
-    const user = { id: 'id', email: 'email' };
+    const user = { id: 'id', email: 'email', isAdmin: false };
     const createContactDto = { message: 'message', subject: 'subject' };
     emailService.sendEmail.mockResolvedValue();
     configService.getOrThrow.mockReturnValue(contactEmail);
@@ -58,7 +58,7 @@ describe('ContactController', () => {
 
     // Act
     const result = await contactController.create(
-      { id: 'id', email: 'email' },
+      { id: 'id', email: 'email', isAdmin: false },
       { message: 'message', subject: 'subject' },
     );
 
@@ -73,7 +73,7 @@ describe('ContactController', () => {
 
     // Act
     const result = contactController.create(
-      { id: 'id', email: 'email' },
+      { id: 'id', email: 'email', isAdmin: false },
       { message: 'message', subject: 'subject' },
     );
 
@@ -90,7 +90,7 @@ describe('ContactController', () => {
 
     // Act
     const result = contactController.create(
-      { id: 'id', email: 'email' },
+      { id: 'id', email: 'email', isAdmin: false },
       { message: 'message', subject: 'subject' },
     );
 

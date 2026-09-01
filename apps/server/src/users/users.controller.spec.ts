@@ -34,7 +34,7 @@ describe('UsersController', () => {
 
     it('should update the user name and return the new user instance', async () => {
       // Arrange
-      const authUser = { id: 'id', email: 'email' };
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
       const updatedUser = {
         id: 'id',
         email: 'email',

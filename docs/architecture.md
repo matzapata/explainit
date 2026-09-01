@@ -37,7 +37,7 @@ Current infrastructure folders and responsibilities:
 - `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
 - `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`)
 - `llm`: text generation model binding (`OpenAILlmProvider`)
-- `vectorstore`: vector add/search/delete over database persistence (`PrismaVectorStoreProvider`)
+- `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
 - `storage`: file/object storage and image resize (`GcpStorageProvider`)
 - `emails`: transactional email delivery (`ResendEmailProvider`, optional NodeMailer provider)
 - `payments`: subscriptions, checkout, and webhooks (`LemonSqueezyPaymentProvider`)
@@ -139,22 +139,28 @@ An embedding is a dense numeric representation where semantically related text i
 ### Why pgvector
 
 - Supports efficient nearest-neighbor search over high-dimensional vectors
-- Allows SQL-native filtering (`workspace`, `chat`, `resource`, visibility)
+- Allows SQL-native filtering (`namespace` is the chat id) next to relational rows
 - Reduces operational overhead at current scale compared to a separate vector tier
 
 ### Retrieval pipeline
 
-1. Embed user query text
-2. Fetch top-k semantically similar chunks
-3. Apply metadata and authorization constraints
-4. Re-rank and trim to model token budget
-5. Build grounded prompt and request completion
+1. Embed user query text (OpenAI `text-embedding-ada-002`, 1536 dimensions)
+2. Fetch top-k chunks with cosine distance (`ORDER BY embedding <=> $query`)
+3. Scope results with `WHERE namespace = chat_id`
+4. Trim to model token budget and build a grounded prompt
+
+`PrismaVectorStoreProvider` writes and searches vectors through `$executeRaw` / `$queryRaw`. An HNSW index (`vector_cosine_ops`) backs kNN. Prisma does not model `vector` natively; the column is `Unsupported("vector(1536)")`.
 
 ## Data model notes
 
-- Relational entities: users, workspaces, chats, resources, messages, ingestion jobs
-- Retrieval entities: chunk rows, embedding vectors, and provenance metadata
-- Citation support: chunk-to-resource references to trace model outputs back to source material
+- **User**: `id` UUID, unique `email`, optional `name`
+- **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points
+- **ChatResource**: belongs to a chat; stores source type/data and `embeddingIds` for the chunks it produced
+- **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
+- **ChatRateLimit**: per-chat message throttle rows
+- **UserSubscription** / **WebhookEvent**: payment records (still present until payments are stripped)
+
+Primary keys are UUID. There is no Mongo/Atlas dependency.
 
 ## Reliability and observability
 
@@ -169,7 +175,7 @@ An embedding is a dense numeric representation where semantically related text i
 
 ## Security and tenancy boundaries
 
-- Enforce workspace-level authorization in all retrieval queries
+- Enforce chat ownership and namespace scoping in all retrieval queries
 - Never trust client-supplied scope without server-side validation
 - Keep provider credentials in environment-managed secrets
 - Redact sensitive fields from logs and telemetry payloads

@@ -1,111 +1,111 @@
 datasource db {
-  provider   = "mongodb"
+  provider   = "postgresql"
   url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 generator client {
   provider        = "prisma-client-js"
-  binaryTargets   = ["native", "darwin-arm64"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions"]
 }
 
-// ============================= user module ============================= 
+// ============================= user module =============================
 model User {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  id    String  @id @default(uuid()) @db.Uuid
   email String  @unique
   name  String?
 
-  // timestamps
   createdAt DateTime @default(now())
 
-  // realtions
   subscription UserSubscription?
   chats        Chat[]
 }
 
-// ============================= payments module ============================= 
+// ============================= payments module =============================
 model UserSubscription {
-  id             String  @id @default(auto()) @map("_id") @db.ObjectId
-  subscriptionId String // from provider
+  id             String    @id @default(uuid()) @db.Uuid
+  subscriptionId String
   variantId      String
   orderId        String
-  provider       String // PaymentProviders;
-  status         String // SubscriptionStatus;
+  provider       String
+  status         String
   renewsAt       DateTime
   endsAt         DateTime?
   trialEndsAt    DateTime?
-  pauseMode      String? // 'void' | 'free' | null;
+  pauseMode      String?
   pauseResumesAt DateTime?
   cancelled      Boolean
   billingAnchor  Int
   testMode       Boolean
 
-  // timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // relations  
   user   User   @relation(fields: [userId], references: [id])
-  userId String @db.ObjectId @unique
+  userId String @unique @db.Uuid
 }
 
 model WebhookEvent {
-  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  id              String  @id @default(uuid()) @db.Uuid
   eventName       String
   processed       Boolean @default(false)
   body            String
   processingError String?
 
-  // timestamps
   createdAt DateTime @default(now())
 }
 
-// ============================= chat module ============================= 
+// ============================= chat module =============================
 model Chat {
-  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                   String   @id @default(uuid()) @db.Uuid
   name                 String?
   logo                 String?
   url                  String?
-  description          String? 
+  description          String?
   conversationStarters String[]
-  published            Boolean @default(false)
-  points               Int     @default(0)
+  published            Boolean  @default(false)
+  points               Int      @default(0)
 
-  // timestamps
   createdAt DateTime @default(now())
 
-  // relations
   owner   User   @relation(fields: [ownerId], references: [id])
-  ownerId String @db.ObjectId
+  ownerId String @db.Uuid
 
   resources ChatResource[]
+
+  @@index([ownerId])
 }
 
 model ChatResource {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(uuid()) @db.Uuid
   type         String
   data         String
   embeddingIds String[]
 
-  // timestamps
   createdAt DateTime @default(now())
 
-  // relations
   chat   Chat   @relation(fields: [chatId], references: [id])
-  chatId String @db.ObjectId
+  chatId String @db.Uuid
+
+  @@index([chatId])
 }
 
 model ChatRateLimit {
-  key     String  @id @map("_id")
-  points  Int
-  expire  DateTime?
+  key    String    @id
+  points Int
+  expire DateTime?
 }
 
 // ============================= embeddings module =============================
+// OpenAI text-embedding-ada-002 (LangChain default) is 1536 dimensions.
+// HNSW cosine index is created in the SQL migration; Prisma cannot express USING hnsw.
 model Embedding {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  id        String                    @id @default(uuid()) @db.Uuid
   content   String
   namespace String
   metadata  Json
+  embedding Unsupported("vector(1536)")
 
-  embedding Float[]
+  @@index([namespace])
 }
