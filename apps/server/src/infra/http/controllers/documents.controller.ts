@@ -13,16 +13,16 @@ import {
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import { AuthUser } from '@src/modules/user/domain/user';
+import { AuthUser } from '@src/modules/user/auth-user';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
-import { GetResourceDto } from '@src/modules/documents/dto/get-resource.dto';
-import { PostResourceInspectDto } from '@src/modules/documents/dto/post-resource-inspect.dto';
+import { GetResourceDto } from './dto/get-resource.dto';
+import { PostResourceInspectDto } from './dto/post-resource-inspect.dto';
 import {
   PostTextResourceDto,
   PostWebResourceDto,
-} from '@src/modules/documents/dto/post-resource.dto';
+} from './dto/post-resource.dto';
 
 @Controller('api/chats')
 export class DocumentsController {

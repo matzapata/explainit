@@ -1,5 +1,5 @@
 import { CurrentUserMiddleware } from './current-user.middleware';
-import { UsersService } from '@src/modules/user/application/users.service';
+import { UsersService } from '@src/modules/user/users.service';
 import { AuthService } from '@src/infra/auth/auth.service';
 import { EnvService } from '@src/infra/env/env.service';
 import { Request, Response } from 'express';

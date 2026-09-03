@@ -1,9 +1,9 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { UsersService } from '@src/modules/user/application/users.service';
+import { UsersService } from '@src/modules/user/users.service';
 import { AuthService } from '@src/infra/auth/auth.service';
 import { EnvService } from '@src/infra/env/env.service';
-import { AuthUser } from '@src/modules/user/domain/user';
+import { AuthUser } from '@src/modules/user/auth-user';
 
 declare module 'express' {
   interface Request {

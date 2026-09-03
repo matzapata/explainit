@@ -37,7 +37,7 @@ flowchart LR
 - A `<domain>.service.ts` file re-exports the active provider implementation.
 - `providers/` contains abstract contracts and one or more concrete adapters.
 
-HTTP controllers live in `infra/http`. Chat and user use-cases live in `modules/{chat,user}/application`. Environment is validated with Zod (`infra/env`).
+HTTP controllers live in `infra/http/controllers` with request/response DTOs in `controllers/dto`. Use-cases live in `modules/{chat,documents,user}` (service + repository at the module root). Environment is validated with Zod (`infra/env`).
 
 Current infrastructure folders and responsibilities:
 
@@ -114,7 +114,7 @@ Ingestion is intentionally decoupled from chat-time generation so indexing failu
 Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across the two process roots:
 
 - `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
-- `modules/chat/application/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `IngestJob` payload type), since it's part of the ingestion use case, not generic infra. `ChatModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
+- `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `IngestJob` payload type), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
 - `IngestWebResourceService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk`. Payload is `{ resourceId, chatId, url }` — never HTML.
 - `infra/worker/ingest.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process.
 - Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.

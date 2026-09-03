@@ -1,6 +1,6 @@
 import { TestBed } from '@automock/jest';
 import { UsersController } from './users.controller';
-import { UsersService } from '@src/modules/user/application/users.service';
+import { UsersService } from '@src/modules/user/users.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 
 describe('UsersController', () => {
