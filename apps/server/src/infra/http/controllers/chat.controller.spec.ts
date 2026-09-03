@@ -342,7 +342,7 @@ describe('ChatController', () => {
       expect(options.getKey({ params: { id: 'chat-1' } })).toBe('chat-1');
     });
 
-    it('increments points and answers the question', async () => {
+    it('increments points and streams the answer as SSE', async () => {
       const chat = {
         id: 'chat-1',
         name: 'name',
@@ -364,19 +364,99 @@ describe('ChatController', () => {
         answer: 'a product',
         context: [],
       };
+      const req = {
+        on: jest.fn().mockReturnThis(),
+        off: jest.fn().mockReturnThis(),
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        setHeader: jest.fn().mockReturnThis(),
+        flushHeaders: jest.fn(),
+        write: jest.fn(),
+        end: jest.fn(),
+        writableEnded: false,
+      };
       chatsService.findFirstById.mockResolvedValue(chat);
-      chatsService.answer.mockResolvedValue(answer);
+      chatsService.answer.mockImplementation(
+        async (_q, _h, _k, _ns, onToken) => {
+          onToken?.('a ');
+          onToken?.('product');
+          return answer;
+        },
+      );
 
-      await expect(
-        chatController.postMessage(body, chat.id),
-      ).resolves.toEqual(answer);
+      await chatController.postMessage(
+        body,
+        chat.id,
+        req as never,
+        res as never,
+      );
+
       expect(chatsService.incrementPoints).toHaveBeenCalledWith(chat.id);
       expect(chatsService.answer).toHaveBeenCalledWith(
         body.question,
         body.chatHistory,
         4,
         chat.id,
+        expect.any(Function),
+        expect.any(AbortSignal),
       );
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/event-stream; charset=utf-8',
+      );
+      expect(res.write).toHaveBeenCalledWith(
+        'event: token\ndata: {"text":"a "}\n\n',
+      );
+      expect(res.write).toHaveBeenCalledWith(
+        'event: token\ndata: {"text":"product"}\n\n',
+      );
+      expect(res.write).toHaveBeenCalledWith(
+        `event: done\ndata: ${JSON.stringify(answer)}\n\n`,
+      );
+      expect(res.end).toHaveBeenCalled();
+      expect(req.off).toHaveBeenCalled();
+    });
+
+    it('writes an error event when generation fails after the stream opens', async () => {
+      const chat = {
+        id: 'chat-1',
+        name: 'name',
+        logo: 'logo',
+        url: 'url',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      const req = {
+        on: jest.fn().mockReturnThis(),
+        off: jest.fn().mockReturnThis(),
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        setHeader: jest.fn().mockReturnThis(),
+        flushHeaders: jest.fn(),
+        write: jest.fn(),
+        end: jest.fn(),
+        writableEnded: false,
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      chatsService.answer.mockRejectedValue(new Error('upstream down'));
+
+      await chatController.postMessage(
+        { question: 'what?', chatHistory: [] },
+        chat.id,
+        req as never,
+        res as never,
+      );
+
+      expect(res.write).toHaveBeenCalledWith(
+        'event: error\ndata: {"message":"upstream down"}\n\n',
+      );
+      expect(res.end).toHaveBeenCalled();
     });
 
     it('throws when the chat is missing', async () => {
@@ -386,6 +466,8 @@ describe('ChatController', () => {
         chatController.postMessage(
           { question: 'what?', chatHistory: [] },
           'missing',
+          { on: jest.fn(), off: jest.fn() } as never,
+          {} as never,
         ),
       ).rejects.toBeInstanceOf(NotFoundException);
     });

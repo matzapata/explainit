@@ -16,9 +16,12 @@ import { ResponseContextDrawer } from './chat-message-context';
 
 export interface ChatMessageProps {
   message: IChatMessage;
+  isStreaming?: boolean;
 }
 
-export function ChatMessage({ message, ...props }: ChatMessageProps) {
+export function ChatMessage({ message, isStreaming = false, ...props }: ChatMessageProps) {
+  const content = isStreaming ? `${message.content}▍` : message.content;
+
   return (
     <div
       className={cn('group relative py-4 md:py-8 flex items-start md:-ml-12')}
@@ -77,7 +80,6 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
 
                 return (
                   <CodeBlock
-                    key={Math.random()}
                     language={(match && match[1]) || ''}
                     value={String(children).replace(/\n$/, '')}
                     {...props}
@@ -86,14 +88,14 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
               },
             }}
           >
-            {message.content}
+            {content}
           </MemoizedReactMarkdown>
-          {message.context.length ? (
+          {!isStreaming && message.context.length ? (
             <ResponseContextDrawer context={message.context} />
           ) : null}
         </div>
 
-        <ChatMessageActions message={message} />
+        {!isStreaming ? <ChatMessageActions message={message} /> : null}
       </div>
     </div>
   );

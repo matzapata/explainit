@@ -1,4 +1,5 @@
 import { apiService } from "@/lib/services/api-service"
+import { apiBaseUrl } from "@/lib/auth/config";
 import { AxiosInstance, AxiosProgressEvent } from "axios";
 
 export interface ChatMetadataDto {
@@ -76,12 +77,94 @@ export class ChatService {
         return res.data
     }
 
-    async postMessage(id: string, question: string, chatHistory?: { message: string, agent: MessageRole }[]): Promise<ChatMessage> {
-        const res = await this.client.post(`/api/chats/${id}/messages`, { question, chatHistory: chatHistory ?? [] })
+    async streamMessage(
+        id: string,
+        question: string,
+        chatHistory: { message: string, agent: MessageRole }[] | undefined,
+        options: { onToken: (text: string) => void; signal?: AbortSignal },
+    ): Promise<ChatMessage> {
+        const res = await fetch(`${apiBaseUrl()}/api/chats/${id}/messages`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "text/event-stream",
+            },
+            body: JSON.stringify({ question, chatHistory: chatHistory ?? [] }),
+            signal: options.signal,
+        })
+
+        if (!res.ok) {
+            let message = `Failed to send message (${res.status})`
+            try {
+                const body = (await res.json()) as { message?: string }
+                if (body.message) {
+                    message = body.message
+                }
+            } catch {
+                // ignore non-JSON error bodies
+            }
+            throw new Error(message)
+        }
+
+        if (!res.body) {
+            throw new Error("Failed to send message")
+        }
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ""
+        let donePayload: { answer: string; context: ChatMessage["context"] } | null = null
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) {
+                    break
+                }
+
+                buffer += decoder.decode(value, { stream: true })
+                const consumed = consumeSse(buffer)
+                buffer = consumed.rest
+
+                for (const event of consumed.events) {
+                    if (event.name === "token") {
+                        const text = (event.data as { text?: string }).text
+                        if (text) {
+                            options.onToken(text)
+                        }
+                    } else if (event.name === "done") {
+                        const data = event.data as {
+                            answer?: string
+                            context?: ChatMessage["context"]
+                        }
+                        donePayload = {
+                            answer: data.answer ?? "",
+                            context: data.context ?? [],
+                        }
+                    } else if (event.name === "error") {
+                        throw new Error(
+                            (event.data as { message?: string }).message ??
+                                "Failed to generate answer",
+                        )
+                    }
+                }
+            }
+        } finally {
+            try {
+                await reader.cancel()
+            } catch {
+                // already closed
+            }
+        }
+
+        if (!donePayload) {
+            throw new Error("Stream ended without a response")
+        }
+
         return {
-            content: res.data.answer,
+            content: donePayload.answer,
             role: MessageRole.ai,
-            context: res.data.context
+            context: donePayload.context,
         }
     }
 
@@ -116,6 +199,39 @@ export class ChatService {
         await this.client.delete(`/api/chats/${id}/resources/${resource_id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
         return id
     }
+}
+
+type SseEvent = { name: string; data: unknown }
+
+function consumeSse(buffer: string): { events: SseEvent[]; rest: string } {
+    const normalized = buffer.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+    const events: SseEvent[] = []
+    const parts = normalized.split("\n\n")
+    const rest = parts.pop() ?? ""
+
+    for (const block of parts) {
+        if (!block.trim() || block.startsWith(":")) {
+            continue
+        }
+
+        let name = "message"
+        const dataLines: string[] = []
+        for (const line of block.split("\n")) {
+            if (line.startsWith("event:")) {
+                name = line.slice(6).trim()
+            } else if (line.startsWith("data:")) {
+                dataLines.push(line.slice(5).trimStart())
+            }
+        }
+
+        if (!dataLines.length) {
+            continue
+        }
+
+        events.push({ name, data: JSON.parse(dataLines.join("\n")) })
+    }
+
+    return { events, rest }
 }
 
 export const chatService = new ChatService(apiService.client)

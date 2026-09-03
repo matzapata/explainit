@@ -2,7 +2,7 @@ import { RunnableLambda } from '@langchain/core/runnables';
 import { LlmService } from '@src/infra/llm/llm.service';
 import { RetrievalService } from '@src/modules/retrieval/retrieval.service';
 import { ChatRepository } from './chat.repository';
-import { ChatsService } from './chat.service';
+import { ChatsService, tokenText } from './chat.service';
 import { MessageAgent } from './message';
 
 describe('ChatsService', () => {
@@ -70,7 +70,14 @@ describe('ChatsService', () => {
       );
       retrievalService.retrieve.mockResolvedValue(context);
 
-      const result = await service.answer('how much?', history, 4, 'chat-1');
+      const tokens: string[] = [];
+      const result = await service.answer(
+        'how much?',
+        history,
+        4,
+        'chat-1',
+        (token) => tokens.push(token),
+      );
 
       expect(retrievalService.buildStandaloneQuestion).toHaveBeenCalledWith(
         'how much?',
@@ -84,11 +91,21 @@ describe('ChatsService', () => {
       expect(capturedPrompt).toContain('What is the price?');
       expect(capturedPrompt).toContain('pricing is $10');
       expect(capturedPrompt).toContain('billed monthly');
+      expect(tokens.join('')).toBe('grounded answer');
       expect(result).toEqual({
         context,
         question: 'how much?',
         answer: 'grounded answer',
       });
+    });
+  });
+
+  describe('tokenText', () => {
+    it('reads string chunks and message content', () => {
+      expect(tokenText('hello')).toBe('hello');
+      expect(tokenText({ content: 'there' })).toBe('there');
+      expect(tokenText({ content: [{ text: 'a' }, { text: 'b' }] })).toBe('ab');
+      expect(tokenText(null)).toBe('');
     });
   });
 });
