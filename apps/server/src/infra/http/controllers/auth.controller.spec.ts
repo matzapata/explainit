@@ -3,6 +3,17 @@ import { EnvService } from '@src/infra/env/env.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from '@src/infra/auth/auth.service';
 
+function mockRes() {
+  const res = {
+    redirect: jest.fn().mockReturnThis(),
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockReturnThis(),
+    cookie: jest.fn().mockReturnThis(),
+    clearCookie: jest.fn().mockReturnThis(),
+  };
+  return res;
+}
+
 describe('AuthController', () => {
   const authService = {
     login: jest.fn(),
@@ -16,6 +27,11 @@ describe('AuthController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    env.get.mockImplementation((key: string) => {
+      if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
+      if (key === 'NODE_ENV') return 'test';
+      return undefined;
+    });
   });
 
   describe('mode', () => {
@@ -39,7 +55,7 @@ describe('AuthController', () => {
 
       expect(
         controller.login({ email: 'admin@example.com', password: 'x' }),
-      ).toEqual({ access_token: 'jwt-token' });
+      ).toEqual({ access_token: 'jwt-token', expires_in: 60 * 60 * 24 * 7 });
     });
 
     it('rejects invalid credentials', () => {
@@ -49,6 +65,34 @@ describe('AuthController', () => {
       expect(() =>
         controller.login({ email: 'admin@example.com', password: 'x' }),
       ).toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('startLogin', () => {
+    it('redirects to the client when AUTH_MODE is none', async () => {
+      env.get.mockImplementation((key: string) => {
+        if (key === 'AUTH_MODE') return 'none';
+        if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
+        return undefined;
+      });
+      const res = mockRes();
+      await controller.startLogin('/settings', res as never);
+      expect(res.redirect).toHaveBeenCalledWith(
+        'http://localhost:3000/settings',
+      );
+    });
+
+    it('redirects to the SPA login page in password mode', async () => {
+      env.get.mockImplementation((key: string) => {
+        if (key === 'AUTH_MODE') return 'password';
+        if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
+        return undefined;
+      });
+      const res = mockRes();
+      await controller.startLogin('/resources', res as never);
+      expect(res.redirect).toHaveBeenCalledWith(
+        'http://localhost:3000/login?returnTo=%2Fresources',
+      );
     });
   });
 });

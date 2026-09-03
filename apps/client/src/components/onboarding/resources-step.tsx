@@ -3,7 +3,7 @@
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import ResourcesTable from '../generate/resources-table';
 import { Button } from '../ui/button';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/router';
 
 export function ResourcesStep(props: { chat: ChatMetadataDto }) {
   const router = useRouter();

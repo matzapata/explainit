@@ -8,7 +8,7 @@ import { ChatScrollAnchor } from '@/components/chat/chat-scroll-anchor';
 import React from 'react';
 import useChat from '@/lib/hooks/use-chat';
 import { ChatMetadataDto, MessageRole } from '@/lib/services/chat-service';
-import Link from 'next/link';
+import { Link } from '@/lib/router';
 import { Button } from '../ui/button';
 
 export interface ChatProps extends React.ComponentProps<'div'> {

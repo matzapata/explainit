@@ -3,7 +3,7 @@
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import ConversationStartersTable from '../generate/conversation-starters-table';
 import { Button } from '../ui/button';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/router';
 
 export function ConversationStartersStep(props: {
   chat: ChatMetadataDto;

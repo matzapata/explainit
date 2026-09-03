@@ -1,9 +1,7 @@
-FROM --platform=linux/amd64 node:18-alpine
+FROM --platform=linux/amd64 node:20-alpine
 
-# List env variables required for building the app
-ARG NEXT_PUBLIC_API_SERVER_BASE_URL
-ARG NEXT_PUBLIC_API_CLIENT_BASE_URL
-ARG NEXT_PUBLIC_LOOM_DEMO_URL
+ARG VITE_API_BASE_URL=http://localhost:4000
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 WORKDIR /app
 
@@ -16,12 +14,6 @@ COPY . .
 
 RUN npm run build
 
-RUN npm prune --production
+EXPOSE 3000
 
-ENV NODE_ENV production
-
-EXPOSE $PORT
-
-CMD ["npm", "run", "start"]
-
-
+CMD ["npm", "run", "preview"]

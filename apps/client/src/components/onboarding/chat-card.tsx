@@ -1,7 +1,7 @@
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import Link from 'next/link';
+import { Link } from '@/lib/router';
 
 export function ChatCard(props: { chat: ChatMetadataDto }) {
   return (

@@ -25,9 +25,7 @@ RUN npm install
 
 COPY . .
 
-# install and clean dev dependencies
 RUN npm run build
-RUN npm prune --production
 
 ENV NODE_ENV=production
 EXPOSE $PORT

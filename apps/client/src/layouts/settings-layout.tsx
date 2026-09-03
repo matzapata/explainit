@@ -2,8 +2,7 @@
 
 import Navbar, { NavbarItem, NavbarProps } from "@/components/navbar/app";
 import { IconHome } from "@/components/ui/icons";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from '@/lib/router';
 
 interface SettingsLayoutProps extends NavbarProps {
   className?: string;

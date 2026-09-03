@@ -3,8 +3,9 @@
 import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
 import { Button } from '../ui/button';
 import { ChatCard } from './chat-card';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/router';
 import { useAccessToken } from '@/lib/auth/use-session';
+import { loginHref } from '@/lib/auth/config';
 import { toast } from '../ui/use-toast';
 import { useState } from 'react';
 import { confettiAnimation } from '@/lib/confetti-animation';
@@ -20,7 +21,7 @@ export function ShareStep(props: { chat: ChatMetadataDto }) {
   const onPublish = () => {
     if (!accessTokenRaw) {
       alert('You need to be logged in to publish your chat.');
-      return window.location.assign('/api/auth/login');
+      return window.location.assign(loginHref());
     }
 
     setIsLoading(true);

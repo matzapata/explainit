@@ -2,7 +2,7 @@
 
 import { Bars4Icon } from "@heroicons/react/24/solid";
 import Logo from "../brand/logo";
-import Link from "next/link";
+import { Link } from '@/lib/router';
 import { LogoutLink } from "@/lib/auth/links";
 import {
   DropdownMenu,

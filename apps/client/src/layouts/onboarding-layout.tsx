@@ -3,7 +3,7 @@
 import Logo from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 import { LogoutLink } from '@/lib/auth/links';
-import Link from 'next/link';
+import { Link } from '@/lib/router';
 
 interface ChatLayoutProps {
   children: React.ReactNode;
