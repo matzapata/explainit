@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LlmModule } from '@src/infra/llm/llm.module';
-import { VectorStoreModule } from '@src/infra/vector-store/vectorstore.module';
+import { VectorStoreModule } from '@src/infra/vector-store/vector-store.module';
 import { RetrievalService } from './retrieval.service';
 
 @Module({

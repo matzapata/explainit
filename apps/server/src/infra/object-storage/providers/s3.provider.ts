@@ -10,12 +10,12 @@ import {
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import sharp from 'sharp';
-import { StorageProvider } from './storage.provider';
+import { ObjectStorageProvider } from './object-storage.provider';
 
 export const S3_CLIENT = 'S3_CLIENT';
 
 @Injectable()
-export class S3StorageProvider implements StorageProvider {
+export class S3StorageProvider implements ObjectStorageProvider {
   private readonly client: S3Client;
   private readonly bucket: string;
   private readonly region: string;

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { VectorStoreService } from './vectorstore.service';
+import { VectorStoreService } from './vector-store.service';
 import { PrismaModule } from '@src/infra/database/prisma.module';
 import { LlmModule } from '../llm/llm.module';
 

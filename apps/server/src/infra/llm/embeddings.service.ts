@@ -1,2 +1,1 @@
-// select provider
-export { OpenAiEmbeddingsProvider as EmbeddingsService } from './providers/openai-embeddings.provider';
+export { OpenRouterEmbeddingsProvider as EmbeddingsService } from './providers/openrouter-embeddings.provider';

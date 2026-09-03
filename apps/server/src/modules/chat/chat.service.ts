@@ -3,11 +3,9 @@ import { ChatRepository } from './chat.repository';
 import { Injectable } from '@nestjs/common';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { formatDocumentsAsString } from 'langchain/util/document';
-import { Document } from 'langchain/document';
 import { LlmService } from '@src/infra/llm/llm.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { EmbeddingHit } from '@src/infra/vector-store/providers/vectorstore.provider';
+import { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
 import { RetrievalService } from '@src/modules/retrieval/retrieval.service';
 import { MessageAgent } from './message';
 import { ANSWER_PROMPT } from './prompts/rag-system.prompt';
@@ -94,9 +92,7 @@ export class ChatsService {
 
     return answerChain.invoke({
       question,
-      context: formatDocumentsAsString(
-        context.map((doc) => new Document({ pageContent: doc.content })),
-      ),
+      context: context.map((doc) => doc.content).join('\n\n'),
     });
   }
 }

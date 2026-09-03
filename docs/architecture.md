@@ -44,10 +44,9 @@ Current infrastructure folders and responsibilities:
 - `auth`: `AUTH_MODE=none|oidc|password`. `NoneProvider` bootstraps `ADMIN_EMAIL`; `JwksProvider` verifies standard `sub` + `email` (any OIDC issuer, including Kinde); `PasswordProvider` issues/verifies a local HS256 JWT
 - `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
-- `embeddings`: embedding generation abstraction (`OpenAiEmbeddingsProvider`; OpenAI-compatible via `OPENAI_BASE_URL`)
-- `llm`: text generation model binding (`OpenAILlmProvider` / `ChatOpenAI`; OpenAI-compatible via `OPENAI_BASE_URL`)
-- `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
-- `storage`: file/object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the bucket; the app does not.
+- `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
+- `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the bucket; the app does not.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 
@@ -136,10 +135,10 @@ This design keeps crawling provider-specific details isolated while exposing a s
 
 ### Embeddings infrastructure
 
-Embedding responsibilities are implemented under `apps/server/src/infra/embeddings`:
+Embedding responsibilities are implemented under `apps/server/src/infra/llm`:
 
 - `EmbeddingsProvider` contract exposes `generateEmbeddings(text: string)`.
-- Active implementation (`OpenAiEmbeddingsProvider`) uses `@langchain/openai`. Optional `OPENAI_BASE_URL` targets OpenRouter or other OpenAI-compatible APIs; `OPENAI_EMBEDDING_MODEL` must remain 1536 dimensions.
+- Active implementation (`OpenRouterEmbeddingsProvider`) POSTs to OpenRouter `/embeddings`. `OPENROUTER_EMBEDDING_MODEL` must remain 1536 dimensions.
 - Text is normalized before embedding (newlines replaced with spaces).
 - The same service is reused by vector ingestion (`addDocuments`) and query-time similarity search.
 
@@ -166,12 +165,12 @@ An embedding is a dense numeric representation where semantically related text i
 
 ### Retrieval pipeline
 
-1. Embed user query text (OpenAI `text-embedding-ada-002`, 1536 dimensions)
+1. Embed user query text (`openai/text-embedding-ada-002` via OpenRouter, 1536 dimensions)
 2. Fetch top-k chunks with cosine distance (`ORDER BY embedding <=> $query`)
 3. Scope results with `WHERE namespace = chat_id`
 4. Trim to model token budget and build a grounded prompt
 
-`PrismaVectorStoreProvider` writes and searches vectors through `$executeRaw` / `$queryRaw`. An HNSW index (`vector_cosine_ops`) backs kNN. Prisma does not model `vector` natively; the column is `Unsupported("vector(1536)")`.
+`PgVectorProvider` writes and searches vectors through Prisma `$executeRaw` / `$queryRaw`. An HNSW index (`vector_cosine_ops`) backs kNN. Prisma does not model `vector` natively; the column is `Unsupported("vector(1536)")`.
 
 ## Data model notes
 
