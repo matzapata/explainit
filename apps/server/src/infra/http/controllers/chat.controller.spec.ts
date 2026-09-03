@@ -1,11 +1,14 @@
 import { TestBed } from '@automock/jest';
+import { NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
+import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { RATE_LIMIT_OPTIONS } from '@src/infra/http/decorators/rate-limit.decorator';
 import { ChatController } from './chat.controller';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
 import { ResourceStatus } from '@prisma/client';
+import { MessageAgent } from '@src/modules/chat/message';
 
 describe('ChatController', () => {
   let chatController: ChatController;
@@ -222,6 +225,106 @@ describe('ChatController', () => {
       });
       expect(result.logo).toContain('https://cdn.example/logo.webp');
     });
+
+    it('throws when the chat is missing', async () => {
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      chatsService.findFirstById.mockResolvedValue(null);
+
+      await expect(
+        chatController.updateChatLogo(
+          authUser,
+          { filename: 'filename', buffer: Buffer.from('') } as never,
+          'missing',
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('getChat', () => {
+    it('returns a public chat by id', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        logo: 'logo',
+        url: 'url',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(chatController.getChat(chat.id)).resolves.toEqual(chat);
+    });
+
+    it('throws when the chat is missing', async () => {
+      chatsService.findFirstById.mockResolvedValue(null);
+
+      await expect(chatController.getChat('missing')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('admin', () => {
+    it('requires an admin to list and create chats', () => {
+      for (const handler of [
+        ChatController.prototype.getAllChatsByOwner,
+        ChatController.prototype.createChat,
+      ]) {
+        const guards = Reflect.getMetadata('__guards__', handler);
+        expect(new guards[0]()).toBeInstanceOf(AdminGuard);
+      }
+    });
+
+    it('lists chats for the admin owner', async () => {
+      const authUser = { id: 'id', email: 'email', isAdmin: true };
+      const chats = [
+        {
+          id: 'id',
+          name: 'name',
+          logo: 'logo',
+          url: 'url',
+          description: null,
+          points: 0,
+          published: false,
+          conversationStarters: [],
+          createdAt: new Date(),
+          ownerId: authUser.id,
+        },
+      ];
+      chatsService.findManyByOwner.mockResolvedValue(chats);
+
+      await expect(
+        chatController.getAllChatsByOwner(authUser),
+      ).resolves.toEqual(chats);
+      expect(chatsService.findManyByOwner).toHaveBeenCalledWith(authUser.id);
+    });
+
+    it('creates a chat for the admin owner', async () => {
+      const authUser = { id: 'id', email: 'email', isAdmin: true };
+      const data = { name: 'Docs' };
+      const chat = {
+        id: 'id',
+        name: 'Docs',
+        logo: 'logo',
+        url: 'url',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: authUser.id,
+      };
+      chatsService.create.mockResolvedValue(chat);
+
+      await expect(chatController.createChat(authUser, data)).resolves.toEqual(
+        chat,
+      );
+      expect(chatsService.create).toHaveBeenCalledWith(authUser.id, data);
+    });
   });
 
   describe('postMessage', () => {
@@ -237,6 +340,54 @@ describe('ChatController', () => {
         duration: 60,
       });
       expect(options.getKey({ params: { id: 'chat-1' } })).toBe('chat-1');
+    });
+
+    it('increments points and answers the question', async () => {
+      const chat = {
+        id: 'chat-1',
+        name: 'name',
+        logo: 'logo',
+        url: 'url',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      const body = {
+        question: 'what is this?',
+        chatHistory: [{ agent: MessageAgent.USER, message: 'hi' }],
+      };
+      const answer = {
+        question: body.question,
+        answer: 'a product',
+        context: [],
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      chatsService.answer.mockResolvedValue(answer);
+
+      await expect(
+        chatController.postMessage(body, chat.id),
+      ).resolves.toEqual(answer);
+      expect(chatsService.incrementPoints).toHaveBeenCalledWith(chat.id);
+      expect(chatsService.answer).toHaveBeenCalledWith(
+        body.question,
+        body.chatHistory,
+        4,
+        chat.id,
+      );
+    });
+
+    it('throws when the chat is missing', async () => {
+      chatsService.findFirstById.mockResolvedValue(null);
+
+      await expect(
+        chatController.postMessage(
+          { question: 'what?', chatHistory: [] },
+          'missing',
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

@@ -179,5 +179,119 @@ describe('DocumentsService', () => {
         }),
       ).rejects.toBeInstanceOf(PermanentIngestError);
     });
+
+    it('treats invalid URLs as permanent failures', async () => {
+      documentsRepository.findById.mockResolvedValue({
+        id: 'resource-1',
+        status: ResourceStatus.pending,
+      } as never);
+
+      await expect(
+        service.process({
+          resourceId: 'resource-1',
+          chatId: 'chat-1',
+          url: 'not a url',
+        }),
+      ).rejects.toBeInstanceOf(PermanentIngestError);
+      expect(crawlerService.scrape).not.toHaveBeenCalled();
+    });
+
+    it('deletes embeddings when the resource is removed mid-ingest', async () => {
+      documentsRepository.findById
+        .mockResolvedValueOnce({
+          id: 'resource-1',
+          status: ResourceStatus.pending,
+        } as never)
+        .mockResolvedValueOnce(null);
+      crawlerService.scrape.mockResolvedValue([
+        {
+          url: 'https://docs.example.com',
+          title: 'Docs',
+          html: '<p>hello</p>',
+        },
+      ]);
+      chunkingService.generateDocsFromHtml.mockResolvedValue([
+        { content: 'hello', namespace: 'chat-1', metadata: {} },
+      ]);
+      vectorStoreService.addDocuments.mockResolvedValue(['emb-1']);
+
+      await service.process({
+        resourceId: 'resource-1',
+        chatId: 'chat-1',
+        url: 'https://docs.example.com',
+      });
+
+      expect(vectorStoreService.deleteDocuments).toHaveBeenCalledWith([
+        'emb-1',
+      ]);
+      expect(documentsRepository.update).not.toHaveBeenCalledWith(
+        'resource-1',
+        expect.objectContaining({ status: ResourceStatus.ready }),
+      );
+    });
+  });
+
+  describe('createTextResource', () => {
+    it('chunks, embeds, and marks the resource ready', async () => {
+      chunkingService.generateDocsFromText.mockResolvedValue([
+        { content: 'hello', namespace: 'chat-1', metadata: {} },
+      ]);
+      vectorStoreService.addDocuments.mockResolvedValue(['emb-1']);
+      documentsRepository.create.mockResolvedValue({
+        id: 'resource-1',
+        type: 'text',
+        status: ResourceStatus.ready,
+        embeddingIds: ['emb-1'],
+      } as never);
+
+      const result = await service.createTextResource('chat-1', {
+        text: 'hello',
+        source: 'manual',
+        title: 'Notes',
+      });
+
+      expect(chunkingService.generateDocsFromText).toHaveBeenCalledWith(
+        { text: 'hello', source: 'manual', title: 'Notes' },
+        'chat-1',
+      );
+      expect(vectorStoreService.addDocuments).toHaveBeenCalledWith([
+        { content: 'hello', namespace: 'chat-1', metadata: {} },
+      ]);
+      expect(documentsRepository.create).toHaveBeenCalledWith({
+        data: 'Notes',
+        type: 'text',
+        status: ResourceStatus.ready,
+        embeddingIds: ['emb-1'],
+        chat: { connect: { id: 'chat-1' } },
+      });
+      expect(result.id).toBe('resource-1');
+    });
+  });
+
+  describe('deleteWithEmbeddings', () => {
+    it('returns null when the resource is missing', async () => {
+      documentsRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteWithEmbeddings('missing')).resolves.toBeNull();
+      expect(vectorStoreService.deleteDocuments).not.toHaveBeenCalled();
+    });
+
+    it('deletes vectors then the resource row', async () => {
+      const resource = {
+        id: 'resource-1',
+        embeddingIds: ['emb-1', 'emb-2'],
+      };
+      documentsRepository.findById.mockResolvedValue(resource as never);
+      documentsRepository.delete.mockResolvedValue(resource as never);
+
+      await expect(service.deleteWithEmbeddings('resource-1')).resolves.toEqual(
+        resource,
+      );
+      expect(vectorStoreService.deleteDocuments).toHaveBeenCalledWith([
+        'emb-1',
+        'emb-2',
+      ]);
+      expect(documentsRepository.delete).toHaveBeenCalledWith('resource-1');
+    });
   });
 });
