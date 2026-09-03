@@ -5,10 +5,11 @@ import {
   RequestMethod,
   ValidationPipe,
 } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from '@src/infra/auth/auth.module';
 import { CrawlerModule } from '@src/infra/crawler/crawler.module';
 import { PrismaModule } from '@src/infra/database/prisma.module';
+import { RateLimiterModule } from '@src/infra/rate-limiter/rate-limiter.module';
 import { StorageModule } from '@src/infra/storage/storage.module';
 import { ChatModule } from '@src/modules/chat/chat.module';
 import { DocumentsModule } from '@src/modules/documents/documents.module';
@@ -18,7 +19,7 @@ import { AuthController } from './controllers/auth/auth.controller';
 import { ChatController } from './controllers/chat/chat.controller';
 import { DocumentsController } from './controllers/documents/documents.controller';
 import { UsersController } from './controllers/user/users.controller';
-import { ChatMessagesRateLimit } from './guards/chat-messages-rate-limit.guard';
+import { RateLimiterGuard } from './guards/rate-limiter.guard';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 
 @Module({
@@ -30,6 +31,7 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
     StorageModule,
     CrawlerModule,
     PrismaModule,
+    RateLimiterModule,
   ],
   controllers: [
     HealthController,
@@ -40,7 +42,10 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
   ],
   providers: [
     CurrentUserMiddleware,
-    ChatMessagesRateLimit,
+    {
+      provide: APP_GUARD,
+      useClass: RateLimiterGuard,
+    },
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

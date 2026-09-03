@@ -23,7 +23,7 @@ import { UpdateChatMetadataDto } from '@src/modules/chat/dto/put-chat-metadata.d
 import { AuthUser } from '@src/modules/user/domain/user';
 import { Chat, ChatResource } from '@prisma/client';
 import { PostMessageDto } from '@src/modules/chat/dto/post-message.dto';
-import { ChatMessagesRateLimit } from '@src/infra/http/guards/chat-messages-rate-limit.guard';
+import { RateLimit } from '@src/infra/http/decorators/rate-limit.decorator';
 import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { DocumentsService } from '@src/modules/documents/documents.service';
 
@@ -132,7 +132,12 @@ export class ChatController {
   }
 
   @Post('/:id/messages')
-  @UseGuards(ChatMessagesRateLimit)
+  @RateLimit({
+    keyPrefix: 'chat-messages',
+    points: 10,
+    duration: 60,
+    getKey: (req) => req.params.id,
+  })
   async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
     const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
