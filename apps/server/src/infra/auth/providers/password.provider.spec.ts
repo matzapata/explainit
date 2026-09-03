@@ -40,4 +40,23 @@ describe('PasswordProvider', () => {
   it('rejects a missing token', async () => {
     await expect(provider.verifyToken(undefined)).resolves.toBeNull();
   });
+
+  it('rejects the wrong email', () => {
+    expect(provider.login('other@example.com', 'secret')).toBeNull();
+  });
+
+  it('rejects a tampered token', async () => {
+    const token = provider.login('admin@example.com', 'secret');
+    await expect(provider.verifyToken(`${token}x`)).resolves.toBeNull();
+  });
+
+  it('rejects an expired token', async () => {
+    const token = jwt.sign(
+      { sub: 'local', email: 'admin@example.com' },
+      'test-secret-at-least-16-chars',
+      { algorithm: 'HS256', expiresIn: -1 },
+    );
+
+    await expect(provider.verifyToken(token)).resolves.toBeNull();
+  });
 });

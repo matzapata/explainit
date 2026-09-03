@@ -61,4 +61,27 @@ describe('CurrentUserMiddleware', () => {
 
     expect(req.currentUser).toBeNull();
   });
+
+  it('extracts a Bearer token and marks non-admins', async () => {
+    (authService.verifyToken as jest.Mock).mockResolvedValue({
+      id: 'local',
+      email: 'user@example.com',
+    });
+    (usersService.findOrCreate as jest.Mock).mockResolvedValue({
+      id: 'user-id',
+      email: 'user@example.com',
+    });
+
+    const req = {
+      headers: { authorization: 'Bearer jwt-token' },
+    } as Request;
+    await middleware.use(req, res, next);
+
+    expect(authService.verifyToken).toHaveBeenCalledWith('jwt-token');
+    expect(req.currentUser).toEqual({
+      id: 'user-id',
+      email: 'user@example.com',
+      isAdmin: false,
+    });
+  });
 });
