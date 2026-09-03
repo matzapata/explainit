@@ -14,6 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
