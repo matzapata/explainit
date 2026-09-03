@@ -2,7 +2,7 @@
 
 Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
 
-1. `client` (Next.js) for user interaction
+1. `client` (Vite + React) for user interaction
 2. `server` (NestJS) for orchestration and policy
 3. `postgres` (Postgres + pgvector) for transactional and semantic data
 
@@ -19,7 +19,7 @@ External providers supply language model inference, embedding generation, and op
 
 ```mermaid
 flowchart LR
-  User[User] --> Client[Next.js Client]
+  User[User] --> Client[Vite React Client]
   Client --> API[NestJS API]
   API --> DB[(Postgres + pgvector)]
   API --> Redis[(Redis / BullMQ)]
@@ -187,7 +187,7 @@ The API emits the three observability signals used in Compose:
 
 - **Traces** — OpenTelemetry SDK (`infra/observability/tracing.ts`) exports OTLP/HTTP to Jaeger. HTTP auto-instrumentation creates the root span; `@Span()` on ingest, retrieve, and generate adds child spans. `/health` and `/metrics` are not traced.
 - **Logs** — Pino injects `traceId` / `spanId` from the active span. Auth cookies and authorization headers are redacted.
-- **Metrics** — Prometheus scrapes `/metrics`. Grafana is provisioned with Prometheus and Jaeger datasources (`admin` / `admin` on port 3001 so it does not collide with the Next.js client).
+- **Metrics** — Prometheus scrapes `/metrics`. Grafana is provisioned with Prometheus and Jaeger datasources (`admin` / `admin` on port 3001 so it does not collide with the Vite client).
 
 Distinguish transient provider failures (retryable) from deterministic content failures (non-retryable). Validate deployments with end-to-end smoke tests for ingestion and Q&A.
 

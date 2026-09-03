@@ -21,11 +21,14 @@ describe('envSchema', () => {
     }
   });
 
-  it('accepts oidc when a JWKS URI is set', () => {
+  it('accepts oidc when issuer, client, JWKS, and redirect URI are set', () => {
     const parsed = envSchema.parse({
       ...base,
       AUTH_MODE: 'oidc',
       AUTH_JWKS_URI: 'https://issuer.example.com/.well-known/jwks.json',
+      AUTH_ISSUER: 'https://issuer.example.com',
+      AUTH_CLIENT_ID: 'explainit',
+      AUTH_REDIRECT_URI: 'http://localhost:4000/api/auth/callback',
     });
     expect(parsed.AUTH_MODE).toBe('oidc');
   });

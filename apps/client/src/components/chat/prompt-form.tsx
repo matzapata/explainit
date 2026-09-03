@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { Link } from '@/lib/router';
 import Textarea from 'react-textarea-autosize';
 
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';

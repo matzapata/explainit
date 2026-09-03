@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '../ui/form';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/router';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 

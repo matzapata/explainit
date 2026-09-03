@@ -1,0 +1,61 @@
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { LoginForm } from '@/components/login-form';
+import Logo from '@/components/brand/logo';
+import Loading from '@/components/loading';
+import { getAccessToken, loginHref, safeReturnTo } from '@/lib/auth/config';
+
+export const Route = createFileRoute('/login')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    returnTo: safeReturnTo(
+      typeof search.returnTo === 'string' ? search.returnTo : undefined,
+    ),
+    error: typeof search.error === 'string' ? search.error : undefined,
+  }),
+  beforeLoad: ({ context, search }) => {
+    const returnTo = search.returnTo ?? '/';
+    if (context.authMode === 'none' || getAccessToken()) {
+      throw redirect({ to: returnTo as never });
+    }
+  },
+  component: LoginPage,
+});
+
+function LoginPage() {
+  const { returnTo, error } = Route.useSearch();
+  const { authMode } = Route.useRouteContext();
+
+  useEffect(() => {
+    if (authMode === 'oidc') {
+      window.location.replace(loginHref(returnTo));
+    }
+  }, [authMode, returnTo]);
+
+  if (authMode !== 'password') {
+    return <Loading />;
+  }
+
+  return (
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-8">
+        <div className="flex justify-center">
+          <Logo />
+        </div>
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Sign in
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Use the admin email and password from your server env.
+          </p>
+        </div>
+        {error ? (
+          <p className="text-sm text-center text-red-500">
+            Sign in failed. Check your identity provider configuration.
+          </p>
+        ) : null}
+        <LoginForm returnTo={returnTo} />
+      </div>
+    </main>
+  );
+}

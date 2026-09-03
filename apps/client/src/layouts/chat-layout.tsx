@@ -6,7 +6,7 @@ interface ChatLayoutProps extends NavbarProps {
   navbarItems?: NavbarItem[];
 }
 
-export default async function ChatLayout(props: ChatLayoutProps) {
+export default function ChatLayout(props: ChatLayoutProps) {
   const navbarItems = props.navbarItems ?? [
     {
       title: "Chats",

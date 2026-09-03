@@ -4,7 +4,7 @@ import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/router';
 
 export function ChatNavBar(props: {
   authenticated: boolean;

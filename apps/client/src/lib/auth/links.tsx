@@ -1,8 +1,6 @@
-'use client';
-
-import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { loginHref } from './config';
+import { Link } from '@/lib/router';
+import { loginHref, logoutHref, clearAccessToken } from './config';
 
 interface AuthLinkProps {
   children: ReactNode;
@@ -30,13 +28,17 @@ export function LogoutLink({
   className,
   postLogoutRedirectURL,
 }: AuthLinkProps) {
-  const returnTo = postLogoutRedirectURL ?? '/';
+  const href = logoutHref(postLogoutRedirectURL ?? '/');
+
   return (
-    <Link
-      href={`/api/auth/logout?returnTo=${encodeURIComponent(returnTo)}`}
+    <a
+      href={href}
       className={className}
+      onClick={() => {
+        clearAccessToken();
+      }}
     >
       {children}
-    </Link>
+    </a>
   );
 }

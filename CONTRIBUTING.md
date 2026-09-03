@@ -12,8 +12,8 @@ Thanks for your interest in contributing to Explainit.
 
 1. Fork the repository and create a feature branch.
 2. Create environment files:
-   - `server/.env.local`
-   - `client/.env.local`
+   - `apps/server/.env.local`
+   - `apps/client/.env.local`
 3. Install dependencies
 4. Keep changes focused and scoped to one concern.
 

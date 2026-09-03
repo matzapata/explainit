@@ -26,7 +26,7 @@ services:
         required: false
     volumes:
       - ./apps/server:/app
-      - /app/node_modules
+      - server_node_modules:/app/node_modules
     ports:
       - '4000:4000'
     shm_size: '1gb'
@@ -59,7 +59,7 @@ services:
         required: false
     volumes:
       - ./apps/server:/app
-      - /app/node_modules
+      - worker_node_modules:/app/node_modules
     shm_size: '1gb'
     command: sh -c "npx prisma migrate deploy && npm run worker"
     depends_on:
@@ -75,13 +75,14 @@ services:
       dockerfile: Dockerfile
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_AUTH_MODE: none
+      API_PROXY_TARGET: http://api:4000
+    command: npm run dev
     env_file:
       - path: ./apps/client/.env.local
         required: false
     volumes:
       - ./apps/client:/app
-      - /app/node_modules
+      - client_node_modules:/app/node_modules
     ports:
       - '3000:3000'
     depends_on:
@@ -190,3 +191,6 @@ volumes:
   floci_data:
   prometheus_data:
   grafana_data:
+  server_node_modules:
+  worker_node_modules:
+  client_node_modules:

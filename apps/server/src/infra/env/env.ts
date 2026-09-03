@@ -56,6 +56,9 @@ export const envSchema = z
     AUTH_JWKS_URI: z.string().url().optional(),
     AUTH_ISSUER: z.string().optional(),
     AUTH_AUDIENCE: z.string().optional(),
+    AUTH_CLIENT_ID: z.string().optional(),
+    AUTH_CLIENT_SECRET: z.string().optional(),
+    AUTH_REDIRECT_URI: z.string().url().optional(),
     AUTH_SECRET: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
 
@@ -68,12 +71,35 @@ export const envSchema = z
       .default('http://localhost:4318/v1/traces'),
   })
   .superRefine((env, ctx) => {
-    if (env.AUTH_MODE === 'oidc' && !env.AUTH_JWKS_URI) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['AUTH_JWKS_URI'],
-        message: 'AUTH_JWKS_URI is required when AUTH_MODE=oidc',
-      });
+    if (env.AUTH_MODE === 'oidc') {
+      if (!env.AUTH_JWKS_URI) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['AUTH_JWKS_URI'],
+          message: 'AUTH_JWKS_URI is required when AUTH_MODE=oidc',
+        });
+      }
+      if (!env.AUTH_ISSUER) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['AUTH_ISSUER'],
+          message: 'AUTH_ISSUER is required when AUTH_MODE=oidc',
+        });
+      }
+      if (!env.AUTH_CLIENT_ID) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['AUTH_CLIENT_ID'],
+          message: 'AUTH_CLIENT_ID is required when AUTH_MODE=oidc',
+        });
+      }
+      if (!env.AUTH_REDIRECT_URI) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['AUTH_REDIRECT_URI'],
+          message: 'AUTH_REDIRECT_URI is required when AUTH_MODE=oidc',
+        });
+      }
     }
 
     if (env.AUTH_MODE === 'password') {

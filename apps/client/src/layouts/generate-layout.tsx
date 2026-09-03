@@ -2,8 +2,7 @@
 
 import Navbar, { NavbarItem, NavbarProps } from '@/components/navbar/app';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/lib/router';
 
 interface GenerateLayoutProps extends NavbarProps {
   className?: string;
