@@ -82,15 +82,15 @@ sequenceDiagram
   participant M as Model Provider
 
   U->>C: Ask question
-  C->>A: POST /chat message
+  C->>A: POST /chat message (SSE)
   A->>D: Load chat/workspace scope
   A->>D: Vector search for relevant chunks
   D-->>A: Ranked context candidates
   A->>A: Apply filters, rank, trim to token budget
-  A->>M: Send prompt + grounded context
-  M-->>A: Completion
-  A-->>C: Response + citation metadata
-  C-->>U: Render answer
+  A->>M: Stream prompt + grounded context
+  M-->>A: Token deltas
+  A-->>C: Tokens, then citations
+  C-->>U: Render answer incrementally
 ```
 
 ## Ingestion lifecycle (indexing path)

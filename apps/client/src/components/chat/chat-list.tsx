@@ -1,5 +1,5 @@
 import { ChatMessage } from "@/components/chat/chat-message";
-import { ChatMessage as IChatMessage } from "@/lib/services/chat-service";
+import { ChatMessage as IChatMessage, MessageRole } from "@/lib/services/chat-service";
 import { ChatMessageLoading } from "./chat-message-loading";
 
 export function ChatList(props: {
@@ -10,12 +10,23 @@ export function ChatList(props: {
     return null;
   }
 
+  const last = props.messages[props.messages.length - 1];
+  const showLoading = props.loading && last?.role !== MessageRole.ai;
+
   return (
     <div className="relative mx-auto max-w-2xl px-4 divide-y dark:divide-gray-800">
       {props.messages.map((message, index) => (
-        <ChatMessage key={index} message={message} />
+        <ChatMessage
+          key={index}
+          message={message}
+          isStreaming={
+            props.loading &&
+            index === props.messages.length - 1 &&
+            message.role === MessageRole.ai
+          }
+        />
       ))}
-      {props.loading && <ChatMessageLoading />}
+      {showLoading && <ChatMessageLoading />}
     </div>
   );
 }

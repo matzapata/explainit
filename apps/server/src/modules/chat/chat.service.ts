@@ -56,6 +56,8 @@ export class ChatsService {
     chatHistory: { agent: MessageAgent; message: string }[],
     k: number,
     namespace: string,
+    onToken: (token: string) => void = () => undefined,
+    signal?: AbortSignal,
   ): Promise<{ question: string; answer: string; context: EmbeddingHit[] }> {
     const standaloneQuestion =
       await this.retrievalService.buildStandaloneQuestion(
@@ -69,7 +71,12 @@ export class ChatsService {
       namespace,
     );
 
-    const answer = await this.generate(standaloneQuestion, context);
+    const answer = await this.generate(
+      standaloneQuestion,
+      context,
+      onToken,
+      signal,
+    );
 
     return {
       context,
@@ -79,7 +86,12 @@ export class ChatsService {
   }
 
   @Span({ name: 'generate' })
-  async generate(question: string, context: EmbeddingHit[]) {
+  async generate(
+    question: string,
+    context: EmbeddingHit[],
+    onToken: (token: string) => void = () => undefined,
+    signal?: AbortSignal,
+  ) {
     const answerChain = RunnableSequence.from([
       {
         context: (input) => input.context,
@@ -90,9 +102,56 @@ export class ChatsService {
       new StringOutputParser(),
     ]);
 
-    return answerChain.invoke({
-      question,
-      context: context.map((doc) => doc.content).join('\n\n'),
-    });
+    const stream = await answerChain.stream(
+      {
+        question,
+        context: context.map((doc) => doc.content).join('\n\n'),
+      },
+      { signal },
+    );
+
+    let answer = '';
+    for await (const chunk of stream) {
+      const token = tokenText(chunk);
+      if (!token) {
+        continue;
+      }
+      answer += token;
+      onToken(token);
+    }
+
+    return answer;
   }
+}
+
+export function tokenText(chunk: unknown): string {
+  if (typeof chunk === 'string') {
+    return chunk;
+  }
+  if (!chunk || typeof chunk !== 'object') {
+    return '';
+  }
+  if (!('content' in chunk)) {
+    return '';
+  }
+
+  const content = (chunk as { content: unknown }).content;
+  if (typeof content === 'string') {
+    return content;
+  }
+  if (!Array.isArray(content)) {
+    return '';
+  }
+
+  return content
+    .map((part) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+      if (part && typeof part === 'object' && 'text' in part) {
+        return String((part as { text: unknown }).text ?? '');
+      }
+      return '';
+    })
+    .join('');
 }

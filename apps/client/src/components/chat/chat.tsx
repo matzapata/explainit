@@ -7,7 +7,7 @@ import { EmptyScreen } from '@/components/chat/empty-screen';
 import { ChatScrollAnchor } from '@/components/chat/chat-scroll-anchor';
 import React from 'react';
 import useChat from '@/lib/hooks/use-chat';
-import { ChatMetadataDto, MessageRole } from '@/lib/services/chat-service';
+import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { Link } from '@/lib/router';
 import { Button } from '../ui/button';
 
@@ -16,7 +16,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 }
 
 export function Chat({ chat, className }: ChatProps) {
-  const { messages, setMessages, isLoading, input, setInput, append } = useChat(
+  const { messages, setMessages, isLoading, input, setInput, append, stop } = useChat(
     chat.id,
     [],
   );
@@ -64,10 +64,9 @@ export function Chat({ chat, className }: ChatProps) {
         )}
       </div>
       <ChatPanel
-        id={chat.id}
         isLoading={isLoading}
         append={append}
-        messages={messages}
+        stop={stop}
         input={input}
         setInput={setInput}
       />

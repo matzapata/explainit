@@ -7,11 +7,13 @@ import {
   ParseFilePipeBuilder,
   Post,
   Put,
+  Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Express } from 'express';
+import { Request, Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
@@ -105,11 +107,7 @@ export class ChatController {
 
     await this.objectStorage.deleteFile(`logos/${chat.id}.webp`);
 
-    const resized = await this.objectStorage.resizeImage(
-      file.buffer,
-      200,
-      200,
-    );
+    const resized = await this.objectStorage.resizeImage(file.buffer, 200, 200);
 
     await this.objectStorage.uploadFile(`logos/${chat.id}.webp`, resized);
 
@@ -138,7 +136,12 @@ export class ChatController {
     duration: 60,
     getKey: (req) => req.params.id,
   })
-  async postMessage(@Body() body: PostMessageDto, @Param('id') id: string) {
+  async postMessage(
+    @Body() body: PostMessageDto,
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
@@ -146,11 +149,51 @@ export class ChatController {
 
     await this.chatsService.incrementPoints(chat.id);
 
-    return this.chatsService.answer(
-      body.question,
-      body.chatHistory,
-      4,
-      chat.id,
-    );
+    // Server-Sent Events: stream tokens as they're generated instead of
+    // waiting for the full answer. Kept inline since it's a handful of
+    // lines specific to this one route.
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // disable nginx response buffering
+    res.socket?.setNoDelay(true); // flush each chunk immediately
+    res.flushHeaders();
+
+    const send = (event: string, data: unknown) =>
+      res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+
+    const abort = new AbortController();
+    const onDisconnect = () => abort.abort();
+    req.on('close', onDisconnect);
+
+    try {
+      const result = await this.chatsService.answer(
+        body.question,
+        body.chatHistory,
+        4,
+        chat.id,
+        (token) => {
+          if (!abort.signal.aborted) {
+            send('token', { text: token });
+          }
+        },
+        abort.signal,
+      );
+
+      if (!abort.signal.aborted) {
+        send('done', result);
+      }
+    } catch (error) {
+      if (!abort.signal.aborted && !res.writableEnded) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to generate answer';
+        send('error', { message });
+      }
+    } finally {
+      req.off('close', onDisconnect);
+      if (!res.writableEnded) {
+        res.end();
+      }
+    }
   }
 }

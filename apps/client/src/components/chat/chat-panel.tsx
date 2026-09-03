@@ -1,52 +1,39 @@
 import { PromptForm } from "@/components/chat/prompt-form";
 import { ButtonScrollToBottom } from "@/components/chat/button-scroll-to-bottom";
-import { ChatMessage } from "@/lib/services/chat-service";
+import { Button } from "@/components/ui/button";
+import { Square } from "lucide-react";
 
 interface ChatPanelProps {
-  id: string;
   isLoading: boolean;
   append: (message: string) => void;
+  stop: () => void;
   input: string;
   setInput: (value: string) => void;
-  messages: ChatMessage[];
 }
 
 export function ChatPanel({
-  id,
   isLoading,
   append,
+  stop,
   input,
   setInput,
-  messages,
 }: ChatPanelProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 ">
       <ButtonScrollToBottom />
       <div className="mx-auto sm:max-w-2xl sm:px-4">
-        {/* TODO: stop and regenerate, also retry */}
-        {/* <div className="flex h-10 items-center justify-center">
-          {isLoading ? (
+        {isLoading ? (
+          <div className="flex h-10 items-center justify-center">
             <Button
-              variant="secondary-gray"
-              onClick={() => stop()}
-              className="bg-white"
+              variant="outline"
+              onClick={stop}
+              className="bg-white dark:bg-gray-950"
             >
-              <IconStop className="mr-2" />
+              <Square className="mr-2 h-3 w-3 fill-current" />
               Stop generating
             </Button>
-          ) : (
-            messages?.length > 0 && (
-              <Button
-                variant="outline"
-                onClick={() => reload()}
-                className="bg-white"
-              >
-                <IconRefresh className="mr-2" />
-                Regenerate response
-              </Button>
-            )
-          )}
-        </div> */}
+          </div>
+        ) : null}
         <div className="space-y-4 border-t bg-white dark:bg-gray-950 dark:border-gray-800 px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
           <PromptForm
             onSubmit={(v) => append(v)}
