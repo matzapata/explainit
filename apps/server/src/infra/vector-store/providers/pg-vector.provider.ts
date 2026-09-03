@@ -1,22 +1,11 @@
 import { randomUUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
-import { VectorStoreProvider, EmbeddingHit } from './vectorstore.provider';
+import { VectorStoreProvider, EmbeddingHit } from './vector-store.provider';
 import { PrismaService } from '@src/infra/database/prisma.service';
 import { EmbeddingsService } from '@src/infra/llm/embeddings.service';
 
-function toSqlVector(values: number[]): string {
-  if (
-    !Array.isArray(values) ||
-    values.length === 0 ||
-    values.some((n) => typeof n !== 'number' || !Number.isFinite(n))
-  ) {
-    throw new Error('Invalid embedding vector');
-  }
-  return `[${values.join(',')}]`;
-}
-
 @Injectable()
-export class PrismaVectorStoreProvider implements VectorStoreProvider {
+export class PgVectorProvider implements VectorStoreProvider {
   constructor(
     private readonly embeddings: EmbeddingsService,
     private readonly prisma: PrismaService,
@@ -86,4 +75,15 @@ export class PrismaVectorStoreProvider implements VectorStoreProvider {
       LIMIT ${limit}
     `;
   }
+}
+
+function toSqlVector(values: number[]): string {
+  if (
+    !Array.isArray(values) ||
+    values.length === 0 ||
+    values.some((n) => typeof n !== 'number' || !Number.isFinite(n))
+  ) {
+    throw new Error('Invalid embedding vector');
+  }
+  return `[${values.join(',')}]`;
 }

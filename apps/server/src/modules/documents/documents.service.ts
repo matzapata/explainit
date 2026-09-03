@@ -5,7 +5,7 @@ import { Queue } from 'bullmq';
 import { ChunkingService } from '@src/infra/chunking/chunking.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { VectorStoreService } from '@src/infra/vector-store/vectorstore.service';
+import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { Prisma } from '@prisma/client';
 import { DocumentsRepository } from './documents.repository';
 import { INGEST_QUEUE, IngestJob } from './ingest-job';

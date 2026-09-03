@@ -1,4 +1,4 @@
-export abstract class StorageProvider {
+export abstract class ObjectStorageProvider {
   abstract uploadFile(path: string, file: Buffer): Promise<void>;
 
   abstract downloadFile(path: string): Promise<Buffer>;

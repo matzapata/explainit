@@ -3,7 +3,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { LlmService } from '@src/infra/llm/llm.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { VectorStoreService } from '@src/infra/vector-store/vectorstore.service';
+import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { MessageAgent } from '../chat/message';
 import { CONDENSE_QUESTION_PROMPT } from '../chat/prompts/rag-system.prompt';
 

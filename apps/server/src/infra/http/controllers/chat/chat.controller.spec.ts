@@ -3,21 +3,21 @@ import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { RATE_LIMIT_OPTIONS } from '@src/infra/http/decorators/rate-limit.decorator';
 import { ChatController } from './chat.controller';
 import { ChatsService } from '@src/modules/chat/chat.service';
-import { StorageService } from '@src/infra/storage/storage.service';
+import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
 import { ResourceStatus } from '@prisma/client';
 
 describe('ChatController', () => {
   let chatController: ChatController;
   let chatsService: jest.Mocked<ChatsService>;
-  let storageService: jest.Mocked<StorageService>;
+  let objectStorage: jest.Mocked<ObjectStorageService>;
   let documentsService: jest.Mocked<DocumentsService>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(ChatController).compile();
     chatController = unit;
     chatsService = unitRef.get(ChatsService);
-    storageService = unitRef.get(StorageService);
+    objectStorage = unitRef.get(ObjectStorageService);
     documentsService = unitRef.get(DocumentsService);
   });
 
@@ -198,10 +198,10 @@ describe('ChatController', () => {
       };
       const file = { filename: 'filename', buffer: Buffer.from('') } as any;
       chatsService.findFirstById.mockResolvedValue(chat);
-      storageService.resizeImage.mockResolvedValue(Buffer.from('resized'));
-      storageService.uploadFile.mockResolvedValue(undefined);
-      storageService.deleteFile.mockResolvedValue(undefined);
-      storageService.getFileUrl.mockResolvedValue(
+      objectStorage.resizeImage.mockResolvedValue(Buffer.from('resized'));
+      objectStorage.uploadFile.mockResolvedValue(undefined);
+      objectStorage.deleteFile.mockResolvedValue(undefined);
+      objectStorage.getFileUrl.mockResolvedValue(
         'https://cdn.example/logo.webp',
       );
       chatsService.update.mockResolvedValue({
@@ -216,7 +216,7 @@ describe('ChatController', () => {
       );
 
       expect(chatsService.findFirstById).toHaveBeenCalledWith(chat.id);
-      expect(storageService.uploadFile).toHaveBeenCalled();
+      expect(objectStorage.uploadFile).toHaveBeenCalled();
       expect(chatsService.update).toHaveBeenCalledWith(authUser.id, chat.id, {
         logo: 'https://cdn.example/logo.webp',
       });

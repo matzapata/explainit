@@ -10,7 +10,7 @@ import { AuthModule } from '@src/infra/auth/auth.module';
 import { CrawlerModule } from '@src/infra/crawler/crawler.module';
 import { PrismaModule } from '@src/infra/database/prisma.module';
 import { RateLimiterModule } from '@src/infra/rate-limiter/rate-limiter.module';
-import { StorageModule } from '@src/infra/storage/storage.module';
+import { ObjectStorageModule } from '@src/infra/object-storage/object-storage.module';
 import { ChatModule } from '@src/modules/chat/chat.module';
 import { DocumentsModule } from '@src/modules/documents/documents.module';
 import { UserModule } from '@src/modules/user/user.module';
@@ -28,7 +28,7 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
     UserModule,
     ChatModule,
     DocumentsModule,
-    StorageModule,
+    ObjectStorageModule,
     CrawlerModule,
     PrismaModule,
     RateLimiterModule,

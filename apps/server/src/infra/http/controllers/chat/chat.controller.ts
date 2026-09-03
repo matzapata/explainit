@@ -17,7 +17,7 @@ import { ChatsService } from '@src/modules/chat/chat.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import { StorageService } from '@src/infra/storage/storage.service';
+import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { ChatMetadataDto } from '@src/modules/chat/dto/get-chat-metadata.dto';
 import { UpdateChatMetadataDto } from '@src/modules/chat/dto/put-chat-metadata.dto';
 import { AuthUser } from '@src/modules/user/domain/user';
@@ -31,7 +31,7 @@ import { DocumentsService } from '@src/modules/documents/documents.service';
 export class ChatController {
   constructor(
     private readonly chatsService: ChatsService,
-    private readonly storageService: StorageService,
+    private readonly objectStorage: ObjectStorageService,
     private readonly documentsService: DocumentsService,
   ) {}
 
@@ -103,18 +103,18 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
-    await this.storageService.deleteFile(`logos/${chat.id}.webp`);
+    await this.objectStorage.deleteFile(`logos/${chat.id}.webp`);
 
-    const resized = await this.storageService.resizeImage(
+    const resized = await this.objectStorage.resizeImage(
       file.buffer,
       200,
       200,
     );
 
-    await this.storageService.uploadFile(`logos/${chat.id}.webp`, resized);
+    await this.objectStorage.uploadFile(`logos/${chat.id}.webp`, resized);
 
     chat = await this.chatsService.update(user.id, id, {
-      logo: await this.storageService.getFileUrl(`logos/${chat.id}.webp`, true),
+      logo: await this.objectStorage.getFileUrl(`logos/${chat.id}.webp`, true),
     });
 
     return { ...chat, logo: chat.logo + '?v=' + Date.now() };

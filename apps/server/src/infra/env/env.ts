@@ -28,14 +28,17 @@ export const envSchema = z
     PORT: z.coerce.number().default(4000),
     CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
-    OPENAI_API_KEY: z.string().min(1),
-    OPENAI_BASE_URL: z.preprocess(
+    OPENROUTER_API_KEY: z.string().min(1),
+    OPENROUTER_BASE_URL: z.preprocess(
       (value) =>
         typeof value === 'string' && value.trim() === '' ? undefined : value,
-      z.string().url().optional(),
+      z.string().url().default('https://openrouter.ai/api/v1'),
     ),
-    OPENAI_MODEL: z.string().min(1).default('gpt-3.5-turbo-0125'),
-    OPENAI_EMBEDDING_MODEL: z.string().min(1).default('text-embedding-ada-002'),
+    OPENROUTER_MODEL: z.string().min(1).default('openai/gpt-4o-mini'),
+    OPENROUTER_EMBEDDING_MODEL: z
+      .string()
+      .min(1)
+      .default('openai/text-embedding-ada-002'),
 
     S3_BUCKET: z.string().default('explainit'),
     S3_ENDPOINT: z.string().optional(),
