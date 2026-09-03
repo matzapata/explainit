@@ -14,11 +14,11 @@ import { ObjectStorageModule } from '@src/infra/object-storage/object-storage.mo
 import { ChatModule } from '@src/modules/chat/chat.module';
 import { DocumentsModule } from '@src/modules/documents/documents.module';
 import { UserModule } from '@src/modules/user/user.module';
-import { HealthController } from './controllers/app/health.controller';
-import { AuthController } from './controllers/auth/auth.controller';
-import { ChatController } from './controllers/chat/chat.controller';
-import { DocumentsController } from './controllers/documents/documents.controller';
-import { UsersController } from './controllers/user/users.controller';
+import { AuthController } from './controllers/auth.controller';
+import { ChatController } from './controllers/chat.controller';
+import { DocumentsController } from './controllers/documents.controller';
+import { HealthController } from './controllers/health.controller';
+import { UsersController } from './controllers/users.controller';
 import { RateLimiterGuard } from './guards/rate-limiter.guard';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 

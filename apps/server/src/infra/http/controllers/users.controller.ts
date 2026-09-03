@@ -2,10 +2,10 @@ import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
-import { UsersService } from '@src/modules/user/application/users.service';
+import { UsersService } from '@src/modules/user/users.service';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import { UserDto } from './dto/user-dto';
-import { AuthUser } from '@src/modules/user/domain/user';
+import { UserDto } from './dto/user.dto';
+import { AuthUser } from '@src/modules/user/auth-user';
 
 @Controller('api/users')
 @UseGuards(AuthGuard)

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { EnvService } from '@src/infra/env/env.service';
 import { AuthService } from '@src/infra/auth/auth.service';
-import { LoginDto } from './dtos/login.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('api/auth')
 export class AuthController {
