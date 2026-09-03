@@ -65,12 +65,6 @@ model ChatResource {
   @@index([chatId])
 }
 
-model ChatRateLimit {
-  key    String    @id
-  points Int
-  expire DateTime?
-}
-
 // ============================= embeddings module =============================
 // OpenAI text-embedding-ada-002 (LangChain default) is 1536 dimensions.
 // HNSW cosine index is created in the SQL migration; Prisma cannot express USING hnsw.

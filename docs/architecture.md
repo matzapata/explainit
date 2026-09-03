@@ -14,7 +14,7 @@ External providers supply language model inference, embedding generation, and op
 - `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
-- `redis`: BullMQ job queue
+- `redis`: BullMQ job queue and rate-limit counters
 - Providers: model APIs and other environment-configured dependencies
 
 ```mermaid
@@ -48,6 +48,8 @@ Current infrastructure folders and responsibilities:
 - `llm`: text generation model binding (`OpenAILlmProvider` / `ChatOpenAI`; OpenAI-compatible via `OPENAI_BASE_URL`)
 - `vectorstore`: vector add/search/delete over Postgres + pgvector (`PrismaVectorStoreProvider`)
 - `storage`: file/object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the bucket; the app does not.
+- `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
+- `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 
 ## Architecture goals
 
@@ -177,7 +179,6 @@ An embedding is a dense numeric representation where semantically related text i
 - **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points
 - **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
-- **ChatRateLimit**: per-chat message throttle rows
 
 Primary keys are UUID. There is no Mongo/Atlas dependency.
 

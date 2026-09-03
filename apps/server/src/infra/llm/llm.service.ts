@@ -1,1 +1,1 @@
-export { OpenAILlmProvider as LlmService } from './providers/openai.provider';
+export { OpenAILlmProvider as LlmService } from './providers/openai-llm.provider';

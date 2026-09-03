@@ -1,5 +1,6 @@
 import { TestBed } from '@automock/jest';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
+import { RATE_LIMIT_OPTIONS } from '@src/infra/http/decorators/rate-limit.decorator';
 import { ChatController } from './chat.controller';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { StorageService } from '@src/infra/storage/storage.service';
@@ -220,6 +221,22 @@ describe('ChatController', () => {
         logo: 'https://cdn.example/logo.webp',
       });
       expect(result.logo).toContain('https://cdn.example/logo.webp');
+    });
+  });
+
+  describe('postMessage', () => {
+    it('rate limits posts per chat', () => {
+      const options = Reflect.getMetadata(
+        RATE_LIMIT_OPTIONS,
+        ChatController.prototype.postMessage,
+      );
+
+      expect(options).toMatchObject({
+        keyPrefix: 'chat-messages',
+        points: 10,
+        duration: 60,
+      });
+      expect(options.getKey({ params: { id: 'chat-1' } })).toBe('chat-1');
     });
   });
 });
