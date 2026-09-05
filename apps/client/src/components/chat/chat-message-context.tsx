@@ -1,3 +1,10 @@
+import { BookOpen } from 'lucide-react';
+import { Button } from '../ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../ui/tooltip';
 import {
   Drawer,
   DrawerContent,
@@ -14,11 +21,21 @@ export function ResponseContextDrawer(props: {
 
   return (
     <Drawer>
-      <DrawerTrigger asChild>
-        <button className="text-xs text-gray-600 hover:underline">
-          Show sources
-        </button>
-      </DrawerTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DrawerTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span className="sr-only">Sources</span>
+            </Button>
+          </DrawerTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Sources</TooltipContent>
+      </Tooltip>
       <DrawerContent>
         <div className="mx-auto w-full max-w-3xl">
           <DrawerHeader>
