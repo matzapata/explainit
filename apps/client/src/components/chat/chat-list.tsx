@@ -14,7 +14,7 @@ export function ChatList(props: {
   const showLoading = props.loading && last?.role !== MessageRole.ai;
 
   return (
-    <div className="relative mx-auto max-w-2xl px-4 divide-y dark:divide-gray-800">
+    <div className="relative mx-auto max-w-2xl px-4">
       {props.messages.map((message, index) => (
         <ChatMessage
           key={index}

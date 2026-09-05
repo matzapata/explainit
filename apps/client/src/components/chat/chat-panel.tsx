@@ -24,7 +24,7 @@ export function ChatPanel({
   return (
     <div className={contained ? "shrink-0" : "fixed inset-x-0 bottom-0"}>
       {!contained && <ButtonScrollToBottom />}
-      <div className={contained ? "px-4" : "mx-auto sm:max-w-2xl sm:px-4"}>
+      <div className={cn(!contained && "mx-auto sm:max-w-2xl sm:px-4")}>
         {isLoading ? (
           <div className="flex h-10 items-center justify-center">
             <Button
