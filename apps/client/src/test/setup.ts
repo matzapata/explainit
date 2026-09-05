@@ -14,6 +14,17 @@ class ResizeObserverStub {
 
 global.ResizeObserver = ResizeObserverStub;
 
+class IntersectionObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+
+global.IntersectionObserver = IntersectionObserverStub;
+
 Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
   value: () => {},
   writable: true,
