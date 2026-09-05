@@ -106,14 +106,12 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
 
-    await this.objectStorage.deleteFile(`logos/${chat.id}.webp`);
-
+    const key = `logos/${chat.id}.webp`;
     const resized = await this.objectStorage.resizeImage(file.buffer, 200, 200);
-
-    await this.objectStorage.uploadFile(`logos/${chat.id}.webp`, resized);
+    await this.objectStorage.uploadFile(key, resized);
 
     chat = await this.chatsService.update(user.id, id, {
-      logo: await this.objectStorage.getFileUrl(`logos/${chat.id}.webp`, true),
+      logo: await this.objectStorage.getFileUrl(key, true),
     });
 
     return { ...chat, logo: chat.logo + '?v=' + Date.now() };

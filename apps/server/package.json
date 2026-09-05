@@ -4,6 +4,9 @@
   "author": "",
   "private": true,
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "postinstall": "prisma generate",
     "build": "nest build",
