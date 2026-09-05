@@ -1,21 +1,36 @@
+import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { ChatMetadataDto } from '@/lib/services/chat-service';
+import { ChatMessage, ChatMetadataDto, MessageRole } from '@/lib/services/chat-service';
 import { PreviewChat } from './preview-chat';
 
+const { session } = vi.hoisted(() => ({
+  session: { messages: [] as ChatMessage[] },
+}));
+
 vi.mock('@/lib/hooks/use-chat', () => ({
-  default: () => ({
-    messages: [],
-    setMessages: vi.fn(),
-    isLoading: false,
-    input: '',
-    setInput: vi.fn(),
-    append: vi.fn(),
-    stop: vi.fn(),
-  }),
+  default: () => {
+    const [messages, setMessages] = useState(session.messages);
+    return {
+      messages,
+      setMessages,
+      isLoading: false,
+      input: '',
+      setInput: vi.fn(),
+      append: async (text: string) => {
+        const next = [
+          ...session.messages,
+          { content: text, role: MessageRole.user, context: [] },
+        ];
+        session.messages = next;
+        setMessages(next);
+      },
+      stop: vi.fn(),
+    };
+  },
 }));
 
 vi.mock('@/lib/router', () => ({
@@ -52,6 +67,11 @@ function renderPreview() {
 }
 
 describe('PreviewChat', () => {
+  beforeEach(() => {
+    session.messages = [];
+    window.history.replaceState(null, '', '/');
+  });
+
   it('opens an in-page Chat without navigating to the share-link page', async () => {
     const user = userEvent.setup();
     renderPreview();
@@ -68,21 +88,40 @@ describe('PreviewChat', () => {
     expect(
       within(dialog).getByPlaceholderText('Send a message.'),
     ).toBeInTheDocument();
-    expect(
-      within(dialog).queryByRole('link', { name: /\/chat\/chat-1/ }),
-    ).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
   });
 
-  it('closes the in-page Chat and leaves Preview on the same page', async () => {
+  it('closes the in-page Chat with Escape and leaves Preview on the same page', async () => {
     const user = userEvent.setup();
     renderPreview();
 
     await user.click(screen.getByRole('button', { name: 'Preview' }));
     await screen.findByRole('dialog');
 
-    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.keyboard('{Escape}');
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Preview' })).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+  });
+
+  it('keeps the transcript when Preview is closed and opened again', async () => {
+    const user = userEvent.setup();
+    renderPreview();
+
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(
+      within(dialog).getByRole('button', { name: /How do I start/ }),
+    );
+
+    expect(within(dialog).getByText('How do I start?')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    const reopened = await screen.findByRole('dialog');
+    expect(within(reopened).getByText('How do I start?')).toBeInTheDocument();
   });
 });
