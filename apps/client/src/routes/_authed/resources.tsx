@@ -12,7 +12,7 @@ function ResourcesPage() {
   const { user, chat } = Route.useLoaderData();
 
   return (
-    <GenerateLayout user={{ email: user.email }} chatId={chat.id}>
+    <GenerateLayout user={{ email: user.email }} chat={chat}>
       <main>
         <div className="py-8 md:py-12 max-w-6xl mx-auto">
           <div className="px-4 md:px-8">

@@ -26,7 +26,7 @@ function ChatPage() {
 
   return (
     <div>
-      <ChatNavBar authenticated={authenticated} chat={chat} />
+      <ChatNavBar authenticated={authenticated} />
       <Chat chat={chat} />
     </div>
   );

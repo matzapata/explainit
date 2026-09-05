@@ -1,6 +1,7 @@
 import { PromptForm } from "@/components/chat/prompt-form";
 import { ButtonScrollToBottom } from "@/components/chat/button-scroll-to-bottom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Square } from "lucide-react";
 
 interface ChatPanelProps {
@@ -9,6 +10,7 @@ interface ChatPanelProps {
   stop: () => void;
   input: string;
   setInput: (value: string) => void;
+  contained?: boolean;
 }
 
 export function ChatPanel({
@@ -17,11 +19,12 @@ export function ChatPanel({
   stop,
   input,
   setInput,
+  contained = false,
 }: ChatPanelProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 ">
-      <ButtonScrollToBottom />
-      <div className="mx-auto sm:max-w-2xl sm:px-4">
+    <div className={contained ? "shrink-0" : "fixed inset-x-0 bottom-0"}>
+      {!contained && <ButtonScrollToBottom />}
+      <div className={contained ? "px-4" : "mx-auto sm:max-w-2xl sm:px-4"}>
         {isLoading ? (
           <div className="flex h-10 items-center justify-center">
             <Button
@@ -34,7 +37,14 @@ export function ChatPanel({
             </Button>
           </div>
         ) : null}
-        <div className="space-y-4 border-t bg-white dark:bg-gray-950 dark:border-gray-800 px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
+        <div
+          className={cn(
+            "space-y-4 bg-white px-4 py-2 dark:bg-gray-950 md:py-4",
+            contained
+              ? "border-t dark:border-gray-800"
+              : "border-t shadow-lg sm:rounded-t-xl sm:border dark:border-gray-800",
+          )}
+        >
           <PromptForm
             onSubmit={(v) => append(v)}
             input={input}

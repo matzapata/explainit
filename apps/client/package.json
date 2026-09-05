@@ -8,7 +8,8 @@
     "start": "vite preview --host 0.0.0.0 --port 3000",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "test": "vitest run"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
@@ -49,6 +50,9 @@
   },
   "devDependencies": {
     "@tanstack/router-plugin": "1.168.35",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.6",
     "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -62,11 +66,13 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react-hooks": "5.2.0",
+    "jsdom": "27.0.1",
     "postcss": "^8",
     "prettier": "^3.0.0",
     "tailwindcss": "^3.3.0",
     "tailwindcss-bg-patterns": "^0.3.0",
     "typescript": "^5",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "vitest": "3.2.7"
   }
 }

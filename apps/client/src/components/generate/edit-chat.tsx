@@ -12,7 +12,7 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
   return (
     <GenerateLayout
       user={{ email: user.email }}
-      chatId={chat.id}
+      chat={chat}
     >
       <div className="py-8 md:py-12 space-y-8 max-w-6xl mx-auto">
         {/* Heading */}

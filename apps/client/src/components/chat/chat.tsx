@@ -1,10 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ChatList } from '@/components/chat/chat-list';
 import { ChatPanel } from '@/components/chat/chat-panel';
-import { EmptyScreen } from '@/components/chat/empty-screen';
-import { ChatScrollAnchor } from '@/components/chat/chat-scroll-anchor';
+import { ChatTranscript } from '@/components/chat/chat-transcript';
 import React from 'react';
 import useChat from '@/lib/hooks/use-chat';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
@@ -50,18 +48,12 @@ export function Chat({ chat, className }: ChatProps) {
         </Button>
       </div>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
-        {messages.length ? (
-          <>
-            <ChatList messages={messages} loading={isLoading} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
-          </>
-        ) : (
-          <EmptyScreen
-            append={append}
-            chatName={chat.name ?? "Untitled Chat"}
-            starters={chat.conversationStarters}
-          />
-        )}
+        <ChatTranscript
+          chat={chat}
+          messages={messages}
+          isLoading={isLoading}
+          append={append}
+        />
       </div>
       <ChatPanel
         isLoading={isLoading}
