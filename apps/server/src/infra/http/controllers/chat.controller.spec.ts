@@ -203,7 +203,6 @@ describe('ChatController', () => {
       chatsService.findFirstById.mockResolvedValue(chat);
       objectStorage.resizeImage.mockResolvedValue(Buffer.from('resized'));
       objectStorage.uploadFile.mockResolvedValue(undefined);
-      objectStorage.deleteFile.mockResolvedValue(undefined);
       objectStorage.getFileUrl.mockResolvedValue(
         'https://cdn.example/logo.webp',
       );
@@ -219,7 +218,12 @@ describe('ChatController', () => {
       );
 
       expect(chatsService.findFirstById).toHaveBeenCalledWith(chat.id);
-      expect(objectStorage.uploadFile).toHaveBeenCalled();
+      expect(objectStorage.resizeImage).toHaveBeenCalledWith(file.buffer, 200, 200);
+      expect(objectStorage.uploadFile).toHaveBeenCalledWith(
+        `logos/${chat.id}.webp`,
+        Buffer.from('resized'),
+      );
+      expect(objectStorage.deleteFile).not.toHaveBeenCalled();
       expect(chatsService.update).toHaveBeenCalledWith(authUser.id, chat.id, {
         logo: 'https://cdn.example/logo.webp',
       });
