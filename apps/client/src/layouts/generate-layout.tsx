@@ -1,15 +1,16 @@
 'use client';
 
 import Navbar, { NavbarItem, NavbarProps } from '@/components/navbar/app';
-import { Button } from '@/components/ui/button';
+import { PreviewChat } from '@/components/chat/preview-chat';
 import { Link, usePathname } from '@/lib/router';
+import { ChatMetadataDto } from '@/lib/services/chat-service';
 
 interface GenerateLayoutProps extends NavbarProps {
   className?: string;
   children: React.ReactNode;
   navbarItems?: NavbarItem[];
   nestedItems?: NavbarItem[];
-  chatId?: string;
+  chat?: ChatMetadataDto;
 }
 
 export default function GenerateLayout(props: GenerateLayoutProps) {
@@ -48,11 +49,7 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
                 </Link>
               ))}
             </div>
-            {props.chatId && (
-              <button className='text-sm bg-primary text-primary-foreground hover:bg-primary/90 h-7 rounded-md px-3'>
-                <Link href={`/chat/${props.chatId}`}>Preview</Link>
-              </button>
-            )}
+            {props.chat && <PreviewChat chat={props.chat} />}
           </div>
         )}
       </nav>

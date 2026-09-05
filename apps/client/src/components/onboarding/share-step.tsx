@@ -3,6 +3,7 @@
 import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
 import { Button } from '../ui/button';
 import { ChatCard } from './chat-card';
+import { PreviewChat } from '@/components/chat/preview-chat';
 import { useRouter } from '@/lib/router';
 import { useAccessToken } from '@/lib/auth/use-session';
 import { loginHref } from '@/lib/auth/config';
@@ -103,7 +104,10 @@ export function ShareStep(props: { chat: ChatMetadataDto }) {
             </button>
           </div>
 
-          <Button variant={"outline"} onClick={() => router.push('/')}>Edit</Button>
+          <div className="flex space-x-3">
+            <PreviewChat chat={props.chat} variant="outline" size="default" />
+            <Button variant={"outline"} onClick={() => router.push('/')}>Edit</Button>
+          </div>
         </div>
       ) : (
         <div className="flex justify-between w-full items-center mt-6">
@@ -111,12 +115,7 @@ export function ShareStep(props: { chat: ChatMetadataDto }) {
             Back
           </Button>
           <div className="space-x-4 flex">
-            <Button
-              variant={'outline'}
-              onClick={() => router.push(`/chat/${props.chat.id}`)}
-            >
-              Preview
-            </Button>
+            <PreviewChat chat={props.chat} variant="outline" size="default" />
             <Button isLoading={isLoading} onClick={onPublish}>
               Publish
             </Button>
