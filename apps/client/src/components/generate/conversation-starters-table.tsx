@@ -66,7 +66,7 @@ export default function ConversationStartersTable(props: {
       toast({ description: 'Conversation starters updated successfully.' });
       setOpen(false);
     },
-    onError: (error) => {
+    onError: () => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
@@ -83,7 +83,7 @@ export default function ConversationStartersTable(props: {
       toast({ description: 'Successfully removed.' });
       setOpen(false);
     },
-    onError: (error) => {
+    onError: () => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
@@ -93,14 +93,14 @@ export default function ConversationStartersTable(props: {
   }
 
   return (
-    <div className="divide-y divide-gray-200 dark:divide-gray-800">
-      <ul className="divide-y divide-gray-200 dark:divide-gray-800">
+    <div>
+      <ul className="divide-y divide-gray-100 dark:divide-white/5">
         {starters.map((s, i) => (
-          <div key={i} className="flex md:flex-1 justify-between py-6 items-center">
-            <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-              {s}
-            </p>
-
+          <li
+            key={i}
+            className="flex justify-between items-center py-2.5 text-sm"
+          >
+            <span>{s}</span>
             <Button
               onClick={() => {
                 if (
@@ -111,29 +111,30 @@ export default function ConversationStartersTable(props: {
                   deleteConversationStarterMutation.mutate({ starter: s });
                 }
               }}
-              className="text-sm dark:text-red-600"
-              variant="link"
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
             >
               <XMarkIcon className="h-4 w-4" />
+              <span className="sr-only">Remove starter</span>
             </Button>
-          </div>
+          </li>
         ))}
       </ul>
 
-      {/* Add new form */}
-      <div className="flex md:flex-1 py-4">
+      <div className="pt-2">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="text-sm px-0 text-primary" variant="link">
-              Add new
+            <Button variant="outline" size="sm">
+              Add starter
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add a new conversation starter</DialogTitle>
+              <DialogTitle>Add a conversation starter</DialogTitle>
               <DialogDescription>
-                Help your customers quickly understand what kind of questions
-                they can make
+                Help visitors quickly understand what kind of questions they can
+                ask.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>

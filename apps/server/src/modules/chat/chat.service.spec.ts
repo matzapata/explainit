@@ -111,4 +111,35 @@ describe('ChatsService', () => {
       expect(tokenText(null)).toBe('');
     });
   });
+
+  describe('create', () => {
+    it('assigns the least-used palette color when none is given', async () => {
+      chatRepository.findManyByOwner.mockResolvedValue([
+        { color: 'purple' },
+        { color: 'blue' },
+      ]);
+      chatRepository.create.mockResolvedValue({ id: 'chat-1' });
+
+      await service.create('owner-1', { name: 'Docs' });
+
+      expect(chatRepository.create).toHaveBeenCalledWith({
+        name: 'Docs',
+        color: 'cyan',
+        owner: { connect: { id: 'owner-1' } },
+      });
+    });
+
+    it('keeps an explicit color', async () => {
+      chatRepository.create.mockResolvedValue({ id: 'chat-1' });
+
+      await service.create('owner-1', { name: 'Docs', color: 'green' });
+
+      expect(chatRepository.findManyByOwner).not.toHaveBeenCalled();
+      expect(chatRepository.create).toHaveBeenCalledWith({
+        name: 'Docs',
+        color: 'green',
+        owner: { connect: { id: 'owner-1' } },
+      });
+    });
+  });
 });

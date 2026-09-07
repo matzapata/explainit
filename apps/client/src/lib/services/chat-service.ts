@@ -4,6 +4,7 @@ import { AxiosInstance } from "axios";
 export interface ChatMetadataDto {
     id: string;
     name?: string;
+    color?: string;
     hostOrigins?: string[];
     conversationStarters: string[];
     published: boolean;
@@ -31,7 +32,7 @@ export class ChatService {
         return res.data
     }
 
-    async createChat(accessToken: string, data: { name?: string, description?: string } = {}): Promise<ChatMetadataDto> {
+    async createChat(accessToken: string, data: { name?: string, description?: string, color?: string } = {}): Promise<ChatMetadataDto> {
         const res = await this.client.post("/api/chats/admin", data, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
@@ -46,7 +47,7 @@ export class ChatService {
         return res.data
     }
 
-    async updateOwnerChat(accessToken: string, id: string, data: { name?: string, hostOrigins?: string[], conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
+    async updateOwnerChat(accessToken: string, id: string, data: { name?: string, color?: string, hostOrigins?: string[], conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
         try {
             const res = await this.client.put(`/api/chats/${id}`, data, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data

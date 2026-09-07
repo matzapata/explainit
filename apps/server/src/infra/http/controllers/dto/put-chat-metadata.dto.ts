@@ -2,16 +2,22 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { CHAT_COLORS } from '@src/modules/chat/chat-colors';
 
 export class UpdateChatMetadataDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @IsOptional()
+  @IsIn([...CHAT_COLORS])
+  color?: (typeof CHAT_COLORS)[number];
 
   @IsOptional()
   @IsArray()

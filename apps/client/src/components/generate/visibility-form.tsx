@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 
-import confetti from 'canvas-confetti';
 import { confettiAnimation } from '@/lib/confetti-animation';
 
 export default function VisibilityForm(props: {
@@ -58,21 +57,18 @@ export default function VisibilityForm(props: {
   });
 
   return (
-    <div className="space-y-2 md:space-y-0 md:flex py-6 items-center">
-      <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-        Visibility
-      </p>
-      <div className="flex md:flex-1 justify-between items-center">
-        <p className="text-sm text-gray-900 dark:text-gray-300">
-          {published ? 'Visible' : 'Hidden'}
+    <div className="max-w-md">
+      <p className="text-sm font-medium mb-1">Visibility</p>
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {published ? 'Published' : 'Draft'}
         </p>
-
         <AlertDialog>
           <AlertDialogTrigger
-            className={cn(buttonVariants({ variant: 'link' }), 'text-sm text-primary')}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
             disabled={setVisibilityMutation.isPending}
           >
-            {published ? 'Hide' : 'Publish'}
+            {published ? 'Unpublish' : 'Publish'}
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>

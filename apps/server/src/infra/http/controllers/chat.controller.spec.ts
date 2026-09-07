@@ -55,6 +55,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -80,6 +81,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'Lorem Ipsum',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -114,10 +116,11 @@ describe('ChatController', () => {
 
     it('should update the chat', async () => {
       const authUser = { id: 'id', email: 'email', isAdmin: false };
-      const data = { name: 'name' };
+      const data = { name: 'name', color: 'green' as const };
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'green' as const,
         description: null,
         points: 0,
         published: false,
@@ -152,6 +155,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -186,6 +190,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -221,6 +226,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -242,6 +248,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -267,6 +274,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -291,6 +299,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -315,6 +324,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: true,
@@ -347,6 +357,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -368,6 +379,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -396,6 +408,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -460,6 +473,7 @@ describe('ChatController', () => {
         {
           id: 'id',
           name: 'name',
+          color: 'blue' as const,
           description: null,
           points: 0,
           published: false,
@@ -485,6 +499,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'Docs',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -508,6 +523,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'chat-1',
         name: 'Docs',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -536,6 +552,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'chat-1',
         name: 'Docs',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -561,6 +578,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'chat-1',
         name: 'Docs',
+        color: 'blue' as const,
         description: null,
         points: 0,
         published: false,
@@ -615,6 +633,7 @@ describe('ChatController', () => {
     const publishedChat = {
       id: 'chat-1',
       name: 'name',
+      color: 'blue' as const,
       description: null,
       points: 0,
       published: true,

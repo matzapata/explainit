@@ -17,6 +17,7 @@ describe('DocumentsController', () => {
   const chat = {
     id: 'chatId',
     name: 'name',
+    color: 'blue' as const,
     description: null,
     points: 0,
     published: false,

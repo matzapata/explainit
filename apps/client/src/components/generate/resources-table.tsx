@@ -4,6 +4,14 @@ import { XMarkIcon } from '@heroicons/react/24/solid';
 import { Button } from '../ui/button';
 import { useEffect, useState } from 'react';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -114,34 +122,48 @@ export default function ResourcesTable(props: {
   }
 
   return (
-    <div className="divide-y divide-gray-200 dark:divide-gray-800">
-      <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-        {resources.map((s, i) => (
-          <div key={i} className="flex md:flex-1 justify-between py-6">
-            <div>
-              <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-                {s.data}
-              </p>
-              <ResourceStatusLabel resource={s} />
-            </div>
-
-            <Button
-              onClick={() => onDeleteClick(s.id)}
-              className="text-sm dark:text-red-600"
-              variant="link"
-            >
-              <XMarkIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </ul>
-
-      {/* Add new form */}
-      <div className="flex md:flex-1 py-4 space-x-6">
+    <div>
+      <div className="flex items-center gap-2 mb-4">
         <AddNewWebResource chatId={props.chatId} setResources={setResources} initialUrl={props.initialUrl} />
-
         <AddTextResource chatId={props.chatId} setResources={setResources} />
       </div>
+
+      {resources.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400 py-8">
+          No resources yet.
+        </p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Source</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-8 pr-0" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {resources.map((s) => (
+              <TableRow key={s.id}>
+                <TableCell className="font-medium">{s.data}</TableCell>
+                <TableCell>
+                  <ResourceStatusLabel resource={s} />
+                </TableCell>
+                <TableCell className="pr-0 text-right">
+                  <Button
+                    onClick={() => onDeleteClick(s.id)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                    <span className="sr-only">Remove resource</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
@@ -149,25 +171,21 @@ export default function ResourcesTable(props: {
 function ResourceStatusLabel(props: { resource: ChatResource }) {
   const status = props.resource.status ?? 'ready';
   if (status === 'ready') {
-    return null;
+    return <span className="text-gray-500 dark:text-gray-400">Ready</span>;
   }
   if (status === 'pending') {
-    return (
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Queued</p>
-    );
+    return <span className="text-gray-500 dark:text-gray-400">Queued</span>;
   }
   if (status === 'processing') {
-    return (
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Indexing…</p>
-    );
+    return <span className="text-gray-500 dark:text-gray-400">Indexing…</span>;
   }
   return (
-    <p
-      className="text-xs text-red-600 mt-1"
+    <span
+      className="text-red-600 dark:text-red-400"
       title={props.resource.error ?? undefined}
     >
       Failed{props.resource.error ? `: ${props.resource.error}` : ''}
-    </p>
+    </span>
   );
 }
 
@@ -252,7 +270,7 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
       }}
     >
       <DialogTrigger asChild>
-        <Button className="text-sm text-primary px-0" variant="link">
+        <Button variant="outline" size="sm">
           Add website
         </Button>
       </DialogTrigger>
@@ -393,7 +411,7 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
       }}
     >
       <DialogTrigger asChild>
-        <Button className="text-sm text-primary" variant="link">
+        <Button variant="outline" size="sm">
           Add text
         </Button>
       </DialogTrigger>

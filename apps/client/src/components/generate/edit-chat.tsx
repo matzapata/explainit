@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import GenerateLayout from '@/layouts/generate-layout';
-import NameForm from './name-form';
-import DescriptionForm from './description-form';
+import ChatDetailsForm from './chat-details-form';
 import ConversationStartersTable from './conversation-starters-table';
 import HostOriginsTable from './host-origins-table';
-import VisibilityForm from './visibility-form';
-import CodeSnippet from './code-snippet';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+import { useAccessToken } from '@/lib/auth/use-session';
+import { useRouter } from '@/lib/router';
+import { chatService } from '@/lib/services/chat-service';
 
 export function EditChat({ user, chat }: { user: any; chat: any }) {
   const [hostOrigins, setHostOrigins] = useState<string[]>(
@@ -17,64 +20,79 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
   return (
     <GenerateLayout user={{ email: user.email }} chat={chat}>
       <div className="space-y-8">
-        <div>
-          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-              General info
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Name, description, and Host origins allowlisted for the visitor
-              API. Add every origin where this Chat is installed (www and apex
-              are different).
-            </p>
-          </div>
+        <ChatDetailsForm
+          chatId={chat.id}
+          name={chat.name}
+          description={chat.description}
+        />
 
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            <NameForm chatId={chat.id} name={chat.name} />
-            <DescriptionForm chatId={chat.id} description={chat.description} />
-            <HostOriginsTable
-              chatId={chat.id}
-              hostOrigins={hostOrigins}
-              onHostOriginsChange={setHostOrigins}
-            />
-          </div>
-        </div>
+        <HostOriginsTable
+          chatId={chat.id}
+          hostOrigins={hostOrigins}
+          onHostOriginsChange={setHostOrigins}
+        />
 
-        <div>
-          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-              Conversation starters
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Inspire your visitors to start a conversation with your
-              documentation.
-            </p>
-          </div>
-
+        <div className="max-w-md">
+          <p className="text-sm font-medium mb-1">Conversation starters</p>
           <ConversationStartersTable
             chatId={chat.id}
             starters={chat.conversationStarters}
           />
         </div>
 
-        <div>
-          <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-              Install on your website
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Publish your Chat, add Host origins, then paste the same Install
-              snippet on each allowlisted origin. Origins are the API whitelist;
-              the snippet does not declare them.
-            </p>
-          </div>
-
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            <VisibilityForm id={chat.id} published={chat.published} />
-            <CodeSnippet id={chat.id} hostOrigins={hostOrigins} />
-          </div>
-        </div>
+        <DeleteChatButton chatId={chat.id} />
       </div>
     </GenerateLayout>
+  );
+}
+
+function DeleteChatButton({ chatId }: { chatId: string }) {
+  const accessToken = useAccessToken();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => {
+      if (!accessToken) throw new Error('No access token');
+      return chatService.deleteChat(accessToken, chatId);
+    },
+    onSuccess: async () => {
+      queryClient.setQueryData(
+        ['chats'],
+        (current: { id: string }[] | undefined) =>
+          current?.filter((row) => row.id !== chatId) ?? current,
+      );
+      await queryClient.invalidateQueries({ queryKey: ['chats'] });
+      toast({ description: 'Chat deleted.' });
+      router.push('/');
+    },
+    onError: () => {
+      toast({
+        variant: 'destructive',
+        description: 'Could not delete chat. Please try again.',
+      });
+    },
+  });
+
+  return (
+    <div className="max-w-md pt-4 border-t border-gray-200 dark:border-white/10">
+      <Button
+        type="button"
+        variant="destructive"
+        className="px-0"
+        disabled={deleteMutation.isPending}
+        onClick={() => {
+          if (
+            window.confirm(
+              'Delete this chat and its resources? This cannot be undone.',
+            )
+          ) {
+            deleteMutation.mutate();
+          }
+        }}
+      >
+        Delete Chat
+      </Button>
+    </div>
   );
 }

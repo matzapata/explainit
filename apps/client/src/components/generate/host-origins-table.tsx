@@ -115,100 +115,86 @@ export default function HostOriginsTable(props: {
   }
 
   return (
-    <div className="space-y-2 md:space-y-0 py-6">
-      <div className="md:flex items-start">
-        <div className="md:w-64 space-y-1">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-300">
-            Host origins
-          </p>
-          <p className="text-xs text-gray-600 dark:text-gray-400 pr-4">
-            Origins that may call the visitor API. Exact matches only — www and
-            apex are different. The Install snippet is identical on every listed
-            origin.
-          </p>
-        </div>
-        <div className="flex-1 divide-y divide-gray-200 dark:divide-gray-800">
-          <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-            {origins.map((origin) => (
-              <div
-                key={origin}
-                className="flex md:flex-1 justify-between py-4 items-center"
+    <div className="max-w-md">
+      <p className="text-sm font-medium mb-1">Host origins</p>
+      <ul className="divide-y divide-gray-100 dark:divide-white/5">
+        {origins.map((origin) => (
+          <li
+            key={origin}
+            className="flex justify-between items-center py-2.5 text-sm"
+          >
+            <span>{origin}</span>
+            <Button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'Remove this Host origin from the allowlist?',
+                  )
+                ) {
+                  deleteOriginMutation.mutate({ origin });
+                }
+              }}
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+            >
+              <XMarkIcon className="h-4 w-4" />
+              <span className="sr-only">Remove {origin}</span>
+            </Button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="pt-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              Add origin
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add a Host origin</DialogTitle>
+              <DialogDescription>
+                Paste a full URL; only its origin is stored (e.g.
+                https://www.demo.com/docs → https://www.demo.com).
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
               >
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-300">
-                  {origin}
-                </p>
+                <FormField
+                  control={form.control}
+                  name="origin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Host URL or origin</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://www.demo.com"
+                          {...field}
+                        />
+                      </FormControl>
 
-                <Button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Remove this Host origin from the allowlist?',
-                      )
-                    ) {
-                      deleteOriginMutation.mutate({ origin });
-                    }
-                  }}
-                  className="text-sm dark:text-red-600"
-                  variant="link"
-                >
-                  <XMarkIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </ul>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div className="flex md:flex-1 py-4">
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="text-sm px-0 text-primary" variant="link">
-                  Add origin
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add a Host origin</DialogTitle>
-                  <DialogDescription>
-                    Paste a full URL; only its origin is stored (e.g.
-                    https://www.demo.com/docs → https://www.demo.com).
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    isLoading={addOriginMutation.isPending}
                   >
-                    <FormField
-                      control={form.control}
-                      name="origin"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Host URL or origin</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://www.demo.com"
-                              {...field}
-                            />
-                          </FormControl>
-
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <DialogFooter>
-                      <Button
-                        type="submit"
-                        isLoading={addOriginMutation.isPending}
-                      >
-                        Add
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+                    Add
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
