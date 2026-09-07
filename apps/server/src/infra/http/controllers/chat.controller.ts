@@ -4,23 +4,23 @@ import {
   Get,
   NotFoundException,
   Param,
-  ParseFilePipeBuilder,
   Post,
   Put,
   Req,
   Res,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import 'multer';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ChatsService } from '@src/modules/chat/chat.service';
+import { ConversationService } from '@src/modules/chat/conversation.service';
+import {
+  CONVERSATION_COOKIE,
+  conversationCookieHeader,
+  parseCookieHeader,
+} from '@src/modules/chat/visitor-context';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { ChatMetadataDto } from './dto/get-chat-metadata.dto';
 import { UpdateChatMetadataDto } from './dto/put-chat-metadata.dto';
 import { AuthUser } from '@src/modules/user/auth-user';
@@ -34,8 +34,8 @@ import { DocumentsService } from '@src/modules/documents/documents.service';
 export class ChatController {
   constructor(
     private readonly chatsService: ChatsService,
-    private readonly objectStorage: ObjectStorageService,
     private readonly documentsService: DocumentsService,
+    private readonly conversationService: ConversationService,
   ) {}
 
   @Get('/admin')
@@ -68,7 +68,7 @@ export class ChatController {
 
     const resources = await this.documentsService.findByChatId(chat.id);
 
-    return { ...chat, logo: chat.logo + '?v=' + Date.now(), resources };
+    return { ...chat, resources };
   }
 
   @Put('/:id')
@@ -82,46 +82,14 @@ export class ChatController {
     return this.chatsService.update(user.id, id, data);
   }
 
-  @Put('/:id/logo')
-  @UseGuards(AuthGuard)
+  @Get('/:id')
   @Serialize(ChatMetadataDto)
-  @UseInterceptors(FileInterceptor('file'))
-  async updateChatLogo(
-    @CurrentUser() user: AuthUser,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(image\/jpg|image\/png)|(image\/jpeg)/,
-        })
-        .addMaxSizeValidator({
-          maxSize: 1000000,
-        })
-        .build(),
-    )
-    file: Express.Multer.File,
-    @Param('id') id: string,
-  ) {
-    let chat = await this.chatsService.findFirstById(id);
+  async getChat(@Param('id') id: string, @Req() req: Request) {
+    const chat = await this.chatsService.findFirstById(id);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
-
-    const key = `logos/${chat.id}.webp`;
-    const resized = await this.objectStorage.resizeImage(file.buffer, 200, 200);
-    await this.objectStorage.uploadFile(key, resized);
-
-    chat = await this.chatsService.update(user.id, id, {
-      logo: await this.objectStorage.getFileUrl(key, true),
-    });
-
-    return { ...chat, logo: chat.logo + '?v=' + Date.now() };
-  }
-
-  @Get('/:id')
-  @Serialize(ChatMetadataDto)
-  async getChat(@Param('id') id: string) {
-    const chat = await this.chatsService.findFirstById(id);
-    if (!chat) {
+    if (!chat.published && !req.currentUser) {
       throw new NotFoundException('Chat not found');
     }
 
@@ -145,8 +113,26 @@ export class ChatController {
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
+    if (!chat.published && !req.currentUser) {
+      throw new NotFoundException('Chat not found');
+    }
 
     await this.chatsService.incrementPoints(chat.id);
+
+    const cookieConversationId = parseCookieHeader(
+      req.headers.cookie,
+      CONVERSATION_COOKIE,
+    );
+    const conversationId = await this.conversationService.resolveConversationId(
+      chat.id,
+      cookieConversationId,
+    );
+    res.setHeader(
+      'Set-Cookie',
+      conversationCookieHeader(conversationId, {
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
+      }),
+    );
 
     // Server-Sent Events: stream tokens as they're generated instead of
     // waiting for the full answer. Kept inline since it's a handful of
@@ -177,10 +163,23 @@ export class ChatController {
           }
         },
         abort.signal,
+        {
+          pageUrl: body.pageUrl,
+          selectedText: body.selectedText,
+        },
       );
 
       if (!abort.signal.aborted) {
         send('done', result);
+        void this.conversationService.persistTurn({
+          conversationId,
+          chatId: chat.id,
+          question: body.question,
+          answer: result.answer,
+          context: result.context,
+          pageUrl: body.pageUrl,
+          selectedText: body.selectedText,
+        });
       }
     } catch (error) {
       if (!abort.signal.aborted && !res.writableEnded) {

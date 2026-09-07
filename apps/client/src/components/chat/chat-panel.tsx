@@ -1,13 +1,10 @@
 import { PromptForm } from "@/components/chat/prompt-form";
 import { ButtonScrollToBottom } from "@/components/chat/button-scroll-to-bottom";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Square } from "lucide-react";
 
 interface ChatPanelProps {
   isLoading: boolean;
   append: (message: string) => void;
-  stop: () => void;
   input: string;
   setInput: (value: string) => void;
   contained?: boolean;
@@ -16,7 +13,6 @@ interface ChatPanelProps {
 export function ChatPanel({
   isLoading,
   append,
-  stop,
   input,
   setInput,
   contained = false,
@@ -25,24 +21,11 @@ export function ChatPanel({
     <div className={contained ? "shrink-0" : "fixed inset-x-0 bottom-0"}>
       {!contained && <ButtonScrollToBottom />}
       <div className={cn(!contained && "mx-auto sm:max-w-2xl sm:px-4")}>
-        {isLoading ? (
-          <div className="flex h-10 items-center justify-center">
-            <Button
-              variant="outline"
-              onClick={stop}
-              className="bg-white dark:bg-gray-950"
-            >
-              <Square className="mr-2 h-3 w-3 fill-current" />
-              Stop generating
-            </Button>
-          </div>
-        ) : null}
         <div
           className={cn(
-            "space-y-4 bg-white px-4 py-2 dark:bg-gray-950 md:py-4",
             contained
-              ? "border-t dark:border-gray-800"
-              : "border-t shadow-lg sm:rounded-t-xl sm:border dark:border-gray-800",
+              ? "border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-muted"
+              : "space-y-4 border-t bg-white px-4 py-2 shadow-lg dark:border-gray-800 dark:bg-gray-950 sm:rounded-t-xl sm:border md:py-4",
           )}
         >
           <PromptForm
@@ -50,6 +33,7 @@ export function ChatPanel({
             input={input}
             setInput={setInput}
             isLoading={isLoading}
+            compact={contained}
           />
         </div>
       </div>

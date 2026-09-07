@@ -1,11 +1,9 @@
 import GenerateLayout from '@/layouts/generate-layout';
 import NameForm from './name-form';
-import LogoForm from './logo-form';
 import WebsiteForm from './website-form';
 import DescriptionForm from './description-form';
 import ConversationStartersTable from './conversation-starters-table';
 import VisibilityForm from './visibility-form';
-import ShareLinkForm from './share-link';
 import CodeSnippet from './code-snippet';
 
 export function EditChat({ user, chat }: { user: any; chat: any }) {
@@ -41,9 +39,6 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
             {/* Name */}
             <NameForm chatId={chat.id} name={chat.name} />
 
-            {/* Logo */}
-            <LogoForm chatId={chat.id} logo={chat.logo} />
-
             {/* Description */}
             <DescriptionForm chatId={chat.id} description={chat.description} />
 
@@ -68,25 +63,23 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
           <ConversationStartersTable chatId={chat.id} starters={chat.conversationStarters} />
         </div>
 
-        {/* Share chat */}
+        {/* Install */}
         <div className="md:px-8 px-4 ">
           <div className="space-y-1 border-b dark:border-b-gray-800 pb-6">
             <h1 className="text-lg md:text-base text-gray-900 dark:text-white font-semibold">
-              Share your chat with your users!
+              Install on your website
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Share your documentation with the world! You can use the link
-              below to share it with your users.
+              Publish your Chat, set your Website, then paste the Install snippet
+              on that origin so Visitors can Ask AI without leaving. Website is
+              the whitelist; the snippet does not declare it.
             </p>
           </div>
 
-          {/* Share */}
           <div className="divide-y divide-gray-200 dark:divide-gray-800">
             <VisibilityForm id={chat.id} published={chat.published} />
 
-            <ShareLinkForm id={chat.id} />
-
-            <CodeSnippet id={chat.id} />
+            <CodeSnippet id={chat.id} website={chat.url} />
           </div>
         </div>
       </div>

@@ -2,7 +2,8 @@
 set -eu
 
 ENDPOINT="${AWS_ENDPOINT_URL:-http://floci:4566}"
-BUCKET="${S3_BUCKET:-explainit}"
+DOC_BUCKET="${S3_BUCKET:-explainit}"
+CDN_BUCKET="${LAUNCHER_S3_BUCKET:-explainit-cdn}"
 
 echo "Waiting for Floci at ${ENDPOINT}..."
 i=0
@@ -18,16 +19,41 @@ if [ "$i" -eq 60 ]; then
   exit 1
 fi
 
-if aws s3api head-bucket --bucket "$BUCKET" --endpoint-url "$ENDPOINT" >/dev/null 2>&1; then
-  echo "S3 bucket ${BUCKET} already exists"
-else
-  echo "Creating S3 bucket ${BUCKET}"
-  aws s3api create-bucket --bucket "$BUCKET" --endpoint-url "$ENDPOINT"
-fi
+ensure_bucket() {
+  bucket="$1"
+  if aws s3api head-bucket --bucket "$bucket" --endpoint-url "$ENDPOINT" >/dev/null 2>&1; then
+    echo "S3 bucket ${bucket} already exists"
+  else
+    echo "Creating S3 bucket ${bucket}"
+    aws s3api create-bucket --bucket "$bucket" --endpoint-url "$ENDPOINT"
+  fi
+  aws s3api put-bucket-cors \
+    --bucket "$bucket" \
+    --cors-configuration file:///cors.json \
+    --endpoint-url "$ENDPOINT"
+}
 
-aws s3api put-bucket-cors \
-  --bucket "$BUCKET" \
-  --cors-configuration file:///cors.json \
+ensure_bucket "$DOC_BUCKET"
+ensure_bucket "$CDN_BUCKET"
+
+# Host pages load launcher.js with a classic <script src>. Anonymous GET.
+cat >/tmp/cdn-policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadLauncher",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::${CDN_BUCKET}/*"
+    }
+  ]
+}
+EOF
+aws s3api put-bucket-policy \
+  --bucket "$CDN_BUCKET" \
+  --policy file:///tmp/cdn-policy.json \
   --endpoint-url "$ENDPOINT"
 
-echo "Floci ready: bucket=${BUCKET}"
+echo "Floci ready: buckets=${DOC_BUCKET},${CDN_BUCKET}"

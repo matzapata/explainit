@@ -6,8 +6,6 @@ export class ChatMetadataDto {
   @Expose()
   name: string;
   @Expose()
-  logo: string;
-  @Expose()
   url: string;
   @Expose()
   conversationStarters: string[];

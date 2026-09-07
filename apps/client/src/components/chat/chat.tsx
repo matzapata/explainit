@@ -14,7 +14,7 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 }
 
 export function Chat({ chat, className }: ChatProps) {
-  const { messages, setMessages, isLoading, input, setInput, append, stop } = useChat(
+  const { messages, setMessages, isLoading, input, setInput, append } = useChat(
     chat.id,
     [],
   );
@@ -58,7 +58,6 @@ export function Chat({ chat, className }: ChatProps) {
       <ChatPanel
         isLoading={isLoading}
         append={append}
-        stop={stop}
         input={input}
         setInput={setInput}
       />

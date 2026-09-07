@@ -6,6 +6,7 @@ import { Span } from '@src/infra/observability/decorators/span.decorator';
 import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { MessageAgent } from '../chat/message';
 import { CONDENSE_QUESTION_PROMPT } from '../chat/prompts/rag-system.prompt';
+import { preferPageMatches } from '../chat/visitor-context';
 
 @Injectable()
 export class RetrievalService {
@@ -17,6 +18,7 @@ export class RetrievalService {
   async buildStandaloneQuestion(
     question: string,
     chatHistory: { agent: MessageAgent; message: string }[],
+    selectedText?: string | null,
   ) {
     const formatChatHistory = (
       history: { agent: MessageAgent; message: string }[],
@@ -33,6 +35,7 @@ export class RetrievalService {
     type ConversationalRetrievalQAChainInput = {
       question: string;
       chatHistory: { agent: MessageAgent; message: string }[];
+      selectedText: string;
     };
 
     const standaloneQuestionChain = RunnableSequence.from([
@@ -41,6 +44,8 @@ export class RetrievalService {
           input.question,
         chatHistory: (input: ConversationalRetrievalQAChainInput) =>
           formatChatHistory(input.chatHistory),
+        selectedText: (input: ConversationalRetrievalQAChainInput) =>
+          input.selectedText,
       },
       CONDENSE_QUESTION_PROMPT,
       this.llmService.model,
@@ -50,11 +55,24 @@ export class RetrievalService {
     return standaloneQuestionChain.invoke({
       question,
       chatHistory,
+      selectedText: selectedText?.trim() || '(none)',
     });
   }
 
   @Span({ name: 'retrieve' })
-  async retrieve(question: string, k: number, namespace: string) {
-    return this.vectorStoreService.similaritySearch(question, k, namespace);
+  async retrieve(
+    question: string,
+    k: number,
+    namespace: string,
+    pageUrl?: string | null,
+  ) {
+    // Fetch extra hits so page-matching sources can bubble up without starving other pages.
+    const fetchK = Math.max(k * 3, k);
+    const hits = await this.vectorStoreService.similaritySearch(
+      question,
+      fetchK,
+      namespace,
+    );
+    return preferPageMatches(hits, pageUrl, k);
   }
 }

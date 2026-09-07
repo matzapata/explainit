@@ -7,6 +7,21 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const apiProxyTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:4000';
 
+const apiProxy = {
+  '/api': {
+    target: apiProxyTarget,
+    changeOrigin: true,
+    timeout: 0,
+    proxyTimeout: 0,
+  },
+  '/host': {
+    target: apiProxyTarget,
+    changeOrigin: true,
+    timeout: 0,
+    proxyTimeout: 0,
+  },
+};
+
 export default defineConfig({
   plugins: [
     tanstackRouter({
@@ -20,28 +35,34 @@ export default defineConfig({
       '@': path.resolve(rootDir, 'src'),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(rootDir, 'index.html'),
+        hostFrame: path.resolve(rootDir, 'src/host-frame.tsx'),
+      },
+      output: {
+        entryFileNames: (chunk) => {
+          if (chunk.name === 'hostFrame') return 'host-frame.js';
+          return 'assets/[name]-[hash].js';
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
+    },
+  },
   server: {
     host: true,
     port: 3000,
-    proxy: {
-      '/api': {
-        target: apiProxyTarget,
-        changeOrigin: true,
-        timeout: 0,
-        proxyTimeout: 0,
-      },
+    proxy: apiProxy,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
     },
   },
   preview: {
     host: true,
     port: 3000,
-    proxy: {
-      '/api': {
-        target: apiProxyTarget,
-        changeOrigin: true,
-        timeout: 0,
-        proxyTimeout: 0,
-      },
-    },
+    proxy: apiProxy,
   },
 });

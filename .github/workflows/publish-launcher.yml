@@ -1,0 +1,45 @@
+name: Publish launcher
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'launcher-v*'
+
+defaults:
+  run:
+    working-directory: packages/launcher
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: packages/launcher/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - env:
+          LAUNCHER_S3_BUCKET: ${{ secrets.LAUNCHER_S3_BUCKET }}
+          LAUNCHER_S3_KEY: ${{ secrets.LAUNCHER_S3_KEY }}
+        run: |
+          key="${LAUNCHER_S3_KEY:-launcher.js}"
+          aws s3 cp dist/launcher.js "s3://${LAUNCHER_S3_BUCKET}/${key}" \
+            --content-type 'application/javascript; charset=utf-8' \
+            --cache-control 'public, max-age=60'
+          if [ -n "${{ secrets.LAUNCHER_CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id "${{ secrets.LAUNCHER_CLOUDFRONT_DISTRIBUTION_ID }}" \
+              --paths "/${key}"
+          fi
