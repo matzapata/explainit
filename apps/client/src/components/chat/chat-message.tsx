@@ -5,7 +5,7 @@ import remarkMath from 'remark-math';
 
 import { CodeBlock } from '@/components/ui/codeblock';
 import { MemoizedReactMarkdown } from '@/components/chat/markdown';
-import { ChatMessageActions } from '@/components/chat/chat-message-actions';
+import { MessageSources } from '@/components/chat/chat-message-context';
 import {
   ChatMessage as IChatMessage,
   MessageRole,
@@ -33,8 +33,8 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
   }
 
   return (
-    <div className="flex flex-col items-start py-3" {...props}>
-      <div className="w-full overflow-hidden">
+    <div className="flex min-w-0 flex-col items-start py-3" {...props}>
+      <div className="min-w-0 w-full">
         <MemoizedReactMarkdown
           className="break-words text-sm font-normal leading-relaxed text-gray-900 dark:text-gray-300"
           remarkPlugins={[remarkGfm, remarkMath]}
@@ -74,7 +74,10 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
 
               if (inline) {
                 return (
-                  <code className={"bg-gray-800 px-0.5"} {...props}>
+                  <code
+                    className="rounded bg-gray-100 px-1 py-px font-mono text-[0.9em] text-gray-800 dark:bg-gray-800 dark:text-gray-100"
+                    {...props}
+                  >
                     {children}
                   </code>
                 );
@@ -93,9 +96,7 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
           {content}
         </MemoizedReactMarkdown>
       </div>
-      {!isStreaming ? (
-        <ChatMessageActions className="mt-2" message={message} />
-      ) : null}
+      {!isStreaming ? <MessageSources context={message.context} /> : null}
     </div>
   );
 }

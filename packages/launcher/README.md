@@ -10,11 +10,14 @@ Vanilla IIFE that Host sites load from a CDN. The dashboard Install snippet is:
     chatId: "CHAT_ID",
     apiUrl: "https://api.example.com",
     button: "#explainit-ask-ai",
+    theme: "system",
   });
 </script>
 ```
 
 `button` is a Host-owned element or a CSS selector for one. The Launcher does not create that control.
+
+`theme` is `light`, `dark`, or `system` (default). `system` follows the visitor's `prefers-color-scheme`. Pass the Host site's appearance so Ask AI matches the page — do not rely on Host CSS leaking into the ShadowRoot.
 
 On click, the Launcher mounts `widget.js` in a closed ShadowRoot on the Host page. The widget calls the visitor API at `apiUrl`. `Chat.hostOrigins` is the Origin whitelist enforced by Nest — not by this script.
 

@@ -59,7 +59,7 @@ export function AskAiOverlay(props: {
           </div>
         </DialogHeader>
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4">
             <ChatTranscript
               chat={props.chat}
               messages={messages}

@@ -27,6 +27,7 @@ export function generateInstallSnippet(opts: {
     chatId: ${JSON.stringify(opts.chatId)},
     apiUrl: ${JSON.stringify(opts.apiUrl)},
     button: "#explainit-ask-ai",
+    theme: "system",
   });
 </script>`;
 }

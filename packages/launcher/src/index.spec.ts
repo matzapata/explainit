@@ -100,6 +100,7 @@ describe('explainit()', () => {
       expect.objectContaining({
         chatId: 'chat-1',
         apiUrl: 'https://api.example.com',
+        theme: 'system',
       }),
     );
     expect(
@@ -161,5 +162,53 @@ describe('explainit()', () => {
     expect(document.getElementById('ask-ai')).toBe(button);
     expect(document.getElementById('explainit-widget-host')).toBeNull();
     expect(document.getElementById('explainit-launcher-style')).toBeNull();
+  });
+
+  it('passes the Host theme to the widget', async () => {
+    const mount = vi.fn(() => () => undefined);
+    window.ExplainitWidget = { mount };
+    const script = document.createElement('script');
+    script.dataset.explainitWidget = '1';
+    document.head.appendChild(script);
+
+    const button = hostButton();
+    instance = explainit({
+      chatId: 'chat-1',
+      apiUrl: 'https://api.example.com',
+      button,
+      theme: 'light',
+    });
+
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await vi.waitFor(() => expect(mount).toHaveBeenCalled());
+
+    expect(mount).toHaveBeenCalledWith(
+      expect.any(ShadowRoot),
+      expect.objectContaining({ theme: 'light' }),
+    );
+  });
+
+  it('defaults an unknown theme to system', async () => {
+    const mount = vi.fn(() => () => undefined);
+    window.ExplainitWidget = { mount };
+    const script = document.createElement('script');
+    script.dataset.explainitWidget = '1';
+    document.head.appendChild(script);
+
+    const button = hostButton();
+    instance = explainit({
+      chatId: 'chat-1',
+      apiUrl: 'https://api.example.com',
+      button,
+      theme: 'auto' as unknown as 'light',
+    });
+
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await vi.waitFor(() => expect(mount).toHaveBeenCalled());
+
+    expect(mount).toHaveBeenCalledWith(
+      expect.any(ShadowRoot),
+      expect.objectContaining({ theme: 'system' }),
+    );
   });
 });

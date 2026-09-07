@@ -1,67 +1,60 @@
-import { BookOpen } from 'lucide-react';
-import { Button } from '../ui/button';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '../ui/tooltip';
-import {
-    Drawer,
-    DrawerContent,
-    DrawerDescription,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from '../ui/drawer';
+import { ChevronDown, File } from 'lucide-react';
 
-export function ResponseContextDrawer(props: {
-  context: { content: string; metadata: { source: string; title: string } }[];
-}) {
-  const uniqueUrls = Array.from(new Set(props.context.map((item) => item.metadata.source)));
+type SourceHit = {
+  content: string;
+  metadata: { source: string; title: string };
+};
+
+function uniqueSources(context: SourceHit[]): {
+  source: string;
+  title: string;
+}[] {
+  const seen = new Map<string, { source: string; title: string }>();
+  for (const item of context) {
+    const source = item.metadata.source;
+    if (!source || seen.has(source)) {
+      continue;
+    }
+    seen.set(source, {
+      source,
+      title: item.metadata.title || source,
+    });
+  }
+  return [...seen.values()];
+}
+
+export function MessageSources(props: { context: SourceHit[] }) {
+  const sources = uniqueSources(props.context);
+  if (!sources.length) {
+    return null;
+  }
+
+  const label =
+    sources.length === 1
+      ? 'Used 1 source'
+      : `Used ${sources.length} sources`;
 
   return (
-    <Drawer>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DrawerTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
+    <details className="group mt-2">
+      <summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-brand-600 marker:content-none [&::-webkit-details-marker]:hidden dark:text-brand-400">
+        <ChevronDown className="-rotate-90 h-3 w-3 shrink-0 transition-transform group-open:rotate-0" />
+        {label}
+      </summary>
+      <ul className="mt-1.5 space-y-1.5 pl-4">
+        {sources.map((item) => (
+          <li key={item.source}>
+            <a
+              href={item.source}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-start gap-1.5 text-xs text-brand-600 hover:underline dark:text-brand-400"
             >
-              <BookOpen className="h-4 w-4" />
-              <span className="sr-only">Sources</span>
-            </Button>
-          </DrawerTrigger>
-        </TooltipTrigger>
-        <TooltipContent>Sources</TooltipContent>
-      </Tooltip>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-3xl">
-          <DrawerHeader>
-            <DrawerTitle className="text-left dark:text-white">
-              Response sources
-            </DrawerTitle>
-            <DrawerDescription className="text-left dark:text-gray-300">
-              The response was generated with the content of the following pages
-            </DrawerDescription>
-          </DrawerHeader>
-
-          <div className="px-4 pb-14 max-h-44 overflow-scroll">
-            {uniqueUrls.map((url, i) => (
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-brand-400 hover:underline block"
-              >
-                {url}
-              </a>
-            ))}
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+              <File className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{item.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

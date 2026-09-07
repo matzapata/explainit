@@ -2,14 +2,19 @@ import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AskAiOverlay, type PageContext } from '@/components/chat/ask-ai-overlay';
+import { HostThemeRoot } from '@/components/chat/host-theme-root';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PortalContainerContext } from '@/lib/portal-container';
+import { allowWheelThroughScrollLock } from '@/lib/composed-wheel-scroll';
+import { type HostTheme } from '@/lib/host-theme';
 import { chatService, ChatMetadataDto } from '@/lib/services/chat-service';
 import './index.css';
 
 export type WidgetMountOptions = {
   chatId: string;
   apiUrl: string;
+  /** Host-provided appearance. `system` follows prefers-color-scheme. */
+  theme?: HostTheme;
   onClose?: () => void;
 };
 
@@ -105,12 +110,22 @@ function mount(
 
   const queryClient = new QueryClient();
   const root = ReactDOM.createRoot(mountPoint);
+  const onWheel = (event: WheelEvent) => {
+    allowWheelThroughScrollLock(event, shadowRoot);
+  };
+  // Register before Dialog mounts so this runs ahead of Radix RemoveScroll.
+  document.addEventListener('wheel', onWheel, {
+    capture: true,
+    passive: false,
+  });
   root.render(
     <React.StrictMode>
       <PortalContainerContext.Provider value={mountPoint}>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <WidgetApp chatId={opts.chatId} onClose={opts.onClose} />
+            <HostThemeRoot theme={opts.theme}>
+              <WidgetApp chatId={opts.chatId} onClose={opts.onClose} />
+            </HostThemeRoot>
           </TooltipProvider>
         </QueryClientProvider>
       </PortalContainerContext.Provider>
@@ -118,6 +133,9 @@ function mount(
   );
 
   return () => {
+    document.removeEventListener('wheel', onWheel, {
+      capture: true,
+    });
     root.unmount();
   };
 }

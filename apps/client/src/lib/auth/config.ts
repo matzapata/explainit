@@ -10,6 +10,7 @@ declare global {
         opts: {
           chatId: string;
           apiUrl: string;
+          theme?: 'light' | 'dark' | 'system';
           onClose?: () => void;
         },
       ) => () => void;
