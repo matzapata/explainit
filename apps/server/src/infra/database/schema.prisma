@@ -21,15 +21,27 @@ model User {
   chats Chat[]
 }
 
+enum ChatColor {
+  purple
+  blue
+  cyan
+  green
+  red
+  orange
+  yellow
+  gray
+}
+
 // ============================= chat module =============================
 model Chat {
-  id                   String   @id @default(uuid()) @db.Uuid
+  id                   String    @id @default(uuid()) @db.Uuid
   name                 String?
-  hostOrigins          String[] @default([])
+  color                ChatColor @default(blue)
+  hostOrigins          String[]  @default([])
   description          String?
   conversationStarters String[]
-  published            Boolean  @default(false)
-  points               Int      @default(0)
+  published            Boolean   @default(false)
+  points               Int       @default(0)
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now())

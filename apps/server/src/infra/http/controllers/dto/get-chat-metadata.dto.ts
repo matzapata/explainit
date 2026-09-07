@@ -22,6 +22,8 @@ export class ChatMetadataDto {
   @Expose()
   description: string;
   @Expose()
+  color: string;
+  @Expose()
   points: number;
   @Expose()
   updatedAt: Date;

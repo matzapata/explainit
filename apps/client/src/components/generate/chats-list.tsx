@@ -24,16 +24,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -66,7 +58,6 @@ export function ChatsList({ user, chats }: { user: UserDto; chats: ChatMetadataD
   const router = useRouter();
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
-  const [rows, setRows] = useState(chats);
   const [open, setOpen] = useState(false);
   const form = useForm<z.infer<typeof createChatSchema>>({
     resolver: zodResolver(createChatSchema),
@@ -95,33 +86,13 @@ export function ChatsList({ user, chats }: { user: UserDto; chats: ChatMetadataD
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => {
-      if (!accessToken) throw new Error('No access token');
-      return chatService.deleteChat(accessToken, id);
-    },
-    onSuccess: (_chat, id) => {
-      setRows((current) => current.filter((chat) => chat.id !== id));
-      void queryClient.invalidateQueries({ queryKey: ['chats'] });
-      toast({ description: 'Chat deleted.' });
-    },
-    onError: () => {
-      toast({
-        variant: 'destructive',
-        description: 'Could not delete chat. Please try again.',
-      });
-    },
-  });
-
   return (
     <>
       <Navbar user={{ email: user.email }} />
       <main>
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Chats
-            </h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-lg font-semibold">Chats</h1>
             {user.isAdmin && (
               <Dialog
                 open={open}
@@ -196,128 +167,84 @@ export function ChatsList({ user, chats }: { user: UserDto; chats: ChatMetadataD
               )}
           </div>
 
-          <div className="mt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last used</TableHead>
-                  <TableHead>Last updated</TableHead>
-                  <TableHead className="w-12">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-muted-foreground"
-                    >
-                      No chats yet.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows.map((chat) => (
-                    <TableRow key={chat.id}>
-                      <TableCell>
-                        <Link
-                          href={`/chats/${chat.id}`}
-                          className="font-medium text-foreground hover:underline"
-                        >
-                          {chat.name?.trim() || 'Untitled chat'}
-                        </Link>
-                      </TableCell>
-                      <TableCell
-                        className={
-                          chat.published
-                            ? 'text-foreground'
-                            : 'text-muted-foreground'
-                        }
-                      >
-                        {chat.published ? 'Published' : 'Draft'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatChatDate(chat.lastUsedAt, 'Never')}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatChatDate(chat.updatedAt)}
-                      </TableCell>
-                      <TableCell>
-                        <ChatRowMenu
-                          chat={chat}
-                          deleting={deleteMutation.isPending}
-                          onDelete={() => {
-                            if (
-                              window.confirm(
-                                'Delete this chat and its resources? This cannot be undone.',
-                              )
-                            ) {
-                              deleteMutation.mutate(chat.id);
-                            }
-                          }}
-                        />
-                      </TableCell>
+          {chats.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No chats yet.
+              </p>
+              {user.isAdmin && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    className="text-sm text-gray-900 dark:text-gray-100 underline"
+                    onClick={() => setOpen(true)}
+                  >
+                    Add Chat
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="-mx-4 -my-2 overflow-x-auto whitespace-nowrap sm:-mx-6 mt-6">
+              <div className="inline-block min-w-full px-4 py-2 align-middle sm:px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Last used
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Last updated
+                      </TableHead>
+                      <TableHead className="w-8 pr-0" />
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {chats.map((chat) => (
+                      <TableRow
+                        key={chat.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/chats/${chat.id}`)}
+                      >
+                        <TableCell>
+                          <Link
+                            href={`/chats/${chat.id}`}
+                            className="font-medium"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {chat.name?.trim() || 'Untitled chat'}
+                          </Link>
+                        </TableCell>
+                        <TableCell
+                          className={
+                            chat.published
+                              ? undefined
+                              : 'text-gray-500 dark:text-gray-400'
+                          }
+                        >
+                          {chat.published ? 'Published' : 'Draft'}
+                        </TableCell>
+                        <TableCell className="text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                          {formatChatDate(chat.lastUsedAt, 'Never')}
+                        </TableCell>
+                        <TableCell className="text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                          {formatChatDate(chat.updatedAt)}
+                        </TableCell>
+                        <TableCell className="text-right text-gray-400 dark:text-gray-500 pr-0">
+                          →
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </>
-  );
-}
-
-function ChatRowMenu({
-  chat,
-  deleting,
-  onDelete,
-}: {
-  chat: ChatMetadataDto;
-  deleting: boolean;
-  onDelete: () => void;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="xs"
-          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-        >
-          <EllipsisHorizontalIcon className="h-4 w-4" />
-          <span className="sr-only">Open chat actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onSelect={() => {
-            void copyText(chat.id).then((copied) => {
-              toast({
-                variant: copied ? 'default' : 'destructive',
-                description: copied
-                  ? 'Chat ID copied.'
-                  : 'Could not copy chat ID.',
-              });
-            });
-          }}
-        >
-          Copy ID
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-red-600 focus:text-red-600 dark:text-red-500 dark:focus:text-red-500"
-          disabled={deleting}
-          onSelect={onDelete}
-        >
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 
@@ -334,29 +261,5 @@ function formatChatDate(value?: string | Date | null, empty = '—') {
   return date.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
   });
-}
-
-async function copyText(value: string) {
-  const input = document.createElement('textarea');
-  input.value = value;
-  input.setAttribute('readonly', '');
-  input.style.position = 'fixed';
-  input.style.left = '-9999px';
-  document.body.appendChild(input);
-  input.focus();
-  input.select();
-  const copied = document.execCommand('copy');
-  document.body.removeChild(input);
-  if (copied) {
-    return true;
-  }
-
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    return false;
-  }
 }

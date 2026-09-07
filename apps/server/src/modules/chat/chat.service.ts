@@ -9,6 +9,7 @@ import { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.pro
 import { RetrievalService } from '@src/modules/retrieval/retrieval.service';
 import { MessageAgent } from './message';
 import { ANSWER_PROMPT } from './prompts/rag-system.prompt';
+import { nextAvailableColor } from './chat-colors';
 
 export { MessageAgent };
 
@@ -25,9 +26,18 @@ export class ChatsService {
     private readonly llmService: LlmService,
   ) {}
 
-  create(owner: string, data: Omit<Prisma.ChatCreateInput, 'owner'>) {
+  async create(owner: string, data: Omit<Prisma.ChatCreateInput, 'owner'>) {
+    const color =
+      data.color ??
+      nextAvailableColor(
+        (await this.chatRepository.findManyByOwner(owner)).map(
+          (chat) => chat.color,
+        ),
+      );
+
     return this.chatRepository.create({
       ...data,
+      color,
       owner: { connect: { id: owner } },
     });
   }

@@ -26,11 +26,15 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
   const nestedItems = props.nestedItems ?? [
     {
       link: `/chats/${chatId}`,
-      title: 'General',
+      title: 'Settings',
     },
     {
       link: `/chats/${chatId}/resources`,
       title: 'Resources',
+    },
+    {
+      link: `/chats/${chatId}/setup`,
+      title: 'Setup',
     },
   ];
 
@@ -41,15 +45,15 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
       <main className={props.className ?? ''}>
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 text-sm">
               <Link
                 href="/"
-                className="text-sm text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white shrink-0"
+                className="text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-100 shrink-0"
               >
                 Chats
               </Link>
-              <span className="text-sm text-gray-300 dark:text-gray-600">/</span>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <span className="text-gray-300 dark:text-gray-600">/</span>
+              <h1 className="font-medium text-gray-900 dark:text-white truncate">
                 {chatName}
               </h1>
             </div>
@@ -61,17 +65,18 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
             />
           </div>
 
-          <nav className="flex gap-5 border-b border-gray-200 dark:border-gray-800">
+          <nav className="flex gap-5 border-b border-gray-200 dark:border-white/10">
             {nestedItems.map((item, i) => {
               const active = pathsMatch(item.link, pathname);
               return (
                 <Link
                   key={i}
                   href={item.link}
-                  className={`py-2 text-sm -mb-px ${
+                  data-text={item.title}
+                  className={`tab-link py-2 text-sm -mb-px ${
                     active
                       ? 'border-b border-gray-900 dark:border-gray-100 font-medium text-gray-900 dark:text-white'
-                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                   }`}
                 >
                   {item.title}

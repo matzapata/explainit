@@ -29,6 +29,7 @@ export function Link({ href, children, className, ...rest }: AppLinkProps) {
       to={href as never}
       className={className}
       activeOptions={{ exact: true }}
+      {...rest}
     >
       {children}
     </RouterLink>
