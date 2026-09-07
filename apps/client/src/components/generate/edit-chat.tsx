@@ -6,8 +6,20 @@ import GenerateLayout from '@/layouts/generate-layout';
 import ChatDetailsForm from './chat-details-form';
 import ConversationStartersTable from './conversation-starters-table';
 import HostOriginsTable from './host-origins-table';
-import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { buttonVariants } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 import { useAccessToken } from '@/lib/auth/use-session';
 import { useRouter } from '@/lib/router';
 import { chatService } from '@/lib/services/chat-service';
@@ -76,23 +88,32 @@ function DeleteChatButton({ chatId }: { chatId: string }) {
 
   return (
     <div className="max-w-md pt-4 border-t border-gray-200 dark:border-white/10">
-      <Button
-        type="button"
-        variant="destructive"
-        className="px-0"
-        disabled={deleteMutation.isPending}
-        onClick={() => {
-          if (
-            window.confirm(
-              'Delete this chat and its resources? This cannot be undone.',
-            )
-          ) {
-            deleteMutation.mutate();
-          }
-        }}
-      >
-        Delete Chat
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger
+          className={cn(buttonVariants({ variant: 'destructive' }), 'px-0')}
+          disabled={deleteMutation.isPending}
+        >
+          Delete Chat
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete the chat and its resources. This cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="text-red-600 hover:underline dark:text-red-400"
+              onClick={() => deleteMutation.mutate()}
+            >
+              Delete Chat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
