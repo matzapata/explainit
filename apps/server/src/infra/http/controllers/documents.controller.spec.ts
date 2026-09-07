@@ -17,7 +17,6 @@ describe('DocumentsController', () => {
   const chat = {
     id: 'chatId',
     name: 'name',
-    logo: 'logo',
     url: 'url',
     description: null,
     points: 0,

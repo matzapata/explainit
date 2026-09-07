@@ -59,7 +59,7 @@ describe('RetrievalService', () => {
       ).resolves.toEqual(hits);
       expect(vectorStoreService.similaritySearch).toHaveBeenCalledWith(
         'standalone question',
-        4,
+        12,
         'chat-1',
       );
     });

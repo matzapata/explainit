@@ -2,10 +2,8 @@
 
 import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Button, buttonVariants } from '../ui/button';
+import { Button } from '../ui/button';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useAccessToken } from '@/lib/auth/use-session';
@@ -21,8 +19,6 @@ import {
   FormMessage,
 } from '../ui/form';
 import { useRouter } from '@/lib/router';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -46,7 +42,6 @@ export function GeneralInfoStep(props: {
 }) {
   const router = useRouter()
   const accessTokenRaw = useAccessToken();
-  const [logoUrl, setLogoUrl] = useState<string | undefined>(props.chat.logo);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,10 +60,10 @@ export function GeneralInfoStep(props: {
       if (!accessTokenRaw) throw new Error('No access token');
       return chatService.updateOwnerChat(accessTokenRaw, props.chat.id, mutationProps);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       router.push('/onboarding/resources')
     },
-    onError: (error) => {
+    onError: () => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
@@ -81,23 +76,6 @@ export function GeneralInfoStep(props: {
     }
   }
 
-  const uploadPicture = useMutation({
-    mutationFn: (mutationProps: { file: FileList }) => {
-      if (!accessTokenRaw) throw new Error('No access token');
-
-      const file = mutationProps.file[0];
-      if (!file.type.includes("image")) throw new Error("Invalid file type");
-
-      return chatService.updateOwnerChatLogo(accessTokenRaw, props.chat.id, file)
-    },
-    onSuccess: (data) => {
-      setLogoUrl(data.logo);
-    },
-    onError: (error) => {
-      toast({ description: `Sorry, something went wrong. Please try again.${error.message? " Error" + error.message : ""}` });
-    },
-  });
-
   return (
     <>
       <div className="border-b border-b-gray-800 pb-6 mb-6">
@@ -105,36 +83,12 @@ export function GeneralInfoStep(props: {
           Let's create your chat
         </h1>
         <p className="text-gray-300">
-          Add your chat's name, logo and description. This information will be
-          displayed on the chat page.
+          Add your chat's name, website and description. The website origin is
+          the Host site whitelist: Host Chat only frames there.
         </p>
       </div>
 
       <div className="space-y-4 border-gray-800 divide-gray-800">
-        <div className="space-y-2">
-          <Label>Logo</Label>
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16 rounded-md">
-              <AvatarImage className="rounded-md" src={logoUrl} />
-              <AvatarFallback className="rounded-md">C</AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <label htmlFor="logo" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), "cursor-pointer")}>
-                {uploadPicture.isPending ? 'Uploading...' : 'Upload logo'}
-              </label>
-              <Input id='logo' disabled={uploadPicture.isPending} className='hidden' type="file" accept=".jpg, .png, .jpeg" onChange={(e) => {
-                const file = e.target.files;
-                if (file) {
-                  uploadPicture.mutate({ file });
-                }
-              }} />
-              <p className="text-gray-500 text-xs">
-                .png, .jpeg files up to 1MB. Recommended size is 50x50px
-              </p>
-            </div>
-          </div>
-        </div>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">

@@ -1,11 +1,10 @@
 import { apiService } from "@/lib/services/api-service"
 import { apiBaseUrl } from "@/lib/auth/config";
-import { AxiosInstance, AxiosProgressEvent } from "axios";
+import { AxiosInstance } from "axios";
 
 export interface ChatMetadataDto {
     id: string;
     name?: string;
-    logo?: string;
     url?: string;
     conversationStarters: string[];
     published: boolean;
@@ -53,25 +52,6 @@ export class ChatService {
         }
     }
 
-    async updateOwnerChatLogo(accessToken: string, id: string, file: File, onUploadProgress?: (progress: number) => void): Promise<ChatMetadataDto> {
-        try {
-            const formData = new FormData()
-            formData.append("file", file)
-
-            const res = await this.client.put(`/api/chats/${id}/logo`, formData, {
-                headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${accessToken}` },
-                onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent?.total ?? 1))
-                    onUploadProgress?.(percentCompleted)
-                },
-            })
-            return { ...res.data, createdAt: new Date(res.data.createdAt) }
-        } catch (error: any) {
-            console.error(error)
-            throw new Error(error?.response?.data?.message ?? "")
-        }
-    }
-
     async getChat(id: string): Promise<ChatMetadataDto> {
         const res = await this.client.get(`/api/chats/${id}`)
         return res.data
@@ -81,15 +61,34 @@ export class ChatService {
         id: string,
         question: string,
         chatHistory: { message: string, agent: MessageRole }[] | undefined,
-        options: { onToken: (text: string) => void; signal?: AbortSignal },
+        options: {
+            onToken: (text: string) => void;
+            signal?: AbortSignal;
+            pageUrl?: string;
+            selectedText?: string;
+            accessToken?: string;
+        },
     ): Promise<ChatMessage> {
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+        };
+        if (options.accessToken) {
+            headers.Authorization = `Bearer ${options.accessToken}`;
+        }
+
         const res = await fetch(`${apiBaseUrl()}/api/chats/${id}/messages`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "text/event-stream",
-            },
-            body: JSON.stringify({ question, chatHistory: chatHistory ?? [] }),
+            headers,
+            credentials: "include",
+            body: JSON.stringify({
+                question,
+                chatHistory: chatHistory ?? [],
+                ...(options.pageUrl ? { pageUrl: options.pageUrl } : {}),
+                ...(options.selectedText
+                    ? { selectedText: options.selectedText }
+                    : {}),
+            }),
             signal: options.signal,
         })
 

@@ -78,8 +78,8 @@ export default function WebsiteForm(props: { chatId: string, website?: string })
             <DialogHeader>
               <DialogTitle>Update Website</DialogTitle>
               <DialogDescription>
-                Make changes to your website url here. People will use this link to go straight to your docs. Don't worry, you can provide more data to the chat later. Click save when you're
-                done.
+                This origin is the Host site whitelist: Host Chat only frames
+                there. Use the docs homepage, e.g. https://docs.example.com.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>

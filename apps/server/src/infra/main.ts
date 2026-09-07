@@ -32,6 +32,13 @@ async function bootstrap() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
+  // Prevent framing the API/app except Host Chat, which sets its own frame-ancestors.
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/host')) {
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    }
+    next();
+  });
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   await app.listen(env.get('PORT'));

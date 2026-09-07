@@ -82,11 +82,13 @@ describe('ChatsService', () => {
       expect(retrievalService.buildStandaloneQuestion).toHaveBeenCalledWith(
         'how much?',
         history,
+        null,
       );
       expect(retrievalService.retrieve).toHaveBeenCalledWith(
         'What is the price?',
         4,
         'chat-1',
+        undefined,
       );
       expect(capturedPrompt).toContain('What is the price?');
       expect(capturedPrompt).toContain('pricing is $10');

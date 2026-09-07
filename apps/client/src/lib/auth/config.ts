@@ -1,3 +1,11 @@
+declare global {
+  interface Window {
+    __EXPLAINIT_HOST_FRAME__?: boolean;
+    __EXPLAINIT_API_BASE__?: string;
+    __EXPLAINIT_CHAT_ID__?: string;
+  }
+}
+
 export type AuthMode = 'none' | 'oidc' | 'password';
 
 export const TOKEN_COOKIE = 'explainit_token';
@@ -7,6 +15,13 @@ export const TOKEN_MAX_AGE = 60 * 60 * 24 * 7;
 let cachedAuthMode: AuthMode | null = null;
 
 export function apiBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.__EXPLAINIT_HOST_FRAME__) {
+    const fromWindow = window.__EXPLAINIT_API_BASE__;
+    if (fromWindow !== undefined) {
+      // Empty string means same origin as the Host Chat page (Nest / reverse proxy).
+      return fromWindow.replace(/\/$/, '');
+    }
+  }
   const raw = import.meta.env.VITE_API_BASE_URL;
   if (raw === undefined || raw === '') {
     return '';
@@ -68,6 +83,10 @@ export function readCookie(name: string): string {
 }
 
 export function getAccessToken(): string {
+  if (typeof window !== 'undefined' && window.__EXPLAINIT_HOST_FRAME__) {
+    return '';
+  }
+
   if (getAuthMode() === 'none') {
     return NONE_ACCESS_TOKEN;
   }

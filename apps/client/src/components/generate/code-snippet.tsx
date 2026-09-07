@@ -3,59 +3,67 @@
 import { useEffect, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { Button } from '../ui/button';
+import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard';
+import { toast } from '../ui/use-toast';
+import {
+  generateInstallSnippet,
+  launcherSrc,
+} from '@/lib/install-snippet';
 
-const generateCodeSnippet = (href: string) => `<html>
-<head>
-    <style>
-      /* Style for the chat bubble */
-      .chat-bubble {
-          z-index: 1000;
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          background-color: #007bff;
-          color: #ffffff;
-          padding: 10px 20px;
-          border-radius: 20px 20px 0px 20px;
-          cursor: pointer;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-          transition: all 0.3s ease;
-      }
+function originFromWebsite(website?: string): string | null {
+  if (!website?.trim()) return null;
+  try {
+    return new URL(website.trim()).origin;
+  } catch {
+    return null;
+  }
+}
 
-      /* Style for the chat bubble when hovered */
-      .chat-bubble:hover {
-          background-color: #0056b3;
-      }
-    </style>
-</head>
-<body>
-    <a 
-      class="chat-bubble" 
-      href="${href}"
-    >
-      ExplainIt with AI
-    </a>
-    <!-- ... -->
-</body>
-</html>`;
-
-export default function CodeSnippet(props: { id: string }) {
-  const [codeSnippet, setCodeSnippet] = useState<string>('');
+export default function CodeSnippet(props: {
+  id: string;
+  website?: string;
+}) {
+  const [codeSnippet, setCodeSnippet] = useState('');
+  const hostOrigin = originFromWebsite(props.website);
+  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCodeSnippet(generateCodeSnippet(`${window.location.origin}/chat/${props.id}`));
+    if (typeof window === 'undefined' || !hostOrigin) {
+      setCodeSnippet('');
+      return;
     }
-  }, [props.id]);
+    setCodeSnippet(
+      generateInstallSnippet({
+        scriptSrc: launcherSrc(),
+        chatId: props.id,
+        appUrl: window.location.origin,
+      }),
+    );
+  }, [props.id, hostOrigin]);
+
+  if (!hostOrigin) {
+    return (
+      <div className="space-y-2 md:space-y-0 md:flex py-6">
+        <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
+          Install snippet
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 md:flex-1">
+          Set your Website above first. That origin is the Host site whitelist:
+          Host Chat only frames there.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2 md:space-y-0 md:flex py-6">
       <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
-        Code Snippet
+        Install snippet
       </p>
-      <div className="flex md:flex-1">
+      <div className="flex md:flex-1 flex-col gap-2">
         <SyntaxHighlighter
-          language={'html'}
+          language="html"
           style={coldarkDark}
           PreTag="div"
           showLineNumbers
@@ -76,6 +84,25 @@ export default function CodeSnippet(props: { id: string }) {
         >
           {codeSnippet}
         </SyntaxHighlighter>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Host origin (from Website): <code>{hostOrigin}</code>. Nest blocks
+          framing anywhere else. Style or replace the Ask AI control — the
+          Launcher does not create it.
+        </p>
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!!isCopied || !codeSnippet}
+            onClick={() => {
+              copyToClipboard(codeSnippet);
+              toast({ description: 'Install snippet copied' });
+            }}
+          >
+            {isCopied ? 'Copied' : 'Copy snippet'}
+          </Button>
+        </div>
       </div>
     </div>
   );

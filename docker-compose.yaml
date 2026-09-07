@@ -30,7 +30,7 @@ services:
     ports:
       - '4000:4000'
     shm_size: '1gb'
-    command: sh -c "npx prisma migrate deploy && npm run dev"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run dev"
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,7 +61,7 @@ services:
       - ./apps/server:/app
       - worker_node_modules:/app/node_modules
     shm_size: '1gb'
-    command: sh -c "npx prisma migrate deploy && npm run worker"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run worker"
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,6 +77,7 @@ services:
       NODE_ENV: development
       API_PROXY_TARGET: http://api:4000
       VITE_API_BASE_URL: ''
+      VITE_LAUNCHER_SRC: http://localhost:4566/explainit-cdn/launcher.js
     command: npm run dev
     env_file:
       - path: ./apps/client/.env.local
@@ -87,7 +88,27 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - api
+      api:
+        condition: service_started
+      launcher:
+        condition: service_completed_successfully
+  launcher:
+    build:
+      context: ./packages/launcher
+      dockerfile: Dockerfile
+    restart: 'no'
+    environment:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://floci:4566
+      LAUNCHER_S3_BUCKET: explainit-cdn
+    volumes:
+      - ./packages/launcher:/app
+      - launcher_node_modules:/app/node_modules
+    depends_on:
+      floci-init:
+        condition: service_completed_successfully
   postgres:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
@@ -140,6 +161,7 @@ services:
       AWS_DEFAULT_REGION: us-east-1
       AWS_ENDPOINT_URL: http://floci:4566
       S3_BUCKET: explainit
+      LAUNCHER_S3_BUCKET: explainit-cdn
     volumes:
       - ./config/floci/init.sh:/init.sh:ro
       - ./config/floci/cors.json:/cors.json:ro
@@ -195,3 +217,4 @@ volumes:
   server_node_modules:
   worker_node_modules:
   client_node_modules:
+  launcher_node_modules:

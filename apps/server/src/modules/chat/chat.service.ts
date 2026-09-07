@@ -12,6 +12,11 @@ import { ANSWER_PROMPT } from './prompts/rag-system.prompt';
 
 export { MessageAgent };
 
+export type AnswerOptions = {
+  pageUrl?: string | null;
+  selectedText?: string | null;
+};
+
 @Injectable()
 export class ChatsService {
   constructor(
@@ -58,22 +63,27 @@ export class ChatsService {
     namespace: string,
     onToken: (token: string) => void = () => undefined,
     signal?: AbortSignal,
+    options: AnswerOptions = {},
   ): Promise<{ question: string; answer: string; context: EmbeddingHit[] }> {
+    const selectedText = options.selectedText?.trim() || '';
     const standaloneQuestion =
       await this.retrievalService.buildStandaloneQuestion(
         question,
         chatHistory,
+        selectedText || null,
       );
 
     const context = await this.retrievalService.retrieve(
       standaloneQuestion,
       k,
       namespace,
+      options.pageUrl,
     );
 
     const answer = await this.generate(
       standaloneQuestion,
       context,
+      selectedText,
       onToken,
       signal,
     );
@@ -89,6 +99,7 @@ export class ChatsService {
   async generate(
     question: string,
     context: EmbeddingHit[],
+    selectedText: string,
     onToken: (token: string) => void = () => undefined,
     signal?: AbortSignal,
   ) {
@@ -96,6 +107,7 @@ export class ChatsService {
       {
         context: (input) => input.context,
         question: (input) => input.question,
+        selectedText: (input) => input.selectedText,
       },
       ANSWER_PROMPT,
       this.llmService.model,
@@ -105,6 +117,7 @@ export class ChatsService {
     const stream = await answerChain.stream(
       {
         question,
+        selectedText: selectedText || '(none)',
         context: context.map((doc) => doc.content).join('\n\n'),
       },
       { signal },

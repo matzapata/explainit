@@ -6,11 +6,14 @@ Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
 2. `server` (NestJS) for orchestration and policy
 3. `postgres` (Postgres + pgvector) for transactional and semantic data
 
+The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, appUrl, button })` with a Host-owned control; they do not load the React app into their DOM.
+
 External providers supply language model inference, embedding generation, and optional storage integrations.
 
 ## System context
 
 - `client`: chat UX, workspace/resource setup, and response rendering
+- `launcher`: CDN IIFE that opens Host Chat in an iframe (`explainit({ chatId, appUrl, button })`)
 - `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
@@ -46,7 +49,7 @@ Current infrastructure folders and responsibilities:
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
-- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the bucket; the app does not.
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` one-shot uploads `launcher.js`. The app does not.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 

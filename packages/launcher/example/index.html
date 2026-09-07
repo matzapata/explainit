@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acme Docs (Host site demo)</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.5;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 40rem;
+        padding: 2rem 1.25rem 6rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+      }
+      .meta {
+        color: #555;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+      }
+      p {
+        margin: 0.75rem 0;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9em;
+      }
+      #ask-ai {
+        z-index: 2147483000;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #7B39ED;
+        color: #ffffff;
+        padding: 10px 20px;
+        border-radius: 20px 20px 0px 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        border: none;
+        font: inherit;
+      }
+      #ask-ai:hover {
+        background-color: #5b21b6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Acme Docs</h1>
+    <p class="meta">
+      Local Host site demo for Explainit. Replace
+      <code>YOUR_CHAT_ID</code> below, or paste the Install snippet from the
+      dashboard. Website in the dashboard is the whitelist — this page does not
+      declare an allowed origin.
+    </p>
+    <p>Select this paragraph, then open Ask AI from the Host control.</p>
+    <p>Pricing is $10/month. Billing is monthly.</p>
+    <p>
+      Support hours are Monday–Friday, 9am–5pm Eastern. Refunds are available
+      within 14 days of purchase.
+    </p>
+
+    <button type="button" id="ask-ai">Ask AI</button>
+    <script src="http://localhost:4566/explainit-cdn/launcher.js"></script>
+    <script>
+      explainit({
+        chatId: "fc7e495b-4392-46dd-93c7-938c1cf459e3",
+        appUrl: "http://localhost:3000",
+        button: "#ask-ai",
+      });
+    </script>
+  </body>
+</html>
