@@ -24,8 +24,8 @@ export function ChatPanel({
         <div
           className={cn(
             contained
-              ? "border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-muted"
-              : "space-y-4 border-t bg-white px-4 py-2 shadow-lg dark:border-gray-800 dark:bg-gray-950 sm:rounded-t-xl sm:border md:py-4",
+              ? "border-t border-gray-200 bg-transparent px-4 py-3 dark:border-white/10"
+              : "space-y-4 border-t border-gray-200 bg-white px-4 py-2 dark:border-white/10 dark:bg-gray-950 sm:border md:py-4",
           )}
         >
           <PromptForm

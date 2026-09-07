@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { PreviewChat } from './preview-chat';
 
 vi.mock('@explainit/host-chat', () => ({
+  HostThemeRoot: ({ children }: { children: ReactNode }) => children,
   AskAiOverlay: ({
     open,
     onOpenChange,

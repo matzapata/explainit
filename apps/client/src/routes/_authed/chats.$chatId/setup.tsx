@@ -18,9 +18,8 @@ function ChatSetupPage() {
       <div className="space-y-6 text-sm">
         <section className="text-gray-500 dark:text-gray-400 space-y-1 max-w-xl">
           <p>
-            Publish the Chat, then paste the Install snippet on every Host
-            origin you allowlisted in Settings. www and apex are different
-            origins.
+            Publish the Chat, then paste the Install snippet. Make sure your
+            domain is allowlisted in Settings.
           </p>
         </section>
 

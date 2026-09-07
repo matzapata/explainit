@@ -96,13 +96,13 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
   }
 
   return (
-    <div className="codeblock relative w-full overflow-x-auto bg-gray-100 font-sans dark:bg-zinc-950">
-      <div className="flex w-full items-center justify-between bg-gray-200 px-6 py-2 pr-4 text-gray-700 dark:bg-zinc-800 dark:text-zinc-100">
+    <div className="codeblock relative w-full overflow-x-auto bg-gray-100 font-sans dark:bg-gray-900">
+      <div className="flex w-full items-center justify-between bg-gray-200 px-6 py-2 pr-4 text-gray-700 dark:bg-gray-800 dark:text-gray-100">
         <span className="text-xs lowercase">{language}</span>
         <div className="flex items-center space-x-1">
           <Button
             variant="ghost"
-            className="hover:bg-gray-300 focus-visible:ring-1 focus-visible:ring-gray-700 focus-visible:ring-offset-0 dark:hover:bg-zinc-700"
+            className="hover:bg-gray-300 focus-visible:ring-1 focus-visible:ring-gray-700 focus-visible:ring-offset-0 dark:hover:bg-white/10"
             onClick={downloadAsFile}
             size="icon"
           >
@@ -112,7 +112,7 @@ const CodeBlock: FC<Props> = memo(({ language, value }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="text-xs hover:bg-gray-300 focus-visible:ring-1 focus-visible:ring-gray-700 focus-visible:ring-offset-0 dark:hover:bg-zinc-700"
+            className="text-xs hover:bg-gray-300 focus-visible:ring-1 focus-visible:ring-gray-700 focus-visible:ring-offset-0 dark:hover:bg-white/10"
             onClick={onCopy}
           >
             {isCopied ? <IconCheck /> : <IconCopy />}

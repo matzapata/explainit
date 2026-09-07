@@ -54,7 +54,7 @@ export function PromptForm({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question…"
             spellCheck={false}
-            className="min-h-16 max-h-40 w-full flex-1 resize-none rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 focus-within:outline-none dark:border-gray-800 dark:bg-gray-950 dark:text-white"
+            className="min-h-16 max-h-40 w-full flex-1 resize-none border border-gray-200 bg-transparent px-2.5 py-1.5 text-sm leading-5 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950/20 dark:border-white/10 dark:text-white dark:placeholder:text-gray-500 dark:focus-visible:ring-white/20"
           />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -62,7 +62,7 @@ export function PromptForm({
                 type="submit"
                 size="icon"
                 disabled={isLoading || input === ''}
-                className="h-10 w-10 shrink-0"
+                className="shrink-0"
               >
                 <IconArrowElbow />
                 <span className="sr-only">Send message</span>
@@ -72,7 +72,7 @@ export function PromptForm({
           </Tooltip>
         </div>
       ) : (
-        <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-white pr-8 dark:border-gray-800 dark:bg-gray-950 sm:rounded-md sm:border sm:pr-12">
+        <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden border border-gray-200 bg-transparent pr-8 dark:border-white/10 sm:pr-12">
           <Textarea
             ref={inputRef}
             tabIndex={0}
@@ -82,7 +82,7 @@ export function PromptForm({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Send a message."
             spellCheck={false}
-            className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none dark:text-white sm:text-sm"
+            className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] placeholder:text-gray-400 focus-visible:outline-none dark:text-white dark:placeholder:text-gray-500 sm:text-sm"
           />
           <div className="absolute right-0 top-4 sm:right-4">
             <Tooltip>

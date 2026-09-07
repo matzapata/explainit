@@ -50,16 +50,7 @@ export default function CodeSnippet(props: {
     <div className="max-w-xl">
       <h2 className="font-semibold mb-2">Install snippet</h2>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        Paste the same snippet on each allowlisted origin:{' '}
-        {origins.map((origin, i) => (
-          <span key={origin}>
-            {i > 0 ? ', ' : ''}
-            <code className="bg-gray-100 dark:bg-white/5 px-1 font-mono text-xs">
-              {origin}
-            </code>
-          </span>
-        ))}
-        .
+        Make sure your domain is allowlisted in Settings.
       </p>
       <pre className="text-xs overflow-x-auto mb-3">
         <SyntaxHighlighter
