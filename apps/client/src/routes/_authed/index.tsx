@@ -1,13 +1,19 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { EditChat } from '@/components/generate/edit-chat';
-import { ensureOwnerWorkspace } from '@/lib/queries';
+import { ChatsList } from '@/components/generate/chats-list';
+import { queries } from '@/lib/queries';
 
 export const Route = createFileRoute('/_authed/')({
-  loader: ({ context }) => ensureOwnerWorkspace(context.queryClient),
+  loader: async ({ context }) => {
+    const [user, chats] = await Promise.all([
+      context.queryClient.ensureQueryData(queries.user()),
+      context.queryClient.ensureQueryData(queries.chats()),
+    ]);
+    return { user, chats };
+  },
   component: HomePage,
 });
 
 function HomePage() {
-  const { user, chat } = Route.useLoaderData();
-  return <EditChat chat={chat} user={user} />;
+  const { user, chats } = Route.useLoaderData();
+  return <ChatsList user={user} chats={chats} />;
 }

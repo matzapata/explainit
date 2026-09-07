@@ -9,7 +9,9 @@ export interface ChatMetadataDto {
     published: boolean;
     description?: string;
     points: number;
-    resources: ChatResource[];
+    updatedAt?: string;
+    lastUsedAt?: string | null;
+    resources?: ChatResource[];
 }
 
 export interface ChatResource {
@@ -24,14 +26,28 @@ export class ChatService {
 
     constructor(private readonly client: AxiosInstance) { }
 
-    async getOwnerChat(accessToken: string): Promise<ChatMetadataDto> {
+    async listOwnerChats(accessToken: string): Promise<ChatMetadataDto[]> {
         const res = await this.client.get("/api/chats", { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+    async createChat(accessToken: string, data: { name?: string, description?: string } = {}): Promise<ChatMetadataDto> {
+        const res = await this.client.post("/api/chats/admin", data, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+    async deleteChat(accessToken: string, id: string): Promise<ChatMetadataDto> {
+        const res = await this.client.delete(`/api/chats/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+        return res.data
+    }
+
+    async getOwnerChatById(accessToken: string, id: string): Promise<ChatMetadataDto> {
+        const res = await this.client.get(`/api/chats/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
 
     async updateOwnerChat(accessToken: string, id: string, data: { name?: string, hostOrigins?: string[], conversationStarters?: string[], published?: boolean, description?: string }): Promise<ChatMetadataDto> {
         try {
-            // name, host origins, conversation starters, published
             const res = await this.client.put(`/api/chats/${id}`, data, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
@@ -47,7 +63,6 @@ export class ChatService {
 
     async addWebResource(accessToken: string, id: string, urls: string[]): Promise<ChatResource[]> {
         try {
-            // name, website, conversation starters, published
             const res = await this.client.post(`/api/chats/${id}/resources/web`, { urls }, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
@@ -58,7 +73,6 @@ export class ChatService {
 
     async addTextResource(accessToken: string, id: string, text: string, title: string, source: string): Promise<ChatResource[]> {
         try {
-            // name, website, conversation starters, published
             const res = await this.client.post(`/api/chats/${id}/resources/text`, { text, title, source }, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {

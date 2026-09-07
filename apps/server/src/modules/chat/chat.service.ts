@@ -52,6 +52,10 @@ export class ChatsService {
     return this.chatRepository.findFirstById(id);
   }
 
+  delete(id: string) {
+    return this.chatRepository.delete(id);
+  }
+
   incrementPoints(id: string) {
     return this.chatRepository.incrementPoints(id);
   }

@@ -67,6 +67,7 @@ describe('UsersController', () => {
         id: 'id',
         email: 'email',
         name: 'Ada',
+        isAdmin: false,
       });
       expect(usersService.findById).toHaveBeenCalledWith(authUser.id);
     });

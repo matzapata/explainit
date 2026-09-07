@@ -1,6 +1,5 @@
 "use client";
 
-import { Bars4Icon } from "@heroicons/react/24/solid";
 import Logo from "../brand/logo";
 import { Link } from '@/lib/router';
 import { LogoutLink } from "@/lib/auth/links";
@@ -12,8 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconLogOut, IconSettings } from "../ui/icons";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { IconLogOut } from "../ui/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export interface NavbarProps {
@@ -30,146 +28,53 @@ export default function Navbar(props: NavbarProps) {
   const items = props.items ?? [];
 
   return (
-    <div className="border-b h-16 bg-white dark:bg-gray-950 border-b-gray-200 dark:border-b-gray-800 flex justify-center">
-      <div className="px-4 md:px-8 w-full flex justify-between py-3 items-center">
-        <div className="flex items-center">
+    <header className="border-b border-gray-200 dark:border-gray-800">
+      <nav className="mx-auto max-w-6xl px-4 py-3 flex justify-between items-center sm:px-6">
+        <div className="flex items-center gap-4">
           <Logo />
-          <div className="hidden md:flex items-center space-x-2 ml-4">
-            {items.map((item, i) => (
-              <Link
-                key={i}
-                href={item.link}
-                className={"px-3 py-1 text-md font-semibold text-gray-700 dark:text-gray-200"}
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
+          {items.length > 0 && (
+            <div className="hidden md:flex items-center gap-4">
+              {items.map((item, i) => (
+                <Link
+                  key={i}
+                  href={item.link}
+                  className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="hidden md:flex items-center space-x-4">
-          <Link
-            href={"/settings"}
-            className="rounded-md py-2 px-[10px] hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <IconSettings className="h-5 w-5 dark:text-gray-100" />
-          </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="focus:outline-none">
-              <Avatar>
-                {/* TODO: add image */}
-                <AvatarImage src={undefined} />
-                <AvatarFallback>
-                  {Array.from(props.user?.email ?? "c")[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>
-                <div className="space-y-1">
-                  <p>My Account</p>
-                  <p className="font-normal pr-4">{props.user?.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogoutLink postLogoutRedirectURL="/">
-                  <div className="flex space-x-2 items-center">
-                    <IconLogOut className="h-4 w-4 text-gray-900" />
-                    <span className="ml-2">Logout</span>
-                  </div>
-                </LogoutLink>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Mobile burger and menu */}
-        <div className="md:hidden flex space-x-4 items-center">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="items-center h-9 w-9 p-0 flex justify-center text-gray-900 dark:text-white">
-                <Bars4Icon className="h-6 w-6" />
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="inset-y-0 flex h-auto w-[300px] flex-col p-0 dark:border-gray-800"
-            >
-              <div className="p-4 border-b dark:border-gray-800">
-                <Logo />
+        <DropdownMenu>
+          <DropdownMenuTrigger className="focus:outline-none">
+            <Avatar>
+              <AvatarImage src={props.user?.picture ?? undefined} />
+              <AvatarFallback>
+                {Array.from(props.user?.email ?? "c")[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>
+              <div className="space-y-1">
+                <p>My Account</p>
+                <p className="font-normal pr-4">{props.user?.email}</p>
               </div>
-
-              <div className="space-y-2 px-2 flex-1">
-                {items.map((item, i) => (
-                  <SidebarNavItem
-                    key={i}
-                    href={item.link}
-                    title={item.title}
-                    icon={item.icon}
-                  />
-                ))}
-              </div>
-
-              <div className="divide-y dark:divide-gray-800">
-                <div className="mb-6 space-y-2">
-                  <SidebarNavItem
-                    title="Settings"
-                    href="/settings"
-                    icon={<IconSettings className="h-5 w-5 text-gray-500" />}
-                  />
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <LogoutLink postLogoutRedirectURL="/">
+                <div className="flex space-x-2 items-center">
+                  <IconLogOut className="h-4 w-4 text-gray-900" />
+                  <span className="ml-2">Logout</span>
                 </div>
-
-                <div className="flex items-center justify-between py-6 px-2">
-                  <div className="flex ml-2">
-                    {/* Avatar */}
-                    <Avatar>
-                      <AvatarImage src={props.user?.picture ?? undefined} />
-                      <AvatarFallback>
-                        {Array.from(props.user?.email ?? "c")[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    {/* Name and email */}
-                    <div className="ml-3 items-center flex">
-                      <p className="text-sm dark:text-white">{props.user?.email}</p>
-                    </div>
-                  </div>
-
-                  <LogoutLink postLogoutRedirectURL="/">
-                    <button className="p-2">
-                      <IconLogOut className="h-5 w-5 text-gray-500 dark:text-gray-100" />
-                    </button>
-                  </LogoutLink>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SidebarNavItem(props: {
-  active?: boolean;
-  title: string;
-  icon: React.ReactNode;
-  href: string;
-}) {
-  return (
-    <Link href={props.href}>
-      <div
-        className={`px-3 flex space-x-3 py-2 items-center rounded-md ${
-          props.active ? "bg-gray-50" : ""
-        }`}
-      >
-        {props.icon}
-        <a href="#" className="text-gray-700 dark:text-gray-100 font-semibold">
-          {props.title}
-        </a>
-      </div>
-    </Link>
+              </LogoutLink>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </nav>
+    </header>
   );
 }

@@ -23,6 +23,8 @@ describe('DocumentsController', () => {
     conversationStarters: [],
     hostOrigins: [],
     createdAt: new Date(),
+    updatedAt: new Date(),
+    lastUsedAt: null,
     ownerId: 'ownerId',
   };
 
@@ -156,7 +158,7 @@ describe('DocumentsController', () => {
   });
 
   describe('deleteResourcesFromChat', () => {
-    it('deletes the resource and its embeddings', async () => {
+    it('deletes the resource and its embeddings after checking ownership', async () => {
       const resource = {
         id: 'resource-1',
         type: 'website',
@@ -167,22 +169,59 @@ describe('DocumentsController', () => {
         createdAt: new Date(),
         chatId: chat.id,
       };
+      documentsService.findById.mockResolvedValue(resource);
       documentsService.deleteWithEmbeddings.mockResolvedValue(resource);
 
       await expect(
-        documentsController.deleteResourcesFromChat('resource-1'),
+        documentsController.deleteResourcesFromChat(
+          authUser,
+          chat.id,
+          'resource-1',
+        ),
       ).resolves.toEqual(resource);
       expect(documentsService.deleteWithEmbeddings).toHaveBeenCalledWith(
         'resource-1',
       );
     });
 
-    it('throws when the resource is missing', async () => {
-      documentsService.deleteWithEmbeddings.mockResolvedValue(null);
+    it('rejects when the chat is owned by someone else', async () => {
+      chatsService.findFirstById.mockResolvedValueOnce({
+        ...chat,
+        ownerId: 'other',
+      });
 
       await expect(
-        documentsController.deleteResourcesFromChat('missing'),
+        documentsController.deleteResourcesFromChat(
+          authUser,
+          chat.id,
+          'resource-1',
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(documentsService.deleteWithEmbeddings).not.toHaveBeenCalled();
+    });
+
+    it('throws when the resource is missing or belongs to another chat', async () => {
+      documentsService.findById.mockResolvedValueOnce(null);
+      await expect(
+        documentsController.deleteResourcesFromChat(
+          authUser,
+          chat.id,
+          'missing',
+        ),
       ).rejects.toBeInstanceOf(NotFoundException);
+
+      documentsService.findById.mockResolvedValueOnce({
+        id: 'resource-1',
+        chatId: 'other-chat',
+      } as never);
+      await expect(
+        documentsController.deleteResourcesFromChat(
+          authUser,
+          chat.id,
+          'resource-1',
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(documentsService.deleteWithEmbeddings).not.toHaveBeenCalled();
     });
   });
 });

@@ -77,6 +77,10 @@ export class DocumentsService {
     return this.vectorStoreService.deleteDocuments(ids);
   }
 
+  async deleteChatNamespace(chatId: string) {
+    await this.vectorStoreService.deleteDocumentsByNamespace(chatId);
+  }
+
   async createTextResource(
     chatId: string,
     data: { text: string; source: string; title: string },

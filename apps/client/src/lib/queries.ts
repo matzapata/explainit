@@ -8,9 +8,13 @@ export const queries = {
     queryKey: ['user'] as const,
     queryFn: () => userService.get(getAccessToken()),
   }),
-  ownerChat: () => ({
-    queryKey: ['owner-chat'] as const,
-    queryFn: () => chatService.getOwnerChat(getAccessToken()),
+  chats: () => ({
+    queryKey: ['chats'] as const,
+    queryFn: () => chatService.listOwnerChats(getAccessToken()),
+  }),
+  ownerChat: (id: string) => ({
+    queryKey: ['owner-chat', id] as const,
+    queryFn: () => chatService.getOwnerChatById(getAccessToken(), id),
   }),
   chat: (id: string) => ({
     queryKey: ['chat', id] as const,
@@ -18,9 +22,9 @@ export const queries = {
   }),
 };
 
-export function ensureOwnerWorkspace(queryClient: QueryClient) {
+export function ensureOwnerWorkspace(queryClient: QueryClient, chatId: string) {
   return Promise.all([
     queryClient.ensureQueryData(queries.user()),
-    queryClient.ensureQueryData(queries.ownerChat()),
+    queryClient.ensureQueryData(queries.ownerChat(chatId)),
   ]).then(([user, chat]) => ({ user, chat }));
 }

@@ -76,15 +76,18 @@ export default function ResourcesTable(props: {
 
     const interval = setInterval(async () => {
       try {
-        const chat = await chatService.getOwnerChat(accessTokenRaw);
-        setResources(chat.resources);
+        const chat = await chatService.getOwnerChatById(
+          accessTokenRaw,
+          props.chatId,
+        );
+        setResources(chat.resources ?? []);
       } catch {
         // ignore transient poll errors
       }
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [inflight, accessTokenRaw]);
+  }, [inflight, accessTokenRaw, props.chatId]);
 
   const deleteResourceMutation = useMutation({
     mutationFn: (mutationProps: { id: string }) => {

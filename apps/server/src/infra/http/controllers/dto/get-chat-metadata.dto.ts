@@ -23,4 +23,8 @@ export class ChatMetadataDto {
   description: string;
   @Expose()
   points: number;
+  @Expose()
+  updatedAt: Date;
+  @Expose()
+  lastUsedAt: Date | null;
 }
