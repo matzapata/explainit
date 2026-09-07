@@ -1,4 +1,5 @@
 import {
+  normalizeHostOrigins,
   normalizePageUrl,
   originFromWebsiteUrl,
   parseDashboardOrigins,
@@ -36,6 +37,40 @@ describe('visitor-context', () => {
     });
   });
 
+  describe('normalizeHostOrigins', () => {
+    it('stores origins and dedupes', () => {
+      expect(
+        normalizeHostOrigins([
+          'https://www.demo.com/path',
+          'https://docs.demo.com/',
+          'https://demo.com/path',
+          'https://www.demo.com',
+        ]),
+      ).toEqual([
+        'https://www.demo.com',
+        'https://docs.demo.com',
+        'https://demo.com',
+      ]);
+    });
+
+    it('rejects invalid URLs in strict mode', () => {
+      expect(() =>
+        normalizeHostOrigins(['not-a-url'], { strict: true }),
+      ).toThrow(/Invalid host origin/);
+      expect(() => normalizeHostOrigins(['*'], { strict: true })).toThrow(
+        /valid http/,
+      );
+    });
+
+    it('rejects more than 20 origins', () => {
+      const many = Array.from(
+        { length: 21 },
+        (_, i) => `https://site-${i}.example.com`,
+      );
+      expect(() => normalizeHostOrigins(many)).toThrow(/At most 20/);
+    });
+  });
+
   describe('requestOrigin', () => {
     it('prefers Origin over Referer', () => {
       expect(
@@ -67,41 +102,54 @@ describe('visitor-context', () => {
   });
 
   describe('visitorOriginAllowed', () => {
-    it('allows the Website origin', () => {
+    it('allows a Host origin from a path URL', () => {
       expect(
-        visitorOriginAllowed(
-          'https://docs.example.com',
+        visitorOriginAllowed('https://docs.example.com', [
           'https://docs.example.com/guide',
-        ),
+        ]),
+      ).toBe(true);
+    });
+
+    it('allows any listed Host origin', () => {
+      expect(
+        visitorOriginAllowed('https://www.demo.com', [
+          'https://demo.com',
+          'https://www.demo.com/docs',
+        ]),
       ).toBe(true);
     });
 
     it('allows dashboard CORS origins', () => {
       expect(
-        visitorOriginAllowed('http://localhost:3000', 'https://docs.example.com', {
+        visitorOriginAllowed('http://localhost:3000', ['https://docs.example.com'], {
           dashboardOrigins: ['http://localhost:3000'],
         }),
       ).toBe(true);
     });
 
-    it('allows localhost Host pages in development', () => {
+    it('rejects unlisted localhost Host pages', () => {
       expect(
-        visitorOriginAllowed('http://localhost:8080', 'https://clerk.com/docs', {
-          development: true,
+        visitorOriginAllowed('http://localhost:8080', ['https://clerk.com'], {
+          dashboardOrigins: ['http://localhost:3000'],
         }),
-      ).toBe(true);
+      ).toBe(false);
       expect(
-        visitorOriginAllowed('http://127.0.0.1:8080', 'https://clerk.com/docs', {
-          development: true,
+        visitorOriginAllowed('http://127.0.0.1:8080', ['https://clerk.com'], {
+          dashboardOrigins: ['http://localhost:3000'],
         }),
-      ).toBe(true);
+      ).toBe(false);
     });
 
     it('rejects unknown origins', () => {
       expect(
-        visitorOriginAllowed('https://evil.example.com', 'https://docs.example.com'),
+        visitorOriginAllowed('https://evil.example.com', [
+          'https://docs.example.com',
+          'https://www.demo.com',
+        ]),
       ).toBe(false);
-      expect(visitorOriginAllowed(null, 'https://docs.example.com')).toBe(false);
+      expect(visitorOriginAllowed(null, ['https://docs.example.com'])).toBe(
+        false,
+      );
     });
   });
 

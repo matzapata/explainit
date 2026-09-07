@@ -12,7 +12,7 @@ Minimal fake docs page used to try the Launcher and Host widget locally. Keep th
    ```
 
 3. Open http://localhost:8080.
-4. In the dashboard, set Website to `http://localhost:8080` (or any URL on that origin) and publish the Chat. In development, Nest also allows any `localhost` / `127.0.0.1` Origin.
+4. In the dashboard, add Host origin `http://localhost:8080` (or any URL on that origin) and publish the Chat. Dashboard Preview uses `CORS_ORIGIN` (`http://localhost:3000`); the example Host site must be listed in `hostOrigins`.
 5. Put your Chat id into [`index.html`](index.html) (`explainit({ chatId, apiUrl, button })`), or replace the scripts with the Install snippet from General / onboarding.
 
 `apiUrl` must be the Nest API (`http://localhost:4000`), not the Vite dashboard.

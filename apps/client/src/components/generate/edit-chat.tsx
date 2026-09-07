@@ -1,12 +1,19 @@
+'use client';
+
+import { useState } from 'react';
 import GenerateLayout from '@/layouts/generate-layout';
 import NameForm from './name-form';
-import WebsiteForm from './website-form';
 import DescriptionForm from './description-form';
 import ConversationStartersTable from './conversation-starters-table';
+import HostOriginsTable from './host-origins-table';
 import VisibilityForm from './visibility-form';
 import CodeSnippet from './code-snippet';
 
 export function EditChat({ user, chat }: { user: any; chat: any }) {
+  const [hostOrigins, setHostOrigins] = useState<string[]>(
+    chat.hostOrigins ?? [],
+  );
+
   return (
     <GenerateLayout
       user={{ email: user.email }}
@@ -30,8 +37,9 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
               General info
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Name, description, and the Host website origin allowlisted for
-              the visitor API.
+              Name, description, and Host origins allowlisted for the visitor
+              API. Add every origin where this Chat is installed (www and apex
+              are different).
             </p>
           </div>
 
@@ -43,8 +51,11 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
             {/* Description */}
             <DescriptionForm chatId={chat.id} description={chat.description} />
 
-            {/* Website */}
-            <WebsiteForm chatId={chat.id} website={chat.url} />
+            <HostOriginsTable
+              chatId={chat.id}
+              hostOrigins={hostOrigins}
+              onHostOriginsChange={setHostOrigins}
+            />
           </div>
         </div>
 
@@ -71,16 +82,16 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
               Install on your website
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Publish your Chat, set your Website, then paste the Install snippet
-              on that origin so Visitors can Ask AI without leaving. Website is
-              the API Origin whitelist; the snippet does not declare it.
+              Publish your Chat, add Host origins, then paste the same Install
+              snippet on each allowlisted origin. Origins are the API whitelist;
+              the snippet does not declare them.
             </p>
           </div>
 
           <div className="divide-y divide-gray-200 dark:divide-gray-800">
             <VisibilityForm id={chat.id} published={chat.published} />
 
-            <CodeSnippet id={chat.id} website={chat.url} />
+            <CodeSnippet id={chat.id} hostOrigins={hostOrigins} />
           </div>
         </div>
       </div>

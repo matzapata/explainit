@@ -65,41 +65,76 @@ export function parseDashboardOrigins(corsOrigin: string): string[] {
     .filter(Boolean);
 }
 
+export const MAX_HOST_ORIGINS = 20;
+
 /**
- * Visitor routes allow the Chat Website origin, dashboard CORS origins,
- * and (in development) any localhost / 127.0.0.1 Host page.
+ * Canonicalize Host URLs to origins for storage.
+ * Drops duplicates. When `strict`, rejects `*`, empty, and invalid URLs.
+ */
+export function normalizeHostOrigins(
+  values: string[] | undefined | null,
+  opts: { strict?: boolean } = {},
+): string[] {
+  if (!values?.length) {
+    return [];
+  }
+
+  if (values.length > MAX_HOST_ORIGINS) {
+    throw new Error(`At most ${MAX_HOST_ORIGINS} host origins are allowed`);
+  }
+
+  const seen = new Set<string>();
+  const origins: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value?.trim() ?? '';
+    if (!trimmed || trimmed === '*') {
+      if (opts.strict) {
+        throw new Error('Host origins must be valid http(s) URLs');
+      }
+      continue;
+    }
+    const origin = originFromWebsiteUrl(trimmed);
+    if (!origin) {
+      if (opts.strict) {
+        throw new Error(`Invalid host origin: ${trimmed}`);
+      }
+      continue;
+    }
+    if (seen.has(origin)) {
+      continue;
+    }
+    seen.add(origin);
+    origins.push(origin);
+  }
+
+  return origins;
+}
+
+/**
+ * Visitor routes allow Chat.hostOrigins and dashboard CORS origins.
  */
 export function visitorOriginAllowed(
   origin: string | null,
-  websiteUrl: string | undefined | null,
+  hostOrigins: string[] | undefined | null,
   opts: {
     dashboardOrigins?: string[];
-    development?: boolean;
   } = {},
 ): boolean {
   if (!origin) {
     return false;
   }
 
-  const websiteOrigin = originFromWebsiteUrl(websiteUrl);
-  if (websiteOrigin && origin === websiteOrigin) {
-    return true;
+  for (const allowed of hostOrigins ?? []) {
+    const hostOrigin = originFromWebsiteUrl(allowed);
+    if (hostOrigin && origin === hostOrigin) {
+      return true;
+    }
   }
 
   for (const dashboard of opts.dashboardOrigins ?? []) {
     if (dashboard && origin === dashboard) {
       return true;
-    }
-  }
-
-  if (opts.development) {
-    try {
-      const host = new URL(origin).hostname;
-      if (host === 'localhost' || host === '127.0.0.1') {
-        return true;
-      }
-    } catch {
-      return false;
     }
   }
 

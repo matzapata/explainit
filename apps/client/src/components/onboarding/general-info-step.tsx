@@ -20,12 +20,20 @@ import {
 } from '../ui/form';
 import { useRouter } from '@/lib/router';
 
+function originFromUrl(value: string): string | null {
+  try {
+    return new URL(value.trim()).origin;
+  } catch {
+    return null;
+  }
+}
+
 const formSchema = z.object({
   name: z.string().min(2, {
     message: 'Name must be at least 2 characters.',
   }),
-  url: z.string().url({
-    message: 'Website must be a valid URL.',
+  hostOrigin: z.string().url({
+    message: 'Host origin must be a valid URL.',
   }),
   description: z
     .string()
@@ -42,23 +50,31 @@ export function GeneralInfoStep(props: {
 }) {
   const router = useRouter()
   const accessTokenRaw = useAccessToken();
+  const existingOrigin = props.chat.hostOrigins?.[0] ?? '';
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: props.chat.name ?? '',
       description: props.chat.description ?? '',
-      url: props.chat.url ?? '',
+      hostOrigin: existingOrigin,
     },
   });
 
   const generalInfoMutation = useMutation({
     mutationFn: (mutationProps: {
       name: string;
-      url: string;
+      hostOrigin: string;
       description: string;
     }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.updateOwnerChat(accessTokenRaw, props.chat.id, mutationProps);
+      const origin = originFromUrl(mutationProps.hostOrigin);
+      if (!origin) throw new Error('Invalid host origin');
+      const rest = (props.chat.hostOrigins ?? []).filter((o) => o !== origin);
+      return chatService.updateOwnerChat(accessTokenRaw, props.chat.id, {
+        name: mutationProps.name,
+        description: mutationProps.description,
+        hostOrigins: [origin, ...rest],
+      });
     },
     onSuccess: () => {
       router.push('/onboarding/resources')
@@ -69,7 +85,12 @@ export function GeneralInfoStep(props: {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.name !== props.chat.name || values.description !== props.chat.description || values.url !== props.chat.url) {
+    const nextOrigin = originFromUrl(values.hostOrigin);
+    const changed =
+      values.name !== props.chat.name ||
+      values.description !== props.chat.description ||
+      nextOrigin !== existingOrigin;
+    if (changed) {
       generalInfoMutation.mutate(values);
     } else {
       router.push('/onboarding/resources')
@@ -83,9 +104,8 @@ export function GeneralInfoStep(props: {
           Let's create your chat
         </h1>
         <p className="text-gray-300">
-          Add your chat's name, website and description. The website origin is
-          the Host site whitelist: only browsers on that origin may call the
-          visitor API.
+          Add your chat's name, description, and a Host origin. That origin is
+          allowlisted for the visitor API; you can add more later under General.
         </p>
       </div>
 
@@ -117,7 +137,6 @@ export function GeneralInfoStep(props: {
                     <FormControl>
                       <Textarea className='text-sm' {...field} />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
@@ -125,10 +144,10 @@ export function GeneralInfoStep(props: {
 
               <FormField
                 control={form.control}
-                name="url"
+                name="hostOrigin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Host website</FormLabel>
+                    <FormLabel>Host origin</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="https://docs.example.com"

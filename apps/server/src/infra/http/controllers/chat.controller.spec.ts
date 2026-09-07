@@ -54,11 +54,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -93,11 +93,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'Lorem Ipsum',
-        url: 'https://lorem.com',
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'id',
       };
@@ -131,15 +131,15 @@ describe('ChatController', () => {
 
     it('should update the chat', async () => {
       const authUser = { id: 'id', email: 'email', isAdmin: false };
-      const data = { name: 'name', url: 'url' };
+      const data = { name: 'name' };
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -155,17 +155,55 @@ describe('ChatController', () => {
       expect(result).toEqual(chat);
     });
 
+    it('normalizes hostOrigins to canonical origins', async () => {
+      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const data = {
+        hostOrigins: [
+          'https://www.demo.com/docs',
+          'https://docs.demo.com/',
+          'https://demo.com/path',
+        ],
+      };
+      const chat = {
+        id: 'id',
+        name: 'name',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        hostOrigins: [
+          'https://www.demo.com',
+          'https://docs.demo.com',
+          'https://demo.com',
+        ],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.update.mockResolvedValue(chat);
+
+      const result = await chatController.updateChat(authUser, data, chat.id);
+
+      expect(chatsService.update).toHaveBeenCalledWith(authUser.id, chat.id, {
+        hostOrigins: [
+          'https://www.demo.com',
+          'https://docs.demo.com',
+          'https://demo.com',
+        ],
+      });
+      expect(result).toEqual(chat);
+    });
+
     it('should allow any authenticated user to publish a chat', async () => {
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const data = { published: true };
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
         description: null,
         points: 0,
         published: true,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'id',
       };
@@ -190,15 +228,15 @@ describe('ChatController', () => {
         ...overrides,
       }) as never;
 
-    it('returns a public chat by id when Origin matches Website', async () => {
+    it('returns a public chat by id when Origin matches hostOrigins', async () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: true,
         conversationStarters: [],
+        hostOrigins: [HOST_ORIGIN],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -213,11 +251,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: true,
         conversationStarters: [],
+        hostOrigins: [HOST_ORIGIN],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -231,15 +269,60 @@ describe('ChatController', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('allows dashboard Origin', async () => {
+    it('allows a listed Host origin', async () => {
+      const extraOrigin = 'https://www.demo.com';
       const chat = {
         id: 'id',
         name: 'name',
-        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: true,
         conversationStarters: [],
+        hostOrigins: [HOST_ORIGIN, extraOrigin],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(
+        chatController.getChat(
+          chat.id,
+          visitorReq({ headers: { origin: extraOrigin } }),
+        ),
+      ).resolves.toEqual(chat);
+    });
+
+    it('rejects an Origin not in hostOrigins', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        hostOrigins: ['https://www.demo.com'],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(
+        chatController.getChat(
+          chat.id,
+          visitorReq({ headers: { origin: 'https://other.example.com' } }),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('allows dashboard Origin', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -265,11 +348,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -284,11 +367,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: 'ownerId',
       };
@@ -324,11 +407,11 @@ describe('ChatController', () => {
         {
           id: 'id',
           name: 'name',
-          url: 'url',
           description: null,
           points: 0,
           published: false,
           conversationStarters: [],
+          hostOrigins: [],
           createdAt: new Date(),
           ownerId: authUser.id,
         },
@@ -347,11 +430,11 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'Docs',
-        url: 'url',
         description: null,
         points: 0,
         published: false,
         conversationStarters: [],
+        hostOrigins: [],
         createdAt: new Date(),
         ownerId: authUser.id,
       };
@@ -387,11 +470,11 @@ describe('ChatController', () => {
     const publishedChat = {
       id: 'chat-1',
       name: 'name',
-      url: `${HOST_ORIGIN}/guide`,
       description: null,
       points: 0,
       published: true,
       conversationStarters: [],
+      hostOrigins: [HOST_ORIGIN],
       createdAt: new Date(),
       ownerId: 'ownerId',
     };
