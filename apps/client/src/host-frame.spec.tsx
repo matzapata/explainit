@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { ChatMetadataDto, MessageRole } from '@/lib/services/chat-service';
+import { ChatMetadataDto } from '@/lib/services/chat-service';
 
 const chat: ChatMetadataDto = {
   id: 'chat-1',
@@ -43,7 +43,8 @@ vi.mock('@/lib/router', () => ({
 }));
 
 vi.mock('@/lib/services/chat-service', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/services/chat-service')>();
+  const actual =
+    await importOriginal<typeof import('@/lib/services/chat-service')>();
   return {
     ...actual,
     chatService: {
@@ -52,48 +53,50 @@ vi.mock('@/lib/services/chat-service', async (importOriginal) => {
   };
 });
 
-import { HostFrameApp } from '@/host-frame';
+import { WidgetApp } from '@/host-frame';
 
-function renderHost() {
+function renderWidget() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
       <TooltipProvider>
-        <HostFrameApp />
+        <WidgetApp chatId="chat-1" />
       </TooltipProvider>
     </QueryClientProvider>,
   );
 }
 
-describe('HostFrameApp', () => {
+describe('WidgetApp', () => {
   beforeEach(() => {
-    window.__EXPLAINIT_CHAT_ID__ = 'chat-1';
-    vi.stubGlobal('parent', { postMessage: vi.fn() });
+    window.__EXPLAINIT_WIDGET__ = true;
+    window.__EXPLAINIT_API_BASE__ = 'https://api.example.com';
   });
 
-  it('opens Ask AI again when the Host page sends page context', async () => {
-    const user = userEvent.setup();
-    renderHost();
+  it('opens Ask AI overlay for the chat', async () => {
+    renderWidget();
 
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toBeVisible();
+  });
 
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-
-    window.dispatchEvent(
-      new MessageEvent('message', {
-        origin: 'https://docs.example.com',
-        data: {
-          type: 'explainit:page-context',
-          pageUrl: 'https://docs.example.com/guide',
-          selectedText: '',
-        },
-      }),
+  it('calls onClose when the dialog is closed', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <TooltipProvider>
+          <WidgetApp chatId="chat-1" onClose={onClose} />
+        </TooltipProvider>
+      </QueryClientProvider>,
     );
 
-    expect(await screen.findByRole('dialog')).toBeVisible();
+    await screen.findByRole('dialog');
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

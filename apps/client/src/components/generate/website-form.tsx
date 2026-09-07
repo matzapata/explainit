@@ -64,7 +64,9 @@ export default function WebsiteForm(props: { chatId: string, website?: string })
 
   return (
     <div className="space-y-2 md:space-y-0 md:flex items-center py-6">
-      <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">Website</p>
+      <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
+        Host website
+      </p>
       <div className="flex md:flex-1 items-center justify-between">
         <p className="text-sm text-gray-900 dark:text-gray-300">{website ?? "-"}</p>
 
@@ -76,10 +78,11 @@ export default function WebsiteForm(props: { chatId: string, website?: string })
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Website</DialogTitle>
+              <DialogTitle>Update Host website</DialogTitle>
               <DialogDescription>
-                This origin is the Host site whitelist: Host Chat only frames
-                there. Use the docs homepage, e.g. https://docs.example.com.
+                Set the docs site origin that may call the visitor API (e.g.
+                http://localhost:8080 or https://docs.example.com). Only that
+                origin is allowlisted.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -92,9 +95,12 @@ export default function WebsiteForm(props: { chatId: string, website?: string })
                   name="website"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Website</FormLabel>
+                      <FormLabel>Host website URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="http://docs.lorem.com/getting-started" {...field} />
+                        <Input
+                          placeholder="https://docs.example.com"
+                          {...field}
+                        />
                       </FormControl>
 
                       <FormMessage />

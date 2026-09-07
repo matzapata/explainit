@@ -17,7 +17,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         entryFileNames: 'launcher.js',
-        // Default export is the global: window.explainit({ chatId, appUrl, button })
+        // Default export is the global: window.explainit({ chatId, apiUrl, button })
         exports: 'default',
       },
     },

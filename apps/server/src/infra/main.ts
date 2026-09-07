@@ -6,37 +6,21 @@ import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { EnvService } from './env/env.service';
 
-function parseCorsOrigin(value: string): boolean | string | string[] {
-  const trimmed = value.trim();
-  if (trimmed === '*') {
-    return true;
-  }
-  const origins = trimmed
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  if (origins.length === 0) {
-    return 'http://localhost:3000';
-  }
-  return origins.length === 1 ? origins[0] : origins;
-}
-
 async function bootstrap() {
   tracingService.start();
 
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const env = app.get(EnvService);
+  // Reflect any browser Origin so Host sites and custom UIs can call visitor
+  // routes. Per-chat allowlisting happens in ChatController.
   app.enableCors({
-    origin: parseCorsOrigin(env.get('CORS_ORIGIN')),
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-  // Prevent framing the API/app except Host Chat, which sets its own frame-ancestors.
-  app.use((req, res, next) => {
-    if (!req.path.startsWith('/host')) {
-      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
-    }
+  app.use((_req, res, next) => {
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
     next();
   });
   app.useLogger(app.get(Logger));

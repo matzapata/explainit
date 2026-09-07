@@ -4,6 +4,7 @@ FROM --platform=linux/amd64 node:20-alpine
 # the Vite proxy and call localhost:4000 from the browser.
 ARG VITE_API_BASE_URL=http://localhost:4000
 ARG VITE_LAUNCHER_SRC=http://localhost:4566/explainit-cdn/launcher.js
+ARG VITE_PUBLIC_API_URL=http://localhost:4000
 
 WORKDIR /app
 
@@ -14,7 +15,10 @@ RUN npm install
 
 COPY . .
 
-RUN VITE_API_BASE_URL=$VITE_API_BASE_URL VITE_LAUNCHER_SRC=$VITE_LAUNCHER_SRC npm run build
+RUN VITE_API_BASE_URL=$VITE_API_BASE_URL \
+  VITE_LAUNCHER_SRC=$VITE_LAUNCHER_SRC \
+  VITE_PUBLIC_API_URL=$VITE_PUBLIC_API_URL \
+  npm run build
 
 EXPOSE 3000
 

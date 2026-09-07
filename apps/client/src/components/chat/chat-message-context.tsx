@@ -1,17 +1,17 @@
 import { BookOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
 } from '../ui/drawer';
 
 export function ResponseContextDrawer(props: {

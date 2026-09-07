@@ -9,6 +9,7 @@ import { toast } from '../ui/use-toast';
 import {
   generateInstallSnippet,
   launcherSrc,
+  publicApiUrl,
 } from '@/lib/install-snippet';
 
 function originFromWebsite(website?: string): string | null {
@@ -29,7 +30,7 @@ export default function CodeSnippet(props: {
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !hostOrigin) {
+    if (!hostOrigin) {
       setCodeSnippet('');
       return;
     }
@@ -37,7 +38,7 @@ export default function CodeSnippet(props: {
       generateInstallSnippet({
         scriptSrc: launcherSrc(),
         chatId: props.id,
-        appUrl: window.location.origin,
+        apiUrl: publicApiUrl(),
       }),
     );
   }, [props.id, hostOrigin]);
@@ -50,7 +51,7 @@ export default function CodeSnippet(props: {
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-400 md:flex-1">
           Set your Website above first. That origin is the Host site whitelist:
-          Host Chat only frames there.
+          only browsers on that origin may call the visitor API.
         </p>
       </div>
     );
@@ -85,8 +86,8 @@ export default function CodeSnippet(props: {
           {codeSnippet}
         </SyntaxHighlighter>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Host origin (from Website): <code>{hostOrigin}</code>. Nest blocks
-          framing anywhere else. Style or replace the Ask AI control — the
+          Host origin (from Website): <code>{hostOrigin}</code>. The API rejects
+          requests from other origins. Style or replace the Ask AI control — the
           Launcher does not create it.
         </p>
         <div>

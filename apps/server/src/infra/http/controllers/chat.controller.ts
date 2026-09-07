@@ -14,9 +14,9 @@ import { Request, Response } from 'express';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ConversationService } from '@src/modules/chat/conversation.service';
 import {
-  CONVERSATION_COOKIE,
-  conversationCookieHeader,
-  parseCookieHeader,
+  parseDashboardOrigins,
+  requestOrigin,
+  visitorOriginAllowed,
 } from '@src/modules/chat/visitor-context';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
@@ -29,6 +29,7 @@ import { PostMessageDto } from './dto/post-message.dto';
 import { RateLimit } from '@src/infra/http/decorators/rate-limit.decorator';
 import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { DocumentsService } from '@src/modules/documents/documents.service';
+import { EnvService } from '@src/infra/env/env.service';
 
 @Controller('api/chats')
 export class ChatController {
@@ -36,6 +37,7 @@ export class ChatController {
     private readonly chatsService: ChatsService,
     private readonly documentsService: DocumentsService,
     private readonly conversationService: ConversationService,
+    private readonly env: EnvService,
   ) {}
 
   @Get('/admin')
@@ -92,6 +94,7 @@ export class ChatController {
     if (!chat.published && !req.currentUser) {
       throw new NotFoundException('Chat not found');
     }
+    this.assertVisitorOrigin(req, chat.url);
 
     return chat;
   }
@@ -116,22 +119,13 @@ export class ChatController {
     if (!chat.published && !req.currentUser) {
       throw new NotFoundException('Chat not found');
     }
+    this.assertVisitorOrigin(req, chat.url);
 
     await this.chatsService.incrementPoints(chat.id);
 
-    const cookieConversationId = parseCookieHeader(
-      req.headers.cookie,
-      CONVERSATION_COOKIE,
-    );
     const conversationId = await this.conversationService.resolveConversationId(
       chat.id,
-      cookieConversationId,
-    );
-    res.setHeader(
-      'Set-Cookie',
-      conversationCookieHeader(conversationId, {
-        secure: req.secure || req.headers['x-forwarded-proto'] === 'https',
-      }),
+      body.conversationId,
     );
 
     // Server-Sent Events: stream tokens as they're generated instead of
@@ -170,7 +164,7 @@ export class ChatController {
       );
 
       if (!abort.signal.aborted) {
-        send('done', result);
+        send('done', { ...result, conversationId });
         void this.conversationService.persistTurn({
           conversationId,
           chatId: chat.id,
@@ -194,4 +188,25 @@ export class ChatController {
       }
     }
   }
+
+  private assertVisitorOrigin(req: Request, websiteUrl: string | null) {
+    const origin = requestOrigin(
+      headerString(req.headers.origin),
+      headerString(req.headers.referer),
+    );
+    const allowed = visitorOriginAllowed(origin, websiteUrl, {
+      dashboardOrigins: parseDashboardOrigins(this.env.get('CORS_ORIGIN')),
+      development: this.env.get('NODE_ENV') === 'development',
+    });
+    if (!allowed) {
+      throw new NotFoundException('Chat not found');
+    }
+  }
+}
+
+function headerString(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
 }

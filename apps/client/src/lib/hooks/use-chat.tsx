@@ -1,39 +1,49 @@
-import { useRef, useState } from "react";
+import { useRef, useState } from 'react';
 import {
   ChatMessage,
   MessageRole,
   chatService,
-} from "@/lib/services/chat-service";
-import { getAccessToken } from "@/lib/auth/config";
-import type { PageContext } from "@/components/chat/ask-ai-overlay";
+} from '@/lib/services/chat-service';
+import { getAccessToken } from '@/lib/auth/config';
+import type { PageContext } from '@/components/chat/ask-ai-overlay';
 
-async function refreshHostPageContext(
+function conversationStorageKey(chatId: string): string {
+  return `explainit_conversation:${chatId}`;
+}
+
+function readStoredConversationId(chatId: string): string | undefined {
+  if (typeof window === 'undefined' || !window.__EXPLAINIT_WIDGET__) {
+    return undefined;
+  }
+  try {
+    return localStorage.getItem(conversationStorageKey(chatId)) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeStoredConversationId(chatId: string, id: string) {
+  if (typeof window === 'undefined' || !window.__EXPLAINIT_WIDGET__) {
+    return;
+  }
+  try {
+    localStorage.setItem(conversationStorageKey(chatId), id);
+  } catch {
+    // private mode / quota
+  }
+}
+
+function livePageContext(
   current: PageContext | undefined,
-): Promise<PageContext | undefined> {
-  if (typeof window === "undefined" || !window.__EXPLAINIT_HOST_FRAME__) {
+): PageContext | undefined {
+  if (typeof window === 'undefined' || !window.__EXPLAINIT_WIDGET__) {
     return current;
   }
-
-  return new Promise((resolve) => {
-    const timeout = window.setTimeout(() => resolve(current), 150);
-    const onMessage = (event: MessageEvent) => {
-      if (!event.data || event.data.type !== "explainit:page-context") return;
-      window.clearTimeout(timeout);
-      window.removeEventListener("message", onMessage);
-      resolve({
-        pageUrl:
-          typeof event.data.pageUrl === "string"
-            ? event.data.pageUrl
-            : current?.pageUrl,
-        selectedText:
-          typeof event.data.selectedText === "string"
-            ? event.data.selectedText
-            : current?.selectedText,
-      });
-    };
-    window.addEventListener("message", onMessage);
-    window.parent.postMessage({ type: "explainit:request-context" }, "*");
-  });
+  const selectedText = window.getSelection()?.toString()?.trim() || undefined;
+  return {
+    pageUrl: window.location.href,
+    selectedText: selectedText || current?.selectedText,
+  };
 }
 
 export default function useChat(
@@ -43,11 +53,14 @@ export default function useChat(
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const abortRef = useRef<AbortController | null>(null);
-  const streamedRef = useRef("");
+  const streamedRef = useRef('');
   const pageContextRef = useRef(pageContext);
   pageContextRef.current = pageContext;
+  const conversationIdRef = useRef<string | undefined>(
+    readStoredConversationId(chatId),
+  );
 
   const stop = () => {
     abortRef.current?.abort();
@@ -57,17 +70,17 @@ export default function useChat(
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    streamedRef.current = "";
+    streamedRef.current = '';
 
     setMessages((prev) => [
       ...prev,
       { content: message, role: MessageRole.user, context: [] },
     ]);
-    setInput("");
+    setInput('');
     setIsLoading(true);
 
     try {
-      const ctx = await refreshHostPageContext(pageContextRef.current);
+      const ctx = livePageContext(pageContextRef.current);
       pageContextRef.current = ctx;
       const token = getAccessToken();
       const response = await chatService.streamMessage(
@@ -89,15 +102,17 @@ export default function useChat(
                 next[next.length - 1] = { ...last, content };
                 return next;
               }
-              return [
-                ...next,
-                { content, role: MessageRole.ai, context: [] },
-              ];
+              return [...next, { content, role: MessageRole.ai, context: [] }];
             });
           },
           pageUrl: ctx?.pageUrl,
           selectedText: ctx?.selectedText,
           accessToken: token || undefined,
+          conversationId: conversationIdRef.current,
+          onConversationId: (id) => {
+            conversationIdRef.current = id;
+            writeStoredConversationId(chatId, id);
+          },
         },
       );
       setMessages((prev) => {
@@ -114,11 +129,11 @@ export default function useChat(
         return [...next, response];
       });
     } catch (error) {
-      if ((error as Error).name === "AbortError") {
+      if ((error as Error).name === 'AbortError') {
         return;
       }
       console.error(error);
-      alert("Failed to send message");
+      alert('Failed to send message');
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;

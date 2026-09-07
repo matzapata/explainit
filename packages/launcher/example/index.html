@@ -55,8 +55,8 @@
     <p class="meta">
       Local Host site demo for Explainit. Replace
       <code>YOUR_CHAT_ID</code> below, or paste the Install snippet from the
-      dashboard. Website in the dashboard is the whitelist — this page does not
-      declare an allowed origin.
+      dashboard. Website in the dashboard is the API Origin whitelist — this page
+      does not declare an allowed origin.
     </p>
     <p>Select this paragraph, then open Ask AI from the Host control.</p>
     <p>Pricing is $10/month. Billing is monthly.</p>
@@ -70,7 +70,7 @@
     <script>
       explainit({
         chatId: "fc7e495b-4392-46dd-93c7-938c1cf459e3",
-        appUrl: "http://localhost:3000",
+        apiUrl: "http://localhost:4000",
         button: "#ask-ai",
       });
     </script>

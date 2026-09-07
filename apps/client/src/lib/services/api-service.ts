@@ -5,8 +5,10 @@ export class ApiService {
   private readonly _client: AxiosInstance;
 
   constructor() {
-    this._client = axios.create({
-      baseURL: apiBaseUrl(),
+    this._client = axios.create();
+    this._client.interceptors.request.use((config) => {
+      config.baseURL = apiBaseUrl();
+      return config;
     });
   }
 

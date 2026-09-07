@@ -6,17 +6,26 @@ export function launcherSrc(): string {
   return 'http://localhost:4566/explainit-cdn/launcher.js';
 }
 
+/** Public API origin embedded in the Host Install snippet. */
+export function publicApiUrl(): string {
+  const raw = import.meta.env.VITE_PUBLIC_API_URL;
+  if (raw?.trim()) {
+    return raw.replace(/\/$/, '');
+  }
+  return 'http://localhost:4000';
+}
+
 export function generateInstallSnippet(opts: {
   scriptSrc: string;
   chatId: string;
-  appUrl: string;
+  apiUrl: string;
 }): string {
   return `<button type="button" id="explainit-ask-ai">Ask AI</button>
 <script src="${opts.scriptSrc}"></script>
 <script>
   explainit({
     chatId: ${JSON.stringify(opts.chatId)},
-    appUrl: ${JSON.stringify(opts.appUrl)},
+    apiUrl: ${JSON.stringify(opts.apiUrl)},
     button: "#explainit-ask-ai",
   });
 </script>`;

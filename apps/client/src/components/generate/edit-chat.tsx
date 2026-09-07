@@ -30,7 +30,8 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
               General info
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              This is how others will see you on the site.
+              Name, description, and the Host website origin allowlisted for
+              the visitor API.
             </p>
           </div>
 
@@ -72,7 +73,7 @@ export function EditChat({ user, chat }: { user: any; chat: any }) {
             <p className="text-gray-600 dark:text-gray-300 text-sm">
               Publish your Chat, set your Website, then paste the Install snippet
               on that origin so Visitors can Ask AI without leaving. Website is
-              the whitelist; the snippet does not declare it.
+              the API Origin whitelist; the snippet does not declare it.
             </p>
           </div>
 
