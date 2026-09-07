@@ -33,14 +33,16 @@ export function AskAiOverlay(props: {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
         hideClose
-        className="flex h-[min(85dvh,40rem)] w-[calc(100%-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:rounded-xl"
+        className="flex h-[min(85dvh,40rem)] w-[calc(100%-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:rounded-lg"
       >
-        <DialogHeader className="relative flex h-11 flex-row items-center space-y-0 border-b border-gray-200 px-4 pr-16 text-left sm:text-left dark:border-gray-800">
-          <DialogTitle className="text-sm font-medium">Ask AI</DialogTitle>
+        <DialogHeader className="relative flex h-11 flex-row items-center space-y-0 border-b border-gray-200 px-4 pr-16 text-left sm:text-left dark:border-white/10">
+          <DialogTitle className="text-sm font-medium text-gray-900 dark:text-white">
+            Ask AI
+          </DialogTitle>
           <DialogDescription className="sr-only">
             Ask questions grounded in this Chat&apos;s resources.
           </DialogDescription>
-          <div className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-3">
+          <div className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1">
             <button
               type="button"
               onClick={() => {
@@ -48,12 +50,12 @@ export function AskAiOverlay(props: {
                 setMessages([]);
                 setInput('');
               }}
-              className="rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:text-white dark:ring-offset-gray-950 dark:focus:ring-gray-300"
+              className="p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
             >
               <Plus className="h-4 w-4" />
               <span className="sr-only">New chat</span>
             </button>
-            <DialogClose className="rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 dark:text-white dark:ring-offset-gray-950 dark:focus:ring-gray-300">
+            <DialogClose className="p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogClose>

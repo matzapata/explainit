@@ -36,7 +36,7 @@ export function MessageSources(props: { context: SourceHit[] }) {
 
   return (
     <details className="group mt-2">
-      <summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-brand-600 marker:content-none [&::-webkit-details-marker]:hidden dark:text-brand-400">
+      <summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-gray-500 marker:content-none [&::-webkit-details-marker]:hidden dark:text-gray-400">
         <ChevronDown className="-rotate-90 h-3 w-3 shrink-0 transition-transform group-open:rotate-0" />
         {label}
       </summary>
@@ -47,7 +47,7 @@ export function MessageSources(props: { context: SourceHit[] }) {
               href={item.source}
               target="_blank"
               rel="noreferrer"
-              className="flex items-start gap-1.5 text-xs text-brand-600 hover:underline dark:text-brand-400"
+              className="flex items-start gap-1.5 text-xs text-gray-500 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-gray-100"
             >
               <File className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{item.title}</span>

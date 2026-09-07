@@ -75,6 +75,14 @@ describe('AskAiOverlay', () => {
     ).toBeInTheDocument();
   });
 
+  it('uses outlined send chrome instead of a filled primary button', async () => {
+    render(<OverlayHarness />);
+
+    const send = await screen.findByRole('button', { name: 'Send message' });
+    expect(send).toHaveClass('bg-transparent');
+    expect(send).not.toHaveClass('bg-primary');
+  });
+
   it('does not show Stop generating while a reply is in progress', async () => {
     session.isLoading = true;
     render(<OverlayHarness />);

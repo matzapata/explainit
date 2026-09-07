@@ -1,6 +1,6 @@
 'use client';
 
-import { AskAiOverlay } from '@explainit/host-chat';
+import { AskAiOverlay, HostThemeRoot } from '@explainit/host-chat';
 import { getAccessToken } from '@/lib/auth/config';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
@@ -26,12 +26,14 @@ export function PreviewChat(props: {
         Preview
       </Button>
       {/* Always mounted so the transcript survives close/reopen in this tab. */}
-      <AskAiOverlay
-        chat={props.chat}
-        open={open}
-        onOpenChange={setOpen}
-        accessToken={getAccessToken() || undefined}
-      />
+      <HostThemeRoot theme="dark">
+        <AskAiOverlay
+          chat={props.chat}
+          open={open}
+          onOpenChange={setOpen}
+          accessToken={getAccessToken() || undefined}
+        />
+      </HostThemeRoot>
     </>
   );
 }
