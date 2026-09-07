@@ -101,14 +101,30 @@ export class DocumentsController {
   @Delete('/:id/resources/:resource_id')
   @UseGuards(AuthGuard)
   @Serialize(GetResourceDto)
-  async deleteResourcesFromChat(@Param('resource_id') resource_id: string) {
-    const resource = await this.documentsService.deleteWithEmbeddings(
-      resource_id,
-    );
-    if (!resource) {
+  async deleteResourcesFromChat(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('resource_id') resource_id: string,
+  ) {
+    const chat = await this.chatsService.findFirstById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    } else if (chat.ownerId !== user.id) {
+      throw new BadRequestException('Chat not owned by user');
+    }
+
+    const resource = await this.documentsService.findById(resource_id);
+    if (!resource || resource.chatId !== chat.id) {
       throw new NotFoundException('Resource not found');
     }
 
-    return resource;
+    const deleted = await this.documentsService.deleteWithEmbeddings(
+      resource_id,
+    );
+    if (!deleted) {
+      throw new NotFoundException('Resource not found');
+    }
+
+    return deleted;
   }
 }

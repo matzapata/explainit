@@ -8,6 +8,7 @@ describe('ChatRepository', () => {
       update: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -24,7 +25,7 @@ describe('ChatRepository', () => {
 
     expect(prisma.chat.update).toHaveBeenCalledWith({
       where: { id: 'chat-1', ownerId: 'owner-1' },
-      data: { name: 'Docs' },
+      data: { name: 'Docs', updatedAt: expect.any(Date) },
     });
   });
 
@@ -33,7 +34,16 @@ describe('ChatRepository', () => {
 
     expect(prisma.chat.update).toHaveBeenCalledWith({
       where: { id: 'chat-1' },
-      data: { points: { increment: 1 } },
+      data: { points: { increment: 1 }, lastUsedAt: expect.any(Date) },
+    });
+  });
+
+  it('lists owner chats with the most recently updated first', async () => {
+    await repo.findManyByOwner('owner-1');
+
+    expect(prisma.chat.findMany).toHaveBeenCalledWith({
+      where: { ownerId: 'owner-1' },
+      orderBy: { updatedAt: 'desc' },
     });
   });
 });

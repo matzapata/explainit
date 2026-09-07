@@ -18,7 +18,10 @@ export class ChatRepository {
         id,
         ownerId: owner,
       },
-      data,
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
     });
   }
 
@@ -31,6 +34,7 @@ export class ChatRepository {
   findManyByOwner(ownerId: string) {
     return this.prisma.chat.findMany({
       where: { ownerId },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
@@ -40,10 +44,19 @@ export class ChatRepository {
     });
   }
 
+  delete(id: string) {
+    return this.prisma.chat.delete({
+      where: { id },
+    });
+  }
+
   incrementPoints(id: string) {
     return this.prisma.chat.update({
       where: { id },
-      data: { points: { increment: 1 } },
+      data: {
+        points: { increment: 1 },
+        lastUsedAt: new Date(),
+      },
     });
   }
 }

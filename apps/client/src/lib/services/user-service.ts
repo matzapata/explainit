@@ -5,6 +5,7 @@ export interface UserDto {
     id: string;
     email: string;
     name?: string;
+    isAdmin?: boolean;
 }
 
 export class UserService {
@@ -13,11 +14,6 @@ export class UserService {
 
     async get(accessToken: string): Promise<UserDto> {
         const res = await this.client.get('/api/users', { headers: { Authorization: `Bearer ${accessToken}` } })
-        return res.data
-    }
-
-    async updateName(accessToken: string, name: string, surname: string): Promise<UserDto> {
-        const res = await this.client.put('/api/users', { name: name + ' ' + surname }, { headers: { Authorization: `Bearer ${accessToken}` } })
         return res.data
     }
 }

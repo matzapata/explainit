@@ -27,6 +27,7 @@ export class UsersController {
       id: userData.id,
       email: userData.email,
       name: userData.name,
+      isAdmin: user.isAdmin,
     };
   }
 }

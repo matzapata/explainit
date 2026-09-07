@@ -50,6 +50,12 @@ export class PgVectorProvider implements VectorStoreProvider {
     });
   }
 
+  async deleteDocumentsByNamespace(namespace: string) {
+    await this.prisma.embedding.deleteMany({
+      where: { namespace },
+    });
+  }
+
   async similaritySearch(
     query: string,
     k: number,

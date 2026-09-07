@@ -12,14 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
-import { Route as AuthedResourcesRouteImport } from './routes/_authed/resources'
-import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
-import { Route as AuthedOnboardingIndexRouteImport } from './routes/_authed/onboarding/index'
-import { Route as AuthedOnboardingResourcesRouteImport } from './routes/_authed/onboarding/resources'
-import { Route as AuthedOnboardingShareRouteImport } from './routes/_authed/onboarding/share'
-import { Route as AuthedOnboardingStartersRouteImport } from './routes/_authed/onboarding/starters'
+import { Route as AuthedChatsChatIdIndexRouteImport } from './routes/_authed/chats.$chatId/index'
+import { Route as AuthedChatsChatIdResourcesRouteImport } from './routes/_authed/chats.$chatId/resources'
 
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
@@ -35,16 +31,6 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedResourcesRoute = AuthedResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -55,105 +41,70 @@ const ChatIdRoute = ChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedOnboardingIndexRoute = AuthedOnboardingIndexRouteImport.update({
-  id: '/onboarding/',
-  path: '/onboarding/',
+const AuthedChatsChatIdIndexRoute = AuthedChatsChatIdIndexRouteImport.update({
+  id: '/chats/$chatId/',
+  path: '/chats/$chatId/',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedOnboardingResourcesRoute =
-  AuthedOnboardingResourcesRouteImport.update({
-    id: '/onboarding/resources',
-    path: '/onboarding/resources',
-    getParentRoute: () => AuthedRoute,
-  } as any)
-const AuthedOnboardingShareRoute = AuthedOnboardingShareRouteImport.update({
-  id: '/onboarding/share',
-  path: '/onboarding/share',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedOnboardingStartersRoute =
-  AuthedOnboardingStartersRouteImport.update({
-    id: '/onboarding/starters',
-    path: '/onboarding/starters',
+const AuthedChatsChatIdResourcesRoute =
+  AuthedChatsChatIdResourcesRouteImport.update({
+    id: '/chats/$chatId/resources',
+    path: '/chats/$chatId/resources',
     getParentRoute: () => AuthedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
-  '/resources': typeof AuthedResourcesRoute
-  '/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
-  '/onboarding/resources': typeof AuthedOnboardingResourcesRoute
-  '/onboarding/share': typeof AuthedOnboardingShareRoute
-  '/onboarding/starters': typeof AuthedOnboardingStartersRoute
-  '/onboarding/': typeof AuthedOnboardingIndexRoute
+  '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/chats/$chatId/': typeof AuthedChatsChatIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/resources': typeof AuthedResourcesRoute
-  '/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/': typeof AuthedIndexRoute
-  '/onboarding/resources': typeof AuthedOnboardingResourcesRoute
-  '/onboarding/share': typeof AuthedOnboardingShareRoute
-  '/onboarding/starters': typeof AuthedOnboardingStartersRoute
-  '/onboarding': typeof AuthedOnboardingIndexRoute
+  '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/chats/$chatId': typeof AuthedChatsChatIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
-  '/_authed/resources': typeof AuthedResourcesRoute
-  '/_authed/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/_authed/': typeof AuthedIndexRoute
-  '/_authed/onboarding/resources': typeof AuthedOnboardingResourcesRoute
-  '/_authed/onboarding/share': typeof AuthedOnboardingShareRoute
-  '/_authed/onboarding/starters': typeof AuthedOnboardingStartersRoute
-  '/_authed/onboarding/': typeof AuthedOnboardingIndexRoute
+  '/_authed/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/_authed/chats/$chatId/': typeof AuthedChatsChatIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/resources'
-    | '/settings'
     | '/auth/callback'
     | '/chat/$id'
-    | '/onboarding/resources'
-    | '/onboarding/share'
-    | '/onboarding/starters'
-    | '/onboarding/'
+    | '/chats/$chatId/resources'
+    | '/chats/$chatId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/resources'
-    | '/settings'
     | '/auth/callback'
     | '/chat/$id'
     | '/'
-    | '/onboarding/resources'
-    | '/onboarding/share'
-    | '/onboarding/starters'
-    | '/onboarding'
+    | '/chats/$chatId/resources'
+    | '/chats/$chatId'
   id:
     | '__root__'
     | '/_authed'
     | '/login'
-    | '/_authed/resources'
-    | '/_authed/settings'
     | '/auth/callback'
     | '/chat/$id'
     | '/_authed/'
-    | '/_authed/onboarding/resources'
-    | '/_authed/onboarding/share'
-    | '/_authed/onboarding/starters'
-    | '/_authed/onboarding/'
+    | '/_authed/chats/$chatId/resources'
+    | '/_authed/chats/$chatId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,20 +137,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/resources': {
-      id: '/_authed/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof AuthedResourcesRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/settings': {
-      id: '/_authed/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthedSettingsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -214,55 +151,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/onboarding/': {
-      id: '/_authed/onboarding/'
-      path: '/onboarding'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof AuthedOnboardingIndexRouteImport
+    '/_authed/chats/$chatId/': {
+      id: '/_authed/chats/$chatId/'
+      path: '/chats/$chatId'
+      fullPath: '/chats/$chatId/'
+      preLoaderRoute: typeof AuthedChatsChatIdIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/onboarding/resources': {
-      id: '/_authed/onboarding/resources'
-      path: '/onboarding/resources'
-      fullPath: '/onboarding/resources'
-      preLoaderRoute: typeof AuthedOnboardingResourcesRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/onboarding/share': {
-      id: '/_authed/onboarding/share'
-      path: '/onboarding/share'
-      fullPath: '/onboarding/share'
-      preLoaderRoute: typeof AuthedOnboardingShareRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/onboarding/starters': {
-      id: '/_authed/onboarding/starters'
-      path: '/onboarding/starters'
-      fullPath: '/onboarding/starters'
-      preLoaderRoute: typeof AuthedOnboardingStartersRouteImport
+    '/_authed/chats/$chatId/resources': {
+      id: '/_authed/chats/$chatId/resources'
+      path: '/chats/$chatId/resources'
+      fullPath: '/chats/$chatId/resources'
+      preLoaderRoute: typeof AuthedChatsChatIdResourcesRouteImport
       parentRoute: typeof AuthedRoute
     }
   }
 }
 
 interface AuthedRouteChildren {
-  AuthedResourcesRoute: typeof AuthedResourcesRoute
-  AuthedSettingsRoute: typeof AuthedSettingsRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
-  AuthedOnboardingResourcesRoute: typeof AuthedOnboardingResourcesRoute
-  AuthedOnboardingShareRoute: typeof AuthedOnboardingShareRoute
-  AuthedOnboardingStartersRoute: typeof AuthedOnboardingStartersRoute
-  AuthedOnboardingIndexRoute: typeof AuthedOnboardingIndexRoute
+  AuthedChatsChatIdResourcesRoute: typeof AuthedChatsChatIdResourcesRoute
+  AuthedChatsChatIdIndexRoute: typeof AuthedChatsChatIdIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
-  AuthedResourcesRoute: AuthedResourcesRoute,
-  AuthedSettingsRoute: AuthedSettingsRoute,
   AuthedIndexRoute: AuthedIndexRoute,
-  AuthedOnboardingResourcesRoute: AuthedOnboardingResourcesRoute,
-  AuthedOnboardingShareRoute: AuthedOnboardingShareRoute,
-  AuthedOnboardingStartersRoute: AuthedOnboardingStartersRoute,
-  AuthedOnboardingIndexRoute: AuthedOnboardingIndexRoute,
+  AuthedChatsChatIdResourcesRoute: AuthedChatsChatIdResourcesRoute,
+  AuthedChatsChatIdIndexRoute: AuthedChatsChatIdIndexRoute,
 }
 
 const AuthedRouteWithChildren =

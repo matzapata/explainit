@@ -34,4 +34,6 @@ export abstract class VectorStoreProvider {
   ): Promise<string[]>;
 
   abstract deleteDocuments(ids: string[]): Promise<void>;
+
+  abstract deleteDocumentsByNamespace(namespace: string): Promise<void>;
 }

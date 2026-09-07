@@ -31,6 +31,7 @@ describe('ChatController', () => {
   });
 
   beforeEach(() => {
+    jest.clearAllMocks();
     env.get.mockImplementation((key: string) => {
       if (key === 'CORS_ORIGIN') return DASHBOARD_ORIGIN;
       if (key === 'NODE_ENV') return 'test';
@@ -38,18 +39,18 @@ describe('ChatController', () => {
     });
   });
 
-  describe('getChatByOwner', () => {
-    it('should require authentication to get a chat', () => {
+  describe('getChatsByOwner', () => {
+    it('should require authentication to list chats', () => {
       const guards = Reflect.getMetadata(
         '__guards__',
-        ChatController.prototype.getChatByOwner,
+        ChatController.prototype.getChatsByOwner,
       );
       const guard = new guards[0]();
 
       expect(guard).toBeInstanceOf(AuthGuard);
     });
 
-    it('should return the chat and its resources', async () => {
+    it('should return the owner chats without resources', async () => {
       const authUser = { id: 'id', email: 'email', isAdmin: false };
       const chat = {
         id: 'id',
@@ -60,32 +61,18 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
-      const resources = [
-        {
-          id: 'id',
-          type: 'type',
-          data: 'data',
-          status: ResourceStatus.ready,
-          error: null,
-          embeddingIds: ['embedding-id'],
-          createdAt: new Date(),
-          chatId: 'chatId',
-        },
-      ];
-      chatsService.findFirstByOwner.mockResolvedValue(chat);
-      documentsService.findByChatId.mockResolvedValue(resources);
+      chatsService.findManyByOwner.mockResolvedValue([chat]);
 
-      const result = await chatController.getChatByOwner(authUser);
+      const result = await chatController.getChatsByOwner(authUser);
 
-      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
+      expect(chatsService.findManyByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).not.toHaveBeenCalled();
-      expect(documentsService.findByChatId).toHaveBeenCalledWith(chat.id);
-      expect(result).toEqual({
-        ...chat,
-        resources,
-      });
+      expect(documentsService.findByChatId).not.toHaveBeenCalled();
+      expect(result).toEqual([chat]);
     });
 
     it('should create an example chat for the user if none exists', async () => {
@@ -99,22 +86,18 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'id',
       };
-      const resources = [];
-      chatsService.findFirstByOwner.mockResolvedValue(null);
+      chatsService.findManyByOwner.mockResolvedValue([]);
       chatsService.create.mockResolvedValue(chat);
-      documentsService.findByChatId.mockResolvedValue(resources);
 
-      const result = await chatController.getChatByOwner(authUser);
+      const result = await chatController.getChatsByOwner(authUser);
 
-      expect(chatsService.findFirstByOwner).toHaveBeenCalledWith(authUser.id);
+      expect(chatsService.findManyByOwner).toHaveBeenCalledWith(authUser.id);
       expect(chatsService.create).toHaveBeenCalledWith(authUser.id, {});
-      expect(documentsService.findByChatId).toHaveBeenCalledWith(chat.id);
-      expect(result).toEqual({
-        ...chat,
-        resources,
-      });
+      expect(result).toEqual([chat]);
     });
   });
 
@@ -141,6 +124,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.update.mockResolvedValue(chat);
@@ -177,6 +162,8 @@ describe('ChatController', () => {
           'https://demo.com',
         ],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.update.mockResolvedValue(chat);
@@ -205,6 +192,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'id',
       };
       chatsService.update.mockResolvedValue(chat);
@@ -238,6 +227,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [HOST_ORIGIN],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -257,6 +248,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [HOST_ORIGIN],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -280,6 +273,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [HOST_ORIGIN, extraOrigin],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -302,6 +297,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: ['https://www.demo.com'],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -324,6 +321,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -354,6 +353,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       chatsService.findFirstById.mockResolvedValue(chat);
@@ -373,6 +374,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: 'ownerId',
       };
       const currentUser = { id: 'id', email: 'email', isAdmin: false };
@@ -388,6 +391,48 @@ describe('ChatController', () => {
         ),
       ).resolves.toEqual(chat);
     });
+
+    it('includes resources when the current user owns the chat', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      };
+      const resources = [
+        {
+          id: 'resource-1',
+          type: 'website',
+          data: 'https://docs.example.com',
+          status: ResourceStatus.ready,
+          error: null,
+          embeddingIds: ['emb-1'],
+          createdAt: new Date(),
+          chatId: chat.id,
+        },
+      ];
+      const currentUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      documentsService.findByChatId.mockResolvedValue(resources);
+
+      await expect(
+        chatController.getChat(
+          chat.id,
+          visitorReq({
+            currentUser,
+            headers: { origin: DASHBOARD_ORIGIN },
+          }),
+        ),
+      ).resolves.toEqual({ ...chat, resources });
+      expect(documentsService.findByChatId).toHaveBeenCalledWith(chat.id);
+    });
   });
 
   describe('admin', () => {
@@ -399,6 +444,14 @@ describe('ChatController', () => {
         const guards = Reflect.getMetadata('__guards__', handler);
         expect(new guards[0]()).toBeInstanceOf(AdminGuard);
       }
+    });
+
+    it('requires authentication to delete a chat', () => {
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        ChatController.prototype.deleteChat,
+      );
+      expect(new guards[0]()).toBeInstanceOf(AuthGuard);
     });
 
     it('lists chats for the admin owner', async () => {
@@ -413,6 +466,8 @@ describe('ChatController', () => {
           conversationStarters: [],
           hostOrigins: [],
           createdAt: new Date(),
+          updatedAt: new Date(),
+          lastUsedAt: null,
           ownerId: authUser.id,
         },
       ];
@@ -436,6 +491,8 @@ describe('ChatController', () => {
         conversationStarters: [],
         hostOrigins: [],
         createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
         ownerId: authUser.id,
       };
       chatsService.create.mockResolvedValue(chat);
@@ -444,6 +501,94 @@ describe('ChatController', () => {
         chat,
       );
       expect(chatsService.create).toHaveBeenCalledWith(authUser.id, data);
+    });
+
+    it('lets the owner delete a chat and its embedding namespace', async () => {
+      const owner = { id: 'ownerId', email: 'email', isAdmin: false };
+      const chat = {
+        id: 'chat-1',
+        name: 'Docs',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: owner.id,
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      documentsService.deleteChatNamespace.mockResolvedValue(undefined);
+      chatsService.delete.mockResolvedValue(chat);
+
+      await expect(chatController.deleteChat(owner, chat.id)).resolves.toEqual(
+        chat,
+      );
+      expect(documentsService.deleteChatNamespace).toHaveBeenCalledWith(
+        chat.id,
+      );
+      expect(chatsService.delete).toHaveBeenCalledWith(chat.id);
+    });
+
+    it('lets an admin delete another owner chat', async () => {
+      const admin = { id: 'admin', email: 'email', isAdmin: true };
+      const chat = {
+        id: 'chat-1',
+        name: 'Docs',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      documentsService.deleteChatNamespace.mockResolvedValue(undefined);
+      chatsService.delete.mockResolvedValue(chat);
+
+      await expect(chatController.deleteChat(admin, chat.id)).resolves.toEqual(
+        chat,
+      );
+      expect(chatsService.delete).toHaveBeenCalledWith(chat.id);
+    });
+
+    it('does not let a non-owner delete a chat', async () => {
+      const other = { id: 'other', email: 'email', isAdmin: false };
+      const chat = {
+        id: 'chat-1',
+        name: 'Docs',
+        description: null,
+        points: 0,
+        published: false,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(
+        chatController.deleteChat(other, chat.id),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(documentsService.deleteChatNamespace).not.toHaveBeenCalled();
+      expect(chatsService.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws when deleting a missing chat', async () => {
+      const owner = { id: 'ownerId', email: 'email', isAdmin: false };
+      chatsService.findFirstById.mockResolvedValue(null);
+
+      await expect(
+        chatController.deleteChat(owner, 'missing'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(documentsService.deleteChatNamespace).not.toHaveBeenCalled();
+      expect(chatsService.delete).not.toHaveBeenCalled();
     });
   });
 
@@ -476,6 +621,8 @@ describe('ChatController', () => {
       conversationStarters: [],
       hostOrigins: [HOST_ORIGIN],
       createdAt: new Date(),
+      updatedAt: new Date(),
+      lastUsedAt: null,
       ownerId: 'ownerId',
     };
 

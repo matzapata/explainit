@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   BadRequestException,
@@ -26,7 +27,7 @@ import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
 import { ChatMetadataDto } from './dto/get-chat-metadata.dto';
 import { UpdateChatMetadataDto } from './dto/put-chat-metadata.dto';
 import { AuthUser } from '@src/modules/user/auth-user';
-import { Chat, ChatResource } from '@prisma/client';
+import { Chat } from '@prisma/client';
 import { PostMessageDto } from './dto/post-message.dto';
 import { RateLimit } from '@src/infra/http/decorators/rate-limit.decorator';
 import { AdminGuard } from '@src/infra/http/guards/admin.guard';
@@ -62,17 +63,14 @@ export class ChatController {
   @Get('/')
   @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
-  async getChatByOwner(
-    @CurrentUser() user: AuthUser,
-  ): Promise<Chat & { resources: ChatResource[] }> {
-    let chat = await this.chatsService.findFirstByOwner(user.id);
-    if (!chat) {
-      chat = await this.chatsService.create(user.id, {});
+  async getChatsByOwner(@CurrentUser() user: AuthUser): Promise<Chat[]> {
+    let chats = await this.chatsService.findManyByOwner(user.id);
+    if (chats.length === 0) {
+      const chat = await this.chatsService.create(user.id, {});
+      chats = [chat];
     }
 
-    const resources = await this.documentsService.findByChatId(chat.id);
-
-    return { ...chat, resources };
+    return chats;
   }
 
   @Put('/:id')
@@ -86,6 +84,25 @@ export class ChatController {
     return this.chatsService.update(user.id, id, this.normalizeUpdate(data));
   }
 
+  @Delete('/:id')
+  @UseGuards(AuthGuard)
+  @Serialize(ChatMetadataDto)
+  async deleteChat(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<Chat> {
+    const chat = await this.chatsService.findFirstById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+    if (chat.ownerId !== user.id && !user.isAdmin) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    await this.documentsService.deleteChatNamespace(chat.id);
+    return this.chatsService.delete(chat.id);
+  }
+
   @Get('/:id')
   @Serialize(ChatMetadataDto)
   async getChat(@Param('id') id: string, @Req() req: Request) {
@@ -97,6 +114,12 @@ export class ChatController {
       throw new NotFoundException('Chat not found');
     }
     this.assertVisitorOrigin(req, chat.hostOrigins);
+
+    const isOwner = req.currentUser?.id === chat.ownerId;
+    if (isOwner) {
+      const resources = await this.documentsService.findByChatId(chat.id);
+      return { ...chat, resources };
+    }
 
     return chat;
   }

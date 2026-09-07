@@ -12,6 +12,7 @@ describe('ChatsService', () => {
     findFirstByOwner: jest.fn(),
     findManyByOwner: jest.fn(),
     findFirstById: jest.fn(),
+    delete: jest.fn(),
     incrementPoints: jest.fn(),
   };
 

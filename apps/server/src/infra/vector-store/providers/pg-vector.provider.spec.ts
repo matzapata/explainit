@@ -66,6 +66,15 @@ describe('PgVectorProvider', () => {
     });
   });
 
+  describe('deleteDocumentsByNamespace', () => {
+    it('deletes embeddings by namespace', async () => {
+      await provider.deleteDocumentsByNamespace('chat-1');
+      expect(prisma.embedding.deleteMany).toHaveBeenCalledWith({
+        where: { namespace: 'chat-1' },
+      });
+    });
+  });
+
   describe('similaritySearch', () => {
     it('returns an empty list for a blank query', async () => {
       await expect(
