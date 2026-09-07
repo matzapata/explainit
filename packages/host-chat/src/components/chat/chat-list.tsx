@@ -1,5 +1,5 @@
-import { ChatMessage } from "@/components/chat/chat-message";
-import { ChatMessage as IChatMessage, MessageRole } from "@/lib/services/chat-service";
+import { ChatMessage } from "./chat-message";
+import { ChatMessage as IChatMessage, MessageRole } from '../../lib/types';
 import { ChatMessageLoading } from "./chat-message-loading";
 
 export function ChatList(props: {

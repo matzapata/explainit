@@ -15,7 +15,8 @@
     "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@explainit/host-chat": ["../../packages/host-chat/src/index.ts"]
     }
   },
   "include": ["src"]

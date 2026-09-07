@@ -1,6 +1,6 @@
-import { PromptForm } from "@/components/chat/prompt-form";
-import { ButtonScrollToBottom } from "@/components/chat/button-scroll-to-bottom";
-import { cn } from "@/lib/utils";
+import { PromptForm } from "./prompt-form";
+import { ButtonScrollToBottom } from "./button-scroll-to-bottom";
+import { cn } from "../../lib/utils";
 
 interface ChatPanelProps {
   isLoading: boolean;

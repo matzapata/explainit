@@ -1,10 +1,9 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ChatPanel } from '@/components/chat/chat-panel';
-import { ChatTranscript } from '@/components/chat/chat-transcript';
+import { ChatPanel, ChatTranscript, useChat } from '@explainit/host-chat';
+import { getAccessToken } from '@/lib/auth/config';
 import React from 'react';
-import useChat from '@/lib/hooks/use-chat';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { Link } from '@/lib/router';
 import { Button } from '../ui/button';
@@ -17,6 +16,8 @@ export function Chat({ chat, className }: ChatProps) {
   const { messages, setMessages, isLoading, input, setInput, append } = useChat(
     chat.id,
     [],
+    undefined,
+    getAccessToken() || undefined,
   );
 
   return (

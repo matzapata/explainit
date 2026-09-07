@@ -1,21 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { ChatMetadataDto } from '@/lib/services/chat-service';
+import { TooltipProvider } from './components/ui/tooltip';
+import { ChatMetadata } from './lib/types';
 
-const chat: ChatMetadataDto = {
+const chat: ChatMetadata = {
   id: 'chat-1',
   name: 'Demo',
   conversationStarters: [],
-  published: true,
-  points: 0,
-  resources: [],
 };
 
-vi.mock('@/lib/hooks/use-chat', () => ({
+vi.mock('./lib/hooks/use-chat', () => ({
   default: () => ({
     messages: [],
     setMessages: vi.fn(),
@@ -27,33 +23,11 @@ vi.mock('@/lib/hooks/use-chat', () => ({
   }),
 }));
 
-vi.mock('@/lib/router', () => ({
-  Link: ({
-    href,
-    children,
-    ...rest
-  }: {
-    href: string;
-    children: ReactNode;
-  }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
+vi.mock('./lib/visitor-api', () => ({
+  getChat: vi.fn(async () => chat),
 }));
 
-vi.mock('@/lib/services/chat-service', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/lib/services/chat-service')>();
-  return {
-    ...actual,
-    chatService: {
-      getChat: vi.fn(async () => chat),
-    },
-  };
-});
-
-import { WidgetApp } from '@/host-frame';
+import { WidgetApp } from './widget';
 
 function renderWidget() {
   const client = new QueryClient({

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { AskAiOverlay } from '@/components/chat/ask-ai-overlay';
+import { AskAiOverlay } from '@explainit/host-chat';
+import { getAccessToken } from '@/lib/auth/config';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { ChatMetadataDto } from '@/lib/services/chat-service';
+import { useState } from 'react';
 
 export function PreviewChat(props: {
   chat: ChatMetadataDto;
@@ -29,6 +30,7 @@ export function PreviewChat(props: {
         chat={props.chat}
         open={open}
         onOpenChange={setOpen}
+        accessToken={getAccessToken() || undefined}
       />
     </>
   );

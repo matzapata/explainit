@@ -1,23 +1,3 @@
-declare global {
-  interface Window {
-    /** Set when the Host widget is mounted on a customer page. */
-    __EXPLAINIT_WIDGET__?: boolean;
-    __EXPLAINIT_API_BASE__?: string;
-    __EXPLAINIT_CHAT_ID__?: string;
-    ExplainitWidget?: {
-      mount: (
-        shadowRoot: ShadowRoot,
-        opts: {
-          chatId: string;
-          apiUrl: string;
-          theme?: 'light' | 'dark' | 'system';
-          onClose?: () => void;
-        },
-      ) => () => void;
-    };
-  }
-}
-
 export type AuthMode = 'none' | 'oidc' | 'password';
 
 export const TOKEN_COOKIE = 'explainit_token';
@@ -27,9 +7,6 @@ export const TOKEN_MAX_AGE = 60 * 60 * 24 * 7;
 let cachedAuthMode: AuthMode | null = null;
 
 export function apiBaseUrl(): string {
-  if (typeof window !== 'undefined' && window.__EXPLAINIT_API_BASE__ !== undefined) {
-    return window.__EXPLAINIT_API_BASE__.replace(/\/$/, '');
-  }
   const raw = import.meta.env.VITE_API_BASE_URL;
   if (raw === undefined || raw === '') {
     return '';
@@ -91,10 +68,6 @@ export function readCookie(name: string): string {
 }
 
 export function getAccessToken(): string {
-  if (typeof window !== 'undefined' && window.__EXPLAINIT_WIDGET__) {
-    return '';
-  }
-
   if (getAuthMode() === 'none') {
     return NONE_ACCESS_TOKEN;
   }

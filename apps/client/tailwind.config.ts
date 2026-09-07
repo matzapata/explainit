@@ -32,6 +32,8 @@ const config: Config = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./packages/host-chat/src/**/*.{js,ts,jsx,tsx}",
+    "../../packages/host-chat/src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     container: {

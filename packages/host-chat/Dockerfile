@@ -1,0 +1,14 @@
+FROM --platform=linux/amd64 node:20-alpine
+
+RUN apk add --no-cache aws-cli
+
+WORKDIR /app
+
+COPY package.json .
+COPY package-lock.json .
+
+RUN npm install
+
+COPY . .
+
+CMD ["sh", "-c", "npm run build && aws s3 cp dist/widget.js s3://${LAUNCHER_S3_BUCKET:-explainit-cdn}/widget.js --endpoint-url ${AWS_ENDPOINT_URL} --content-type application/javascript --cache-control no-store && aws s3 cp dist/widget.css s3://${LAUNCHER_S3_BUCKET:-explainit-cdn}/widget.css --endpoint-url ${AWS_ENDPOINT_URL} --content-type text/css --cache-control no-store"]
