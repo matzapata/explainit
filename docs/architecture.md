@@ -6,14 +6,14 @@ Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
 2. `server` (NestJS) for orchestration and policy
 3. `postgres` (Postgres + pgvector) for transactional and semantic data
 
-The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, apiUrl, button })` with a Host-owned control; the Launcher mounts a Shadow DOM widget that calls the visitor API. Custom UIs can call the same JSON endpoints without the widget.
+The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, apiUrl, button, theme })` with a Host-owned control; `theme` is `light` | `dark` | `system`. The Launcher mounts a Shadow DOM widget that calls the visitor API. Custom UIs can call the same JSON endpoints without the widget.
 
 External providers supply language model inference, embedding generation, and optional storage integrations.
 
 ## System context
 
 - `client`: chat UX, workspace/resource setup, and response rendering
-- `launcher` + `widget`: CDN IIFEs — launcher opens Ask AI in a ShadowRoot; widget talks to Nest (`explainit({ chatId, apiUrl, button })`)
+- `launcher` + `widget`: CDN IIFEs — launcher opens Ask AI in a ShadowRoot; widget talks to Nest (`explainit({ chatId, apiUrl, button, theme })`)
 - `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation; visitor routes allowlist `Origin` against `Chat.hostOrigins`
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes

@@ -16,6 +16,7 @@ describe('generateInstallSnippet', () => {
     chatId: "chat-1",
     apiUrl: "https://api.example.com",
     button: "#explainit-ask-ai",
+    theme: "system",
   });
 </script>`);
     expect(snippet).not.toContain('data-allowed-origin');

@@ -13,6 +13,8 @@ const launcherSrcAtLoad =
     ? document.currentScript.src
     : '';
 
+export type HostTheme = 'light' | 'dark' | 'system';
+
 export type ExplainitOptions = {
   /** Chat id from the dashboard Install snippet. */
   chatId: string;
@@ -26,6 +28,11 @@ export type ExplainitOptions = {
    * The Launcher does not create this control.
    */
   button: HTMLElement | string;
+  /**
+   * Ask AI appearance. `system` follows the visitor's prefers-color-scheme.
+   * Defaults to `system` when omitted.
+   */
+  theme?: HostTheme;
 };
 
 export type ExplainitInstance = {
@@ -87,11 +94,19 @@ function ensureHostStyles() {
   document.head.appendChild(style);
 }
 
+function parseHostTheme(value: unknown): HostTheme {
+  if (value === 'light' || value === 'dark' || value === 'system') {
+    return value;
+  }
+  return 'system';
+}
+
 type WidgetMountFn = (
   shadowRoot: ShadowRoot,
   opts: {
     chatId: string;
     apiUrl: string;
+    theme?: HostTheme;
     onClose?: () => void;
   },
 ) => () => void;
@@ -150,6 +165,7 @@ function mountLauncher(config: {
   chatId: string;
   apiUrl: string;
   button: HTMLElement;
+  theme: HostTheme;
 }): ExplainitInstance {
   ensureHostStyles();
 
@@ -196,6 +212,7 @@ function mountLauncher(config: {
     unmount = mount(shadow, {
       chatId: config.chatId,
       apiUrl: config.apiUrl,
+      theme: config.theme,
       onClose: close,
     });
   };
@@ -243,7 +260,12 @@ export default function explainit(
   } catch {
     return undefined;
   }
-  return mountLauncher({ chatId, apiUrl, button });
+  return mountLauncher({
+    chatId,
+    apiUrl,
+    button,
+    theme: parseHostTheme(options.theme),
+  });
 }
 
 declare global {
@@ -255,6 +277,7 @@ declare global {
         opts: {
           chatId: string;
           apiUrl: string;
+          theme?: HostTheme;
           onClose?: () => void;
         },
       ) => () => void;

@@ -18,7 +18,7 @@ export function EmptyScreen(props: {
             {props.starters.map((message, index) => (
               <button
                 key={index}
-                className="h-auto p-0 text-base text-start text-white font-medium"
+                className="h-auto p-0 text-start text-base font-medium text-gray-900 dark:text-white"
                 onClick={() => props.append(message)}
               >
                 <span className="">{message}</span>
