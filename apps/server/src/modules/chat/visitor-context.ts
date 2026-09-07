@@ -1,34 +1,3 @@
-export const CONVERSATION_COOKIE = 'explainit_conversation';
-
-export function parseCookieHeader(
-  header: string | undefined,
-  name: string,
-): string | undefined {
-  if (!header) {
-    return undefined;
-  }
-  for (const part of header.split(';')) {
-    const [rawKey, ...rest] = part.trim().split('=');
-    if (rawKey === name) {
-      const value = rest.join('=').trim();
-      return value || undefined;
-    }
-  }
-  return undefined;
-}
-
-export function conversationCookieHeader(
-  conversationId: string,
-  opts: { secure?: boolean } = {},
-): string {
-  const maxAge = 60 * 60 * 24 * 30;
-  // Host Chat runs in a cross-site iframe, so the cookie must be SameSite=None.
-  const secure = opts.secure ?? true;
-  return `${CONVERSATION_COOKIE}=${conversationId}; Path=/; HttpOnly; SameSite=None${
-    secure ? '; Secure' : ''
-  }; Max-Age=${maxAge}`;
-}
-
 /** Normalize page URLs for comparing Embedding metadata.source. */
 export function normalizePageUrl(
   url: string | undefined | null,
@@ -63,17 +32,78 @@ export function originFromWebsiteUrl(
   }
 }
 
-export function frameAncestorsCsp(
-  allowedOrigin: string,
-  opts: { development?: boolean } = {},
-): string {
-  if (!opts.development) {
-    return `frame-ancestors ${allowedOrigin}`;
+/** Prefer Origin; fall back to Referer origin for same-origin navigations. */
+export function requestOrigin(
+  originHeader: string | undefined,
+  refererHeader: string | undefined,
+): string | null {
+  if (originHeader?.trim()) {
+    try {
+      return new URL(originHeader.trim()).origin;
+    } catch {
+      // fall through to Referer
+    }
   }
-  const extras = ['http://localhost:*', 'http://127.0.0.1:*'].filter(
-    (origin) => origin !== allowedOrigin,
-  );
-  return `frame-ancestors ${[allowedOrigin, ...extras].join(' ')}`;
+  if (refererHeader?.trim()) {
+    try {
+      return new URL(refererHeader.trim()).origin;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export function parseDashboardOrigins(corsOrigin: string): string[] {
+  const trimmed = corsOrigin.trim();
+  if (!trimmed || trimmed === '*') {
+    return [];
+  }
+  return trimmed
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+}
+
+/**
+ * Visitor routes allow the Chat Website origin, dashboard CORS origins,
+ * and (in development) any localhost / 127.0.0.1 Host page.
+ */
+export function visitorOriginAllowed(
+  origin: string | null,
+  websiteUrl: string | undefined | null,
+  opts: {
+    dashboardOrigins?: string[];
+    development?: boolean;
+  } = {},
+): boolean {
+  if (!origin) {
+    return false;
+  }
+
+  const websiteOrigin = originFromWebsiteUrl(websiteUrl);
+  if (websiteOrigin && origin === websiteOrigin) {
+    return true;
+  }
+
+  for (const dashboard of opts.dashboardOrigins ?? []) {
+    if (dashboard && origin === dashboard) {
+      return true;
+    }
+  }
+
+  if (opts.development) {
+    try {
+      const host = new URL(origin).hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 function metadataSource(metadata: unknown): string | null {

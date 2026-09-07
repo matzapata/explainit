@@ -1,8 +1,19 @@
 declare global {
   interface Window {
-    __EXPLAINIT_HOST_FRAME__?: boolean;
+    /** Set when the Host widget is mounted on a customer page. */
+    __EXPLAINIT_WIDGET__?: boolean;
     __EXPLAINIT_API_BASE__?: string;
     __EXPLAINIT_CHAT_ID__?: string;
+    ExplainitWidget?: {
+      mount: (
+        shadowRoot: ShadowRoot,
+        opts: {
+          chatId: string;
+          apiUrl: string;
+          onClose?: () => void;
+        },
+      ) => () => void;
+    };
   }
 }
 
@@ -15,12 +26,8 @@ export const TOKEN_MAX_AGE = 60 * 60 * 24 * 7;
 let cachedAuthMode: AuthMode | null = null;
 
 export function apiBaseUrl(): string {
-  if (typeof window !== 'undefined' && window.__EXPLAINIT_HOST_FRAME__) {
-    const fromWindow = window.__EXPLAINIT_API_BASE__;
-    if (fromWindow !== undefined) {
-      // Empty string means same origin as the Host Chat page (Nest / reverse proxy).
-      return fromWindow.replace(/\/$/, '');
-    }
+  if (typeof window !== 'undefined' && window.__EXPLAINIT_API_BASE__ !== undefined) {
+    return window.__EXPLAINIT_API_BASE__.replace(/\/$/, '');
   }
   const raw = import.meta.env.VITE_API_BASE_URL;
   if (raw === undefined || raw === '') {
@@ -83,7 +90,7 @@ export function readCookie(name: string): string {
 }
 
 export function getAccessToken(): string {
-  if (typeof window !== 'undefined' && window.__EXPLAINIT_HOST_FRAME__) {
+  if (typeof window !== 'undefined' && window.__EXPLAINIT_WIDGET__) {
     return '';
   }
 

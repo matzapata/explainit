@@ -18,7 +18,6 @@ import { AuthController } from './controllers/auth.controller';
 import { ChatController } from './controllers/chat.controller';
 import { DocumentsController } from './controllers/documents.controller';
 import { HealthController } from './controllers/health.controller';
-import { HostController } from './controllers/host.controller';
 import { UsersController } from './controllers/users.controller';
 import { RateLimiterGuard } from './guards/rate-limiter.guard';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
@@ -38,7 +37,6 @@ import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
     HealthController,
     AuthController,
     ChatController,
-    HostController,
     DocumentsController,
     UsersController,
   ],

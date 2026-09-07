@@ -8,7 +8,7 @@ Vanilla IIFE that Host sites load from a CDN. The dashboard Install snippet is:
 <script>
   explainit({
     chatId: "CHAT_ID",
-    appUrl: "https://app.example.com",
+    apiUrl: "https://api.example.com",
     button: "#explainit-ask-ai",
   });
 </script>
@@ -16,7 +16,7 @@ Vanilla IIFE that Host sites load from a CDN. The dashboard Install snippet is:
 
 `button` is a Host-owned element or a CSS selector for one. The Launcher does not create that control.
 
-Website (`Chat.url`) is the whitelist. Nest enforces it with `frame-ancestors`. This script does not.
+On click, the Launcher mounts `widget.js` in a closed ShadowRoot on the Host page. The widget calls the visitor API at `apiUrl`. Website (`Chat.url`) is the Origin whitelist enforced by Nest — not by this script.
 
 ## Local
 
@@ -26,8 +26,8 @@ npm test
 npm run build
 ```
 
-Compose uploads `dist/launcher.js` to Floci (`http://localhost:4566/explainit-cdn/launcher.js`). A Host site demo lives in [`example/`](example/).
+Compose uploads `dist/launcher.js` and the client `dist-widget/widget.{js,css}` to Floci (`http://localhost:4566/explainit-cdn/…`). A Host site demo lives in [`example/`](example/).
 
 ## Production (S3 + CloudFront)
 
-GitHub Actions: workflow `Publish launcher` (`workflow_dispatch` or tag `launcher-v*`). It runs `npm test`, `npm run build`, then `aws s3 cp`. Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `LAUNCHER_S3_BUCKET`. Optional: `LAUNCHER_CLOUDFRONT_DISTRIBUTION_ID`, `LAUNCHER_S3_KEY` (default `launcher.js`).
+GitHub Actions: workflow `Publish launcher` (`workflow_dispatch` or tag `launcher-v*`). It builds the launcher and widget, then `aws s3 cp` for `launcher.js`, `widget.js`, and `widget.css`. Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `LAUNCHER_S3_BUCKET`. Optional: `LAUNCHER_CLOUDFRONT_DISTRIBUTION_ID`, `LAUNCHER_S3_KEY` (default `launcher.js`).

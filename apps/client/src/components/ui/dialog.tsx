@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { usePortalContainer } from "@/lib/portal-container"
 
 const Dialog = DialogPrimitive.Root
 
@@ -34,8 +35,10 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     hideClose?: boolean
   }
->(({ className, children, hideClose = false, ...props }, ref) => (
-  <DialogPortal>
+>(({ className, children, hideClose = false, ...props }, ref) => {
+  const portalContainer = usePortalContainer()
+  return (
+  <DialogPortal container={portalContainer}>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
@@ -54,7 +57,8 @@ const DialogContent = React.forwardRef<
       )}
     </DialogPrimitive.Content>
   </DialogPortal>
-))
+  )
+})
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({

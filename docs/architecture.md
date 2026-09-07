@@ -6,15 +6,15 @@ Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
 2. `server` (NestJS) for orchestration and policy
 3. `postgres` (Postgres + pgvector) for transactional and semantic data
 
-The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, appUrl, button })` with a Host-owned control; they do not load the React app into their DOM.
+The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, apiUrl, button })` with a Host-owned control; the Launcher mounts a Shadow DOM widget that calls the visitor API. Custom UIs can call the same JSON endpoints without the widget.
 
 External providers supply language model inference, embedding generation, and optional storage integrations.
 
 ## System context
 
 - `client`: chat UX, workspace/resource setup, and response rendering
-- `launcher`: CDN IIFE that opens Host Chat in an iframe (`explainit({ chatId, appUrl, button })`)
-- `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation
+- `launcher` + `widget`: CDN IIFEs — launcher opens Ask AI in a ShadowRoot; widget talks to Nest (`explainit({ chatId, apiUrl, button })`)
+- `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation; visitor routes allowlist `Origin` against `Chat.url`
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
 - `redis`: BullMQ job queue and rate-limit counters
@@ -49,7 +49,7 @@ Current infrastructure folders and responsibilities:
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
-- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` one-shot uploads `launcher.js`. The app does not.
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `widget` one-shots upload `launcher.js` and `widget.js`/`widget.css`. The app does not.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 
@@ -198,6 +198,7 @@ Distinguish transient provider failures (retryable) from deterministic content f
 
 - Enforce chat ownership and namespace scoping in all retrieval queries
 - Never trust client-supplied scope without server-side validation
+- Visitor `GET /api/chats/:id` and `POST …/messages` require a browser `Origin` (or `Referer`) that matches `Chat.url`, a dashboard `CORS_ORIGIN`, or (in development) localhost / `127.0.0.1`
 - Keep provider credentials in environment-managed secrets
 - Redact sensitive fields from logs and telemetry payloads
 

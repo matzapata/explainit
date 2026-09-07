@@ -84,7 +84,8 @@ export function GeneralInfoStep(props: {
         </h1>
         <p className="text-gray-300">
           Add your chat's name, website and description. The website origin is
-          the Host site whitelist: Host Chat only frames there.
+          the Host site whitelist: only browsers on that origin may call the
+          visitor API.
         </p>
       </div>
 
@@ -127,9 +128,12 @@ export function GeneralInfoStep(props: {
                 name="url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Website</FormLabel>
+                    <FormLabel>Host website</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input
+                        placeholder="https://docs.example.com"
+                        {...field}
+                      />
                     </FormControl>
 
                     <FormMessage />

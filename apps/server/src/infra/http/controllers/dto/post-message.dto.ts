@@ -16,4 +16,9 @@ export class PostMessageDto {
   @IsOptional()
   @IsString()
   selectedText?: string;
+
+  /** Optional visitor conversation id (client-held; replaces cookie). */
+  @IsOptional()
+  @IsString()
+  conversationId?: string;
 }

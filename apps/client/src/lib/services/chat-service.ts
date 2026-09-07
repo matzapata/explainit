@@ -67,6 +67,8 @@ export class ChatService {
             pageUrl?: string;
             selectedText?: string;
             accessToken?: string;
+            conversationId?: string;
+            onConversationId?: (id: string) => void;
         },
     ): Promise<ChatMessage> {
         const headers: Record<string, string> = {
@@ -80,13 +82,16 @@ export class ChatService {
         const res = await fetch(`${apiBaseUrl()}/api/chats/${id}/messages`, {
             method: "POST",
             headers,
-            credentials: "include",
+            credentials: "omit",
             body: JSON.stringify({
                 question,
                 chatHistory: chatHistory ?? [],
                 ...(options.pageUrl ? { pageUrl: options.pageUrl } : {}),
                 ...(options.selectedText
                     ? { selectedText: options.selectedText }
+                    : {}),
+                ...(options.conversationId
+                    ? { conversationId: options.conversationId }
                     : {}),
             }),
             signal: options.signal,
@@ -135,6 +140,10 @@ export class ChatService {
                         const data = event.data as {
                             answer?: string
                             context?: ChatMessage["context"]
+                            conversationId?: string
+                        }
+                        if (data.conversationId) {
+                            options.onConversationId?.(data.conversationId)
                         }
                         donePayload = {
                             answer: data.answer ?? "",

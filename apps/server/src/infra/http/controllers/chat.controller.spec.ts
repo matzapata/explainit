@@ -7,15 +7,19 @@ import { ChatController } from './chat.controller';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ConversationService } from '@src/modules/chat/conversation.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
+import { EnvService } from '@src/infra/env/env.service';
 import { ResourceStatus } from '@prisma/client';
 import { MessageAgent } from '@src/modules/chat/message';
-import { conversationCookieHeader } from '@src/modules/chat/visitor-context';
+
+const HOST_ORIGIN = 'https://docs.example.com';
+const DASHBOARD_ORIGIN = 'http://localhost:3000';
 
 describe('ChatController', () => {
   let chatController: ChatController;
   let chatsService: jest.Mocked<ChatsService>;
   let documentsService: jest.Mocked<DocumentsService>;
   let conversationService: jest.Mocked<ConversationService>;
+  let env: jest.Mocked<EnvService>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(ChatController).compile();
@@ -23,6 +27,15 @@ describe('ChatController', () => {
     chatsService = unitRef.get(ChatsService);
     documentsService = unitRef.get(DocumentsService);
     conversationService = unitRef.get(ConversationService);
+    env = unitRef.get(EnvService);
+  });
+
+  beforeEach(() => {
+    env.get.mockImplementation((key: string) => {
+      if (key === 'CORS_ORIGIN') return DASHBOARD_ORIGIN;
+      if (key === 'NODE_ENV') return 'test';
+      return undefined as never;
+    });
   });
 
   describe('getChatByOwner', () => {
@@ -170,11 +183,18 @@ describe('ChatController', () => {
   });
 
   describe('getChat', () => {
-    it('returns a public chat by id', async () => {
+    const visitorReq = (overrides: Record<string, unknown> = {}) =>
+      ({
+        headers: { origin: HOST_ORIGIN },
+        currentUser: null,
+        ...overrides,
+      }) as never;
+
+    it('returns a public chat by id when Origin matches Website', async () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
+        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: true,
@@ -185,7 +205,51 @@ describe('ChatController', () => {
       chatsService.findFirstById.mockResolvedValue(chat);
 
       await expect(
-        chatController.getChat(chat.id, { currentUser: null } as never),
+        chatController.getChat(chat.id, visitorReq()),
+      ).resolves.toEqual(chat);
+    });
+
+    it('throws when Origin is not allowed', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        url: `${HOST_ORIGIN}/guide`,
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(
+        chatController.getChat(
+          chat.id,
+          visitorReq({ headers: { origin: 'https://evil.example.com' } }),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('allows dashboard Origin', async () => {
+      const chat = {
+        id: 'id',
+        name: 'name',
+        url: `${HOST_ORIGIN}/guide`,
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        createdAt: new Date(),
+        ownerId: 'ownerId',
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+
+      await expect(
+        chatController.getChat(
+          chat.id,
+          visitorReq({ headers: { origin: DASHBOARD_ORIGIN } }),
+        ),
       ).resolves.toEqual(chat);
     });
 
@@ -193,7 +257,7 @@ describe('ChatController', () => {
       chatsService.findFirstById.mockResolvedValue(null);
 
       await expect(
-        chatController.getChat('missing', { currentUser: null } as never),
+        chatController.getChat('missing', visitorReq()),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -201,7 +265,7 @@ describe('ChatController', () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
+        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: false,
@@ -212,15 +276,15 @@ describe('ChatController', () => {
       chatsService.findFirstById.mockResolvedValue(chat);
 
       await expect(
-        chatController.getChat(chat.id, { currentUser: null } as never),
+        chatController.getChat(chat.id, visitorReq()),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('returns an unpublished chat when there is a current user', async () => {
+    it('returns an unpublished chat when there is a current user and dashboard Origin', async () => {
       const chat = {
         id: 'id',
         name: 'name',
-        url: 'url',
+        url: `${HOST_ORIGIN}/guide`,
         description: null,
         points: 0,
         published: false,
@@ -232,7 +296,13 @@ describe('ChatController', () => {
       chatsService.findFirstById.mockResolvedValue(chat);
 
       await expect(
-        chatController.getChat(chat.id, { currentUser } as never),
+        chatController.getChat(
+          chat.id,
+          visitorReq({
+            currentUser,
+            headers: { origin: DASHBOARD_ORIGIN },
+          }),
+        ),
       ).resolves.toEqual(chat);
     });
   });
@@ -298,7 +368,7 @@ describe('ChatController', () => {
     const conversationId = 'conv-1';
 
     const makeReq = (overrides: Record<string, unknown> = {}) => ({
-      headers: { cookie: undefined },
+      headers: { origin: HOST_ORIGIN },
       currentUser: null,
       on: jest.fn().mockReturnThis(),
       off: jest.fn().mockReturnThis(),
@@ -314,8 +384,25 @@ describe('ChatController', () => {
       writableEnded: false,
     });
 
+    const publishedChat = {
+      id: 'chat-1',
+      name: 'name',
+      url: `${HOST_ORIGIN}/guide`,
+      description: null,
+      points: 0,
+      published: true,
+      conversationStarters: [],
+      createdAt: new Date(),
+      ownerId: 'ownerId',
+    };
+
     beforeEach(() => {
       jest.clearAllMocks();
+      env.get.mockImplementation((key: string) => {
+        if (key === 'CORS_ORIGIN') return DASHBOARD_ORIGIN;
+        if (key === 'NODE_ENV') return 'test';
+        return undefined as never;
+      });
       conversationService.resolveConversationId.mockResolvedValue(
         conversationId,
       );
@@ -336,21 +423,11 @@ describe('ChatController', () => {
       expect(options.getKey({ params: { id: 'chat-1' } })).toBe('chat-1');
     });
 
-    it('increments points and streams the answer as SSE', async () => {
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        url: 'url',
-        description: null,
-        points: 0,
-        published: true,
-        conversationStarters: [],
-        createdAt: new Date(),
-        ownerId: 'ownerId',
-      };
+    it('increments points and streams the answer as SSE with conversationId', async () => {
       const body = {
         question: 'what is this?',
         chatHistory: [{ agent: MessageAgent.USER, message: 'hi' }],
+        conversationId: 'client-conv',
       };
       const answer = {
         question: body.question,
@@ -359,7 +436,7 @@ describe('ChatController', () => {
       };
       const req = makeReq();
       const res = makeRes();
-      chatsService.findFirstById.mockResolvedValue(chat);
+      chatsService.findFirstById.mockResolvedValue(publishedChat);
       chatsService.answer.mockImplementation(
         async (_q, _h, _k, _ns, onToken) => {
           onToken?.('a ');
@@ -370,25 +447,25 @@ describe('ChatController', () => {
 
       await chatController.postMessage(
         body,
-        chat.id,
+        publishedChat.id,
         req as never,
         res as never,
       );
 
-      expect(chatsService.incrementPoints).toHaveBeenCalledWith(chat.id);
+      expect(chatsService.incrementPoints).toHaveBeenCalledWith(publishedChat.id);
       expect(conversationService.resolveConversationId).toHaveBeenCalledWith(
-        chat.id,
-        undefined,
+        publishedChat.id,
+        'client-conv',
       );
-      expect(res.setHeader).toHaveBeenCalledWith(
+      expect(res.setHeader).not.toHaveBeenCalledWith(
         'Set-Cookie',
-        conversationCookieHeader(conversationId, { secure: false }),
+        expect.anything(),
       );
       expect(chatsService.answer).toHaveBeenCalledWith(
         body.question,
         body.chatHistory,
         4,
-        chat.id,
+        publishedChat.id,
         expect.any(Function),
         expect.any(AbortSignal),
         { pageUrl: undefined, selectedText: undefined },
@@ -404,11 +481,11 @@ describe('ChatController', () => {
         'event: token\ndata: {"text":"product"}\n\n',
       );
       expect(res.write).toHaveBeenCalledWith(
-        `event: done\ndata: ${JSON.stringify(answer)}\n\n`,
+        `event: done\ndata: ${JSON.stringify({ ...answer, conversationId })}\n\n`,
       );
       expect(conversationService.persistTurn).toHaveBeenCalledWith({
         conversationId,
-        chatId: chat.id,
+        chatId: publishedChat.id,
         question: body.question,
         answer: answer.answer,
         context: answer.context,
@@ -420,25 +497,14 @@ describe('ChatController', () => {
     });
 
     it('writes an error event when generation fails after the stream opens', async () => {
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        url: 'url',
-        description: null,
-        points: 0,
-        published: true,
-        conversationStarters: [],
-        createdAt: new Date(),
-        ownerId: 'ownerId',
-      };
       const req = makeReq();
       const res = makeRes();
-      chatsService.findFirstById.mockResolvedValue(chat);
+      chatsService.findFirstById.mockResolvedValue(publishedChat);
       chatsService.answer.mockRejectedValue(new Error('upstream down'));
 
       await chatController.postMessage(
         { question: 'what?', chatHistory: [] },
-        chat.id,
+        publishedChat.id,
         req as never,
         res as never,
       );
@@ -464,18 +530,22 @@ describe('ChatController', () => {
       expect(conversationService.resolveConversationId).not.toHaveBeenCalled();
     });
 
+    it('throws when Origin is not allowed', async () => {
+      chatsService.findFirstById.mockResolvedValue(publishedChat);
+
+      await expect(
+        chatController.postMessage(
+          { question: 'what?', chatHistory: [] },
+          publishedChat.id,
+          makeReq({ headers: { origin: 'https://evil.example.com' } }) as never,
+          makeRes() as never,
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(chatsService.incrementPoints).not.toHaveBeenCalled();
+    });
+
     it('throws when the chat is unpublished and there is no current user', async () => {
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        url: 'url',
-        description: null,
-        points: 0,
-        published: false,
-        conversationStarters: [],
-        createdAt: new Date(),
-        ownerId: 'ownerId',
-      };
+      const chat = { ...publishedChat, published: false };
       chatsService.findFirstById.mockResolvedValue(chat);
 
       await expect(
@@ -491,17 +561,7 @@ describe('ChatController', () => {
     });
 
     it('streams successfully when the chat is unpublished and there is a current user', async () => {
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        url: 'url',
-        description: null,
-        points: 0,
-        published: false,
-        conversationStarters: [],
-        createdAt: new Date(),
-        ownerId: 'ownerId',
-      };
+      const chat = { ...publishedChat, published: false };
       const currentUser = { id: 'id', email: 'email', isAdmin: false };
       const body = { question: 'what?', chatHistory: [] };
       const answer = {
@@ -509,7 +569,10 @@ describe('ChatController', () => {
         answer: 'a product',
         context: [],
       };
-      const req = makeReq({ currentUser });
+      const req = makeReq({
+        currentUser,
+        headers: { origin: DASHBOARD_ORIGIN },
+      });
       const res = makeRes();
       chatsService.findFirstById.mockResolvedValue(chat);
       chatsService.answer.mockResolvedValue(answer);
@@ -523,28 +586,17 @@ describe('ChatController', () => {
 
       expect(chatsService.answer).toHaveBeenCalled();
       expect(res.write).toHaveBeenCalledWith(
-        `event: done\ndata: ${JSON.stringify(answer)}\n\n`,
+        `event: done\ndata: ${JSON.stringify({ ...answer, conversationId })}\n\n`,
       );
       expect(conversationService.persistTurn).toHaveBeenCalled();
       expect(res.end).toHaveBeenCalled();
     });
 
     it('passes pageUrl and selectedText from the body to answer and persistTurn', async () => {
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        url: 'url',
-        description: null,
-        points: 0,
-        published: true,
-        conversationStarters: [],
-        createdAt: new Date(),
-        ownerId: 'ownerId',
-      };
       const body = {
         question: 'what is this?',
         chatHistory: [],
-        pageUrl: 'https://example.com/docs',
+        pageUrl: 'https://docs.example.com/docs',
         selectedText: 'highlighted passage',
       };
       const answer = {
@@ -554,12 +606,12 @@ describe('ChatController', () => {
       };
       const req = makeReq();
       const res = makeRes();
-      chatsService.findFirstById.mockResolvedValue(chat);
+      chatsService.findFirstById.mockResolvedValue(publishedChat);
       chatsService.answer.mockResolvedValue(answer);
 
       await chatController.postMessage(
         body,
-        chat.id,
+        publishedChat.id,
         req as never,
         res as never,
       );
@@ -568,14 +620,14 @@ describe('ChatController', () => {
         body.question,
         body.chatHistory,
         4,
-        chat.id,
+        publishedChat.id,
         expect.any(Function),
         expect.any(AbortSignal),
         { pageUrl: body.pageUrl, selectedText: body.selectedText },
       );
       expect(conversationService.persistTurn).toHaveBeenCalledWith({
         conversationId,
-        chatId: chat.id,
+        chatId: publishedChat.id,
         question: body.question,
         answer: answer.answer,
         context: answer.context,

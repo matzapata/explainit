@@ -18,6 +18,10 @@ describe('explainit()', () => {
     document.head.querySelectorAll('#explainit-launcher-style').forEach((n) => {
       n.remove();
     });
+    document.head
+      .querySelectorAll('script[data-explainit-widget]')
+      .forEach((n) => n.remove());
+    delete window.ExplainitWidget;
     vi.stubGlobal('location', {
       ...window.location,
       origin: 'https://docs.example.com',
@@ -30,33 +34,37 @@ describe('explainit()', () => {
     instance = undefined;
   });
 
-  it('no-ops when chatId, appUrl, or button is missing', () => {
+  it('no-ops when chatId, apiUrl, or button is missing', () => {
     hostButton();
     expect(
-      explainit({ chatId: '', appUrl: 'https://app.example.com', button: '#ask-ai' }),
-    ).toBeUndefined();
-    expect(
       explainit({
-        chatId: 'chat-1',
-        appUrl: '' as unknown as string,
+        chatId: '',
+        apiUrl: 'https://api.example.com',
         button: '#ask-ai',
       }),
     ).toBeUndefined();
     expect(
       explainit({
         chatId: 'chat-1',
-        appUrl: 'https://app.example.com',
+        apiUrl: '' as unknown as string,
+        button: '#ask-ai',
+      }),
+    ).toBeUndefined();
+    expect(
+      explainit({
+        chatId: 'chat-1',
+        apiUrl: 'https://api.example.com',
         button: '#missing',
       }),
     ).toBeUndefined();
-    expect(document.querySelector('iframe.explainit-host-frame')).toBeNull();
+    expect(document.getElementById('explainit-widget-host')).toBeNull();
   });
 
   it('does not inject a Host control of its own', () => {
     const button = hostButton();
     instance = explainit({
       chatId: 'chat-1',
-      appUrl: 'https://app.example.com',
+      apiUrl: 'https://api.example.com',
       button,
     });
 
@@ -64,117 +72,94 @@ describe('explainit()', () => {
     expect(document.querySelector('.explainit-launcher-btn')).toBeNull();
   });
 
-  it('opens a Host Chat iframe at appUrl/host/:id from the Host control', () => {
+  it('opens an in-page ShadowRoot widget with apiUrl', async () => {
+    const mount = vi.fn(() => () => undefined);
+    window.ExplainitWidget = { mount };
+
+    // Pretend widget.js is already loaded so loadScript resolves immediately.
     const button = hostButton();
+    const script = document.createElement('script');
+    script.dataset.explainitWidget = '1';
+    document.head.appendChild(script);
+
     instance = explainit({
       chatId: 'chat-1',
-      appUrl: 'https://app.example.com',
+      apiUrl: 'https://api.example.com',
       button: '#ask-ai',
     });
 
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    const iframe = document.querySelector(
-      'iframe.explainit-host-frame',
-    ) as HTMLIFrameElement | null;
-    expect(iframe).toBeTruthy();
-    expect(iframe?.src).toBe('https://app.example.com/host/chat-1');
-    expect(iframe?.classList.contains('is-open')).toBe(true);
-  });
-
-  it('posts page context after Host Chat is ready, not on click', () => {
-    const button = hostButton();
-    instance = explainit({
-      chatId: 'chat-1',
-      appUrl: 'https://app.example.com',
-      button,
+    await vi.waitFor(() => {
+      expect(document.getElementById('explainit-widget-host')).toBeTruthy();
+      expect(mount).toHaveBeenCalled();
     });
 
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    const iframe = document.querySelector(
-      'iframe.explainit-host-frame',
-    ) as HTMLIFrameElement;
-    const postMessage = vi
-      .spyOn(iframe.contentWindow!, 'postMessage')
-      .mockImplementation(() => undefined);
-
-    expect(postMessage).not.toHaveBeenCalled();
-
-    window.dispatchEvent(
-      new MessageEvent('message', {
-        origin: 'https://app.example.com',
-        data: { type: 'explainit:ready' },
-      }),
-    );
-
-    expect(postMessage).toHaveBeenCalledWith(
+    expect(mount).toHaveBeenCalledWith(
+      expect.any(ShadowRoot),
       expect.objectContaining({
-        type: 'explainit:page-context',
-        pageUrl: 'https://docs.example.com/guide',
+        chatId: 'chat-1',
+        apiUrl: 'https://api.example.com',
       }),
-      'https://app.example.com',
     );
+    expect(
+      document.getElementById('explainit-widget-host')?.classList.contains(
+        'is-open',
+      ),
+    ).toBe(true);
+    expect(document.querySelector('iframe')).toBeNull();
   });
 
-  it('shows Host Chat again after close', () => {
+  it('toggles closed on second click', async () => {
+    const unmount = vi.fn();
+    window.ExplainitWidget = { mount: vi.fn(() => unmount) };
+    const script = document.createElement('script');
+    script.dataset.explainitWidget = '1';
+    document.head.appendChild(script);
+
     const button = hostButton();
     instance = explainit({
       chatId: 'chat-1',
-      appUrl: 'https://app.example.com',
+      apiUrl: 'https://api.example.com',
       button,
     });
 
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    const iframe = document.querySelector(
-      'iframe.explainit-host-frame',
-    ) as HTMLIFrameElement;
-    expect(iframe.classList.contains('is-open')).toBe(true);
-
-    window.dispatchEvent(
-      new MessageEvent('message', {
-        origin: 'https://app.example.com',
-        data: { type: 'explainit:close' },
-      }),
+    await vi.waitFor(() =>
+      expect(document.getElementById('explainit-widget-host')).toBeTruthy(),
     );
-    expect(iframe.classList.contains('is-open')).toBe(false);
-
-    const postMessage = vi
-      .spyOn(iframe.contentWindow!, 'postMessage')
-      .mockImplementation(() => undefined);
-
-    window.dispatchEvent(
-      new MessageEvent('message', {
-        origin: 'https://app.example.com',
-        data: { type: 'explainit:ready' },
-      }),
-    );
-    postMessage.mockClear();
 
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    expect(iframe.classList.contains('is-open')).toBe(true);
-    expect(postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'explainit:page-context' }),
-      'https://app.example.com',
-    );
+    expect(unmount).toHaveBeenCalled();
+    expect(
+      document.getElementById('explainit-widget-host')?.classList.contains(
+        'is-open',
+      ),
+    ).toBe(false);
   });
 
-  it('destroy removes Host Chat from the page and leaves the Host control', () => {
+  it('destroy removes the widget host and leaves the Host control', async () => {
+    window.ExplainitWidget = { mount: vi.fn(() => () => undefined) };
+    const script = document.createElement('script');
+    script.dataset.explainitWidget = '1';
+    document.head.appendChild(script);
+
     const button = hostButton();
     instance = explainit({
       chatId: 'chat-1',
-      appUrl: 'https://app.example.com',
+      apiUrl: 'https://api.example.com',
       button,
     });
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await vi.waitFor(() =>
+      expect(document.getElementById('explainit-widget-host')).toBeTruthy(),
+    );
 
     instance?.destroy();
     instance = undefined;
 
     expect(document.getElementById('ask-ai')).toBe(button);
-    expect(document.querySelector('iframe.explainit-host-frame')).toBeNull();
+    expect(document.getElementById('explainit-widget-host')).toBeNull();
     expect(document.getElementById('explainit-launcher-style')).toBeNull();
   });
 });
