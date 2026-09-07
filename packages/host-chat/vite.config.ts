@@ -5,25 +5,19 @@ import react from '@vitejs/plugin-react';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 
-/** CDN Host widget: classic IIFE + CSS for the Launcher ShadowRoot. */
+/** CDN Host Chat: classic IIFE + CSS for the Launcher ShadowRoot. */
 export default defineConfig({
   plugins: [react()],
   define: {
     'process.env.NODE_ENV': JSON.stringify('production'),
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(rootDir, 'src'),
-    },
-  },
+  publicDir: false,
   build: {
-    outDir: 'dist-widget',
+    outDir: 'dist',
     emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
-      entry: path.resolve(rootDir, 'src/host-frame.tsx'),
-      // Must not be ExplainitWidget — Vite assigns the IIFE return value to
-      // that global and would wipe window.ExplainitWidget = { mount }.
+      entry: path.resolve(rootDir, 'src/widget.tsx'),
       name: '__ExplainitWidgetBundle',
       formats: ['iife'],
       fileName: () => 'widget',

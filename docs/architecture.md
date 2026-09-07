@@ -2,18 +2,19 @@
 
 Explainit uses a three-layer Retrieval-Augmented Generation (RAG) architecture:
 
-1. `client` (Vite + React) for user interaction
+1. `client` (Vite + React) for the Owner dashboard
 2. `server` (NestJS) for orchestration and policy
 3. `postgres` (Postgres + pgvector) for transactional and semantic data
 
-The **Launcher** (`packages/launcher`) is a separate minified IIFE on a CDN. Host sites call `explainit({ chatId, apiUrl, button, theme })` with a Host-owned control; `theme` is `light` | `dark` | `system`. The Launcher mounts a Shadow DOM widget that calls the visitor API. Custom UIs can call the same JSON endpoints without the widget.
+The **Launcher** (`packages/launcher`) is a vanilla IIFE on a CDN. Host sites call `explainit({ chatId, apiUrl, button, theme })` with a Host-owned control; `theme` is `light` | `dark` | `system`. On click it mounts **Host Chat** (`packages/host-chat`) — the default Ask AI UI — into a ShadowRoot. Custom UIs can call the same JSON visitor endpoints without that widget.
 
 External providers supply language model inference, embedding generation, and optional storage integrations.
 
 ## System context
 
-- `client`: chat UX, workspace/resource setup, and response rendering
-- `launcher` + `widget`: CDN IIFEs — launcher opens Ask AI in a ShadowRoot; widget talks to Nest (`explainit({ chatId, apiUrl, button, theme })`)
+- `client`: Owner dashboard — workspace/resource setup, Preview (imports Host Chat UI)
+- `launcher`: vanilla CDN IIFE that opens Ask AI in a ShadowRoot (`explainit({ chatId, apiUrl, button, theme })`)
+- `host-chat`: React Ask AI UI shared by dashboard Preview/`/chat/:id` and the CDN `widget.js`/`widget.css`
 - `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation; visitor routes allowlist `Origin` against `Chat.hostOrigins`
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
@@ -49,7 +50,7 @@ Current infrastructure folders and responsibilities:
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
-- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `widget` one-shots upload `launcher.js` and `widget.js`/`widget.css`. The app does not.
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `host-chat` one-shots upload `launcher.js` and `widget.js`/`widget.css`. The dashboard does not.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 
@@ -64,7 +65,9 @@ Current infrastructure folders and responsibilities:
 ## Why this shape works
 
 - **Separation of concerns**
-  - `client` optimizes UX and perceived latency
+  - `client` is the Owner dashboard
+  - `host-chat` is Visitor Ask AI (Preview, `/chat/:id`, and the Host-site widget)
+  - `launcher` is the vanilla Host-site bootstrap
   - `server` centralizes retrieval logic, policy enforcement, and provider coordination
   - `postgres` is the source of truth for both business entities and embeddings
 - **Grounded generation**

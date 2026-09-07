@@ -6,14 +6,14 @@ ARG VITE_API_BASE_URL=http://localhost:4000
 ARG VITE_LAUNCHER_SRC=http://localhost:4566/explainit-cdn/launcher.js
 ARG VITE_PUBLIC_API_URL=http://localhost:4000
 
+# Nest host-chat under /app so Vite resolves react from /app/node_modules.
+COPY apps/client/package.json apps/client/package-lock.json /app/
 WORKDIR /app
-
-COPY package.json .
-COPY package-lock.json .
 
 RUN npm install
 
-COPY . .
+COPY apps/client /app
+COPY packages/host-chat /app/packages/host-chat
 
 RUN VITE_API_BASE_URL=$VITE_API_BASE_URL \
   VITE_LAUNCHER_SRC=$VITE_LAUNCHER_SRC \

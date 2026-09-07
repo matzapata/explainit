@@ -1,11 +1,7 @@
 import { useRef, useState } from 'react';
-import {
-  ChatMessage,
-  MessageRole,
-  chatService,
-} from '@/lib/services/chat-service';
-import { getAccessToken } from '@/lib/auth/config';
-import type { PageContext } from '@/components/chat/ask-ai-overlay';
+import { streamMessage } from '../visitor-api';
+import { ChatMessage, MessageRole } from '../types';
+import type { PageContext } from '../../components/chat/ask-ai-overlay';
 
 function conversationStorageKey(chatId: string): string {
   return `explainit_conversation:${chatId}`;
@@ -50,6 +46,7 @@ export default function useChat(
   chatId: string,
   initialMessages: ChatMessage[] = [],
   pageContext?: PageContext,
+  accessToken?: string,
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,8 +79,7 @@ export default function useChat(
     try {
       const ctx = livePageContext(pageContextRef.current);
       pageContextRef.current = ctx;
-      const token = getAccessToken();
-      const response = await chatService.streamMessage(
+      const response = await streamMessage(
         chatId,
         message,
         messages.map((m) => ({
@@ -107,7 +103,7 @@ export default function useChat(
           },
           pageUrl: ctx?.pageUrl,
           selectedText: ctx?.selectedText,
-          accessToken: token || undefined,
+          accessToken,
           conversationId: conversationIdRef.current,
           onConversationId: (id) => {
             conversationIdRef.current = id;

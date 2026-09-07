@@ -1,7 +1,7 @@
 'use client';
 
-import { ChatPanel } from '@/components/chat/chat-panel';
-import { ChatTranscript } from '@/components/chat/chat-transcript';
+import { ChatPanel } from './chat-panel';
+import { ChatTranscript } from './chat-transcript';
 import {
   Dialog,
   DialogClose,
@@ -9,10 +9,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '../ui/dialog';
 import { Plus, X } from 'lucide-react';
-import useChat from '@/lib/hooks/use-chat';
-import { ChatMetadataDto } from '@/lib/services/chat-service';
+import useChat from '../../lib/hooks/use-chat';
+import { ChatMetadata } from '../../lib/types';
 
 export type PageContext = {
   pageUrl?: string;
@@ -20,13 +20,14 @@ export type PageContext = {
 };
 
 export function AskAiOverlay(props: {
-  chat: ChatMetadataDto;
+  chat: ChatMetadata;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pageContext?: PageContext;
+  accessToken?: string;
 }) {
   const { messages, setMessages, isLoading, input, setInput, append, stop } =
-    useChat(props.chat.id, [], props.pageContext);
+    useChat(props.chat.id, [], props.pageContext, props.accessToken);
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>

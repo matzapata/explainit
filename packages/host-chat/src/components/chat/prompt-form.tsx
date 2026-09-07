@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import Textarea from 'react-textarea-autosize';
 
-import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { Button } from '@/components/ui/button';
+import { useEnterSubmit } from '../../lib/hooks/use-enter-submit';
+import { Button } from '../ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { IconArrowElbow } from '@/components/ui/icons';
+} from '../ui/tooltip';
+import { IconArrowElbow } from '../ui/icons';
 
 interface PromptProps {
   onSubmit: (value: string) => unknown;

@@ -1,4 +1,4 @@
-import { IconArrowRight } from "@/components/ui/icons";
+import { IconArrowRight } from "../ui/icons";
 
 
 export function EmptyScreen(props: {

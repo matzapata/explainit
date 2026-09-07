@@ -1,13 +1,10 @@
-import { ChatList } from '@/components/chat/chat-list';
-import { ChatScrollAnchor } from '@/components/chat/chat-scroll-anchor';
-import { EmptyScreen } from '@/components/chat/empty-screen';
-import {
-  ChatMessage,
-  ChatMetadataDto,
-} from '@/lib/services/chat-service';
+import { ChatList } from './chat-list';
+import { ChatScrollAnchor } from './chat-scroll-anchor';
+import { EmptyScreen } from './empty-screen';
+import { ChatMessage, ChatMetadata } from '../../lib/types';
 
 export function ChatTranscript(props: {
-  chat: ChatMetadataDto;
+  chat: ChatMetadata;
   messages: ChatMessage[];
   isLoading: boolean;
   append: (value: string) => void;

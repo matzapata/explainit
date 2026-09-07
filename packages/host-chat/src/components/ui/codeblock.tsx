@@ -7,10 +7,10 @@ import {
   coldarkDark,
 } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
-import { useHostTheme } from '@/components/chat/host-theme-root'
-import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
-import { IconCheck, IconCopy, IconDownload } from '@/components/ui/icons'
-import { Button } from '@/components/ui/button'
+import { useHostTheme } from '../chat/host-theme-root'
+import { useCopyToClipboard } from '../../lib/hooks/use-copy-to-clipboard'
+import { IconCheck, IconCopy, IconDownload } from './icons'
+import { Button } from './button'
 
 interface Props {
   language: string

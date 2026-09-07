@@ -3,13 +3,13 @@
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
-import { CodeBlock } from '@/components/ui/codeblock';
-import { MemoizedReactMarkdown } from '@/components/chat/markdown';
-import { MessageSources } from '@/components/chat/chat-message-context';
+import { CodeBlock } from '../ui/codeblock';
+import { MemoizedReactMarkdown } from './markdown';
+import { MessageSources } from './chat-message-context';
 import {
   ChatMessage as IChatMessage,
   MessageRole,
-} from '@/lib/services/chat-service';
+} from '../../lib/types';
 
 export interface ChatMessageProps {
   message: IChatMessage;

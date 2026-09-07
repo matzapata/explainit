@@ -1,6 +1,6 @@
 # Explainit client
 
-Vite + React SPA for the Explainit admin and public chat UI. It talks to the NestJS API (`apps/server`).
+Vite + React SPA for the Owner dashboard. It talks to the NestJS API (`apps/server`). Ask AI UI (Preview and `/chat/:id`) comes from `@explainit/host-chat` (`packages/host-chat`).
 
 ## Scripts
 

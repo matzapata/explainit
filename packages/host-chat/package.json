@@ -1,0 +1,48 @@
+{
+  "name": "@explainit/host-chat",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-slot": "1.3.3",
+    "@radix-ui/react-tooltip": "1.2.16",
+    "@tanstack/react-query": "5.102.8",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "0.344.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-intersection-observer": "9.16.0",
+    "react-markdown": "8.0.7",
+    "react-syntax-highlighter": "15.6.6",
+    "react-textarea-autosize": "8.5.9",
+    "remark-gfm": "3.0.1",
+    "remark-math": "6.0.0",
+    "tailwind-merge": "2.6.1",
+    "tailwindcss-animate": "1.0.7"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.6",
+    "@types/node": "20.19.43",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@types/react-syntax-highlighter": "15.5.13",
+    "@vitejs/plugin-react": "6.1.0",
+    "autoprefixer": "10.5.4",
+    "jsdom": "27.0.1",
+    "postcss": "8.5.26",
+    "tailwindcss": "3.4.19",
+    "typescript": "5.9.3",
+    "vite": "8.2.2",
+    "vitest": "3.2.7"
+  }
+}

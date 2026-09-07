@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PortalContainerContext } from '@/lib/portal-container';
+import { PortalContainerContext } from '../../lib/portal-container';
 import { HostThemeRoot, useHostTheme } from './host-theme-root';
 
 function ThemeLabel() {

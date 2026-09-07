@@ -10,8 +10,8 @@ import {
   resolveHostTheme,
   type HostTheme,
   type ResolvedHostTheme,
-} from '@/lib/host-theme';
-import { usePortalContainer } from '@/lib/portal-container';
+} from '../../lib/host-theme';
+import { usePortalContainer } from '../../lib/portal-container';
 
 const HostThemeContext = createContext<ResolvedHostTheme>('light');
 

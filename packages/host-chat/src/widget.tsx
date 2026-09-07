@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AskAiOverlay, type PageContext } from '@/components/chat/ask-ai-overlay';
-import { HostThemeRoot } from '@/components/chat/host-theme-root';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { PortalContainerContext } from '@/lib/portal-container';
-import { allowWheelThroughScrollLock } from '@/lib/composed-wheel-scroll';
-import { type HostTheme } from '@/lib/host-theme';
-import { chatService, ChatMetadataDto } from '@/lib/services/chat-service';
+import { AskAiOverlay, type PageContext } from './components/chat/ask-ai-overlay';
+import { HostThemeRoot } from './components/chat/host-theme-root';
+import { TooltipProvider } from './components/ui/tooltip';
+import { PortalContainerContext } from './lib/portal-container';
+import { allowWheelThroughScrollLock } from './lib/composed-wheel-scroll';
+import { type HostTheme } from './lib/host-theme';
+import { ChatMetadata } from './lib/types';
+import { getChat } from './lib/visitor-api';
+import './lib/api-base';
 import './index.css';
 
 export type WidgetMountOptions = {
@@ -23,7 +25,7 @@ export function WidgetApp(props: {
   onClose?: () => void;
   pageContext?: PageContext;
 }) {
-  const [chat, setChat] = useState<ChatMetadataDto | null>(null);
+  const [chat, setChat] = useState<ChatMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
   const [pageContext, setPageContext] = useState<PageContext>(
@@ -38,8 +40,7 @@ export function WidgetApp(props: {
       setError('Missing Chat id');
       return;
     }
-    chatService
-      .getChat(props.chatId)
+    getChat(props.chatId)
       .then(setChat)
       .catch(() => setError('Chat not available'));
   }, [props.chatId]);
@@ -86,9 +87,6 @@ export function WidgetApp(props: {
     />
   );
 }
-
-/** @deprecated Use WidgetApp — kept for tests that import the old name. */
-export const HostFrameApp = WidgetApp;
 
 function mount(
   shadowRoot: ShadowRoot,

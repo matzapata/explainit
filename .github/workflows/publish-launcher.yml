@@ -19,7 +19,7 @@ jobs:
           cache: npm
           cache-dependency-path: |
             packages/launcher/package-lock.json
-            apps/client/package-lock.json
+            packages/host-chat/package-lock.json
       - name: Build launcher
         working-directory: packages/launcher
         run: |
@@ -27,10 +27,11 @@ jobs:
           npm test
           npm run build
       - name: Build widget
-        working-directory: apps/client
+        working-directory: packages/host-chat
         run: |
           npm ci
-          npm run build:widget
+          npm test
+          npm run build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -45,10 +46,10 @@ jobs:
           aws s3 cp packages/launcher/dist/launcher.js "s3://${LAUNCHER_S3_BUCKET}/${key}" \
             --content-type 'application/javascript; charset=utf-8' \
             --cache-control 'public, max-age=60'
-          aws s3 cp apps/client/dist-widget/widget.js "s3://${LAUNCHER_S3_BUCKET}/widget.js" \
+          aws s3 cp packages/host-chat/dist/widget.js "s3://${LAUNCHER_S3_BUCKET}/widget.js" \
             --content-type 'application/javascript; charset=utf-8' \
             --cache-control 'public, max-age=60'
-          aws s3 cp apps/client/dist-widget/widget.css "s3://${LAUNCHER_S3_BUCKET}/widget.css" \
+          aws s3 cp packages/host-chat/dist/widget.css "s3://${LAUNCHER_S3_BUCKET}/widget.css" \
             --content-type 'text/css; charset=utf-8' \
             --cache-control 'public, max-age=60'
           if [ -n "${{ secrets.LAUNCHER_CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
