@@ -226,8 +226,8 @@ function mountLauncher(config: {
 }
 
 /**
- * Start the Launcher on the Host page. Website (`Chat.url`) is the
- * API Origin whitelist — enforced by Nest, not by this call.
+ * Start the Launcher on the Host page. `Chat.hostOrigins` is the API Origin
+ * whitelist — enforced by Nest, not by this call.
  */
 export default function explainit(
   options: ExplainitOptions,

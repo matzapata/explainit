@@ -16,7 +16,7 @@ Vanilla IIFE that Host sites load from a CDN. The dashboard Install snippet is:
 
 `button` is a Host-owned element or a CSS selector for one. The Launcher does not create that control.
 
-On click, the Launcher mounts `widget.js` in a closed ShadowRoot on the Host page. The widget calls the visitor API at `apiUrl`. Website (`Chat.url`) is the Origin whitelist enforced by Nest — not by this script.
+On click, the Launcher mounts `widget.js` in a closed ShadowRoot on the Host page. The widget calls the visitor API at `apiUrl`. `Chat.hostOrigins` is the Origin whitelist enforced by Nest — not by this script.
 
 ## Local
 

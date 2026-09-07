@@ -12,25 +12,16 @@ import {
   publicApiUrl,
 } from '@/lib/install-snippet';
 
-function originFromWebsite(website?: string): string | null {
-  if (!website?.trim()) return null;
-  try {
-    return new URL(website.trim()).origin;
-  } catch {
-    return null;
-  }
-}
-
 export default function CodeSnippet(props: {
   id: string;
-  website?: string;
+  hostOrigins?: string[];
 }) {
   const [codeSnippet, setCodeSnippet] = useState('');
-  const hostOrigin = originFromWebsite(props.website);
+  const origins = props.hostOrigins ?? [];
   const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
 
   useEffect(() => {
-    if (!hostOrigin) {
+    if (!origins.length) {
       setCodeSnippet('');
       return;
     }
@@ -41,17 +32,17 @@ export default function CodeSnippet(props: {
         apiUrl: publicApiUrl(),
       }),
     );
-  }, [props.id, hostOrigin]);
+  }, [props.id, origins.join('|')]);
 
-  if (!hostOrigin) {
+  if (!origins.length) {
     return (
       <div className="space-y-2 md:space-y-0 md:flex py-6">
         <p className="text-sm md:w-64 font-medium text-gray-900 dark:text-gray-300">
           Install snippet
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-400 md:flex-1">
-          Set your Website above first. That origin is the Host site whitelist:
-          only browsers on that origin may call the visitor API.
+          Add at least one Host origin above first. Only browsers on those
+          origins may call the visitor API.
         </p>
       </div>
     );
@@ -86,9 +77,16 @@ export default function CodeSnippet(props: {
           {codeSnippet}
         </SyntaxHighlighter>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Host origin (from Website): <code>{hostOrigin}</code>. The API rejects
-          requests from other origins. Style or replace the Ask AI control — the
-          Launcher does not create it.
+          Allowed Host origins:{' '}
+          {origins.map((origin, i) => (
+            <span key={origin}>
+              {i > 0 ? ', ' : ''}
+              <code>{origin}</code>
+            </span>
+          ))}
+          . Paste the same snippet on each; the API rejects requests from other
+          origins. Style or replace the Ask AI control — the Launcher does not
+          create it.
         </p>
         <div>
           <Button

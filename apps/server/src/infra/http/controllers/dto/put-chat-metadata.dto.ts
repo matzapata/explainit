@@ -1,4 +1,6 @@
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsOptional,
   IsString,
@@ -12,8 +14,10 @@ export class UpdateChatMetadataDto {
   name?: string;
 
   @IsOptional()
-  @IsString()
-  url?: string;
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  hostOrigins?: string[];
 
   @IsOptional()
   @MaxLength(100, { each: true })

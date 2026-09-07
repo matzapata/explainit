@@ -6,7 +6,7 @@ export class ChatMetadataDto {
   @Expose()
   name: string;
   @Expose()
-  url: string;
+  hostOrigins: string[];
   @Expose()
   conversationStarters: string[];
   @Expose()

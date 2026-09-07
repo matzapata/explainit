@@ -14,7 +14,7 @@ External providers supply language model inference, embedding generation, and op
 
 - `client`: chat UX, workspace/resource setup, and response rendering
 - `launcher` + `widget`: CDN IIFEs — launcher opens Ask AI in a ShadowRoot; widget talks to Nest (`explainit({ chatId, apiUrl, button })`)
-- `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation; visitor routes allowlist `Origin` against `Chat.url`
+- `server` API: auth, enqueue ingest jobs, retrieval, prompt assembly, and response generation; visitor routes allowlist `Origin` against `Chat.hostOrigins`
 - `server` worker: BullMQ processor that scrapes, chunks, and embeds website resources
 - `postgres`: source records, chats/messages, chunk metadata, and vector indexes
 - `redis`: BullMQ job queue and rate-limit counters
@@ -178,7 +178,7 @@ An embedding is a dense numeric representation where semantically related text i
 ## Data model notes
 
 - **User**: `id` UUID, unique `email`, optional `name`
-- **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points
+- **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points; `hostOrigins` for visitor Origin allowlisting
 - **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
 
@@ -198,7 +198,7 @@ Distinguish transient provider failures (retryable) from deterministic content f
 
 - Enforce chat ownership and namespace scoping in all retrieval queries
 - Never trust client-supplied scope without server-side validation
-- Visitor `GET /api/chats/:id` and `POST …/messages` require a browser `Origin` (or `Referer`) that matches `Chat.url`, a dashboard `CORS_ORIGIN`, or (in development) localhost / `127.0.0.1`
+- Visitor `GET /api/chats/:id` and `POST …/messages` require a browser `Origin` (or `Referer`) that matches any `Chat.hostOrigins` entry or a dashboard `CORS_ORIGIN`
 - Keep provider credentials in environment-managed secrets
 - Redact sensitive fields from logs and telemetry payloads
 

@@ -64,7 +64,10 @@ export function ShareStep(props: { chat: ChatMetadataDto }) {
       {published ? (
         <>
           <div className="my-4 rounded-lg border border-gray-800 px-4">
-            <CodeSnippet id={props.chat.id} website={props.chat.url} />
+            <CodeSnippet
+              id={props.chat.id}
+              hostOrigins={props.chat.hostOrigins ?? []}
+            />
           </div>
           <div className="flex justify-between my-4">
             <Button variant={'outline'} onClick={() => router.back()}>

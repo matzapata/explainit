@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   NotFoundException,
+  BadRequestException,
   Param,
   Post,
   Put,
@@ -14,6 +15,7 @@ import { Request, Response } from 'express';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ConversationService } from '@src/modules/chat/conversation.service';
 import {
+  normalizeHostOrigins,
   parseDashboardOrigins,
   requestOrigin,
   visitorOriginAllowed,
@@ -54,7 +56,7 @@ export class ChatController {
     @CurrentUser() user: AuthUser,
     @Body() data: UpdateChatMetadataDto,
   ): Promise<Chat> {
-    return this.chatsService.create(user.id, data);
+    return this.chatsService.create(user.id, this.normalizeUpdate(data));
   }
 
   @Get('/')
@@ -81,7 +83,7 @@ export class ChatController {
     @Body() data: UpdateChatMetadataDto,
     @Param('id') id: string,
   ): Promise<Chat> {
-    return this.chatsService.update(user.id, id, data);
+    return this.chatsService.update(user.id, id, this.normalizeUpdate(data));
   }
 
   @Get('/:id')
@@ -94,7 +96,7 @@ export class ChatController {
     if (!chat.published && !req.currentUser) {
       throw new NotFoundException('Chat not found');
     }
-    this.assertVisitorOrigin(req, chat.url);
+    this.assertVisitorOrigin(req, chat.hostOrigins);
 
     return chat;
   }
@@ -119,7 +121,7 @@ export class ChatController {
     if (!chat.published && !req.currentUser) {
       throw new NotFoundException('Chat not found');
     }
-    this.assertVisitorOrigin(req, chat.url);
+    this.assertVisitorOrigin(req, chat.hostOrigins);
 
     await this.chatsService.incrementPoints(chat.id);
 
@@ -189,14 +191,30 @@ export class ChatController {
     }
   }
 
-  private assertVisitorOrigin(req: Request, websiteUrl: string | null) {
+  private normalizeUpdate(data: UpdateChatMetadataDto): UpdateChatMetadataDto {
+    if (data.hostOrigins === undefined) {
+      return data;
+    }
+
+    try {
+      return {
+        ...data,
+        hostOrigins: normalizeHostOrigins(data.hostOrigins, { strict: true }),
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid hostOrigins',
+      );
+    }
+  }
+
+  private assertVisitorOrigin(req: Request, hostOrigins: string[] = []) {
     const origin = requestOrigin(
       headerString(req.headers.origin),
       headerString(req.headers.referer),
     );
-    const allowed = visitorOriginAllowed(origin, websiteUrl, {
+    const allowed = visitorOriginAllowed(origin, hostOrigins, {
       dashboardOrigins: parseDashboardOrigins(this.env.get('CORS_ORIGIN')),
-      development: this.env.get('NODE_ENV') === 'development',
     });
     if (!allowed) {
       throw new NotFoundException('Chat not found');

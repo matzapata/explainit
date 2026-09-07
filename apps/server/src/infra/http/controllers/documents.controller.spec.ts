@@ -17,11 +17,11 @@ describe('DocumentsController', () => {
   const chat = {
     id: 'chatId',
     name: 'name',
-    url: 'url',
     description: null,
     points: 0,
     published: false,
     conversationStarters: [],
+    hostOrigins: [],
     createdAt: new Date(),
     ownerId: 'ownerId',
   };
