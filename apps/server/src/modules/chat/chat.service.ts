@@ -1,15 +1,15 @@
-import { Prisma } from '@prisma/client';
-import { ChatRepository } from './chat.repository';
-import { Injectable } from '@nestjs/common';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { LlmService } from '@src/infra/llm/llm.service';
+import { Injectable } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
+import type { LlmService } from '@src/infra/llm/llm.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
-import { RetrievalService } from '@src/modules/retrieval/retrieval.service';
+import type { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
+import type { RetrievalService } from '@src/modules/retrieval/retrieval.service';
+import type { ChatRepository } from './chat.repository';
+import { nextAvailableColor } from './chat-colors';
 import { MessageAgent } from './message';
 import { ANSWER_PROMPT } from './prompts/rag-system.prompt';
-import { nextAvailableColor } from './chat-colors';
 
 export { MessageAgent };
 

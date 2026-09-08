@@ -1,16 +1,14 @@
 'use client';
 
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { Button } from '../ui/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useAccessToken } from '@/lib/auth/use-session';
+import { type ChatResource, chatService } from '@/lib/services/chat-service';
+import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
@@ -29,14 +27,16 @@ import {
   FormMessage,
 } from '../ui/form';
 import { Input } from '../ui/input';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useAccessToken } from '@/lib/auth/use-session';
-import { ChatResource, chatService } from '@/lib/services/chat-service';
-import { toast } from '../ui/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
 import { Textarea } from '../ui/textarea';
+import { toast } from '../ui/use-toast';
 
 const addTextFormSchema = z.object({
   text: z
@@ -57,7 +57,7 @@ function stringIsAValidUrl(s: string): boolean {
   try {
     new URL(s);
     return true;
-  } catch (err) {
+  } catch {
     return false;
   }
 }
@@ -106,7 +106,8 @@ export default function ResourcesTable(props: {
   );
 
   const inflight = resources.some(
-    (resource) => resource.status === 'pending' || resource.status === 'processing',
+    (resource) =>
+      resource.status === 'pending' || resource.status === 'processing',
   );
 
   useEffect(() => {
@@ -132,13 +133,17 @@ export default function ResourcesTable(props: {
   const deleteResourceMutation = useMutation({
     mutationFn: (mutationProps: { id: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.deleteResource(accessTokenRaw,props.chatId,  mutationProps.id);
+      return chatService.deleteResource(
+        accessTokenRaw,
+        props.chatId,
+        mutationProps.id,
+      );
     },
     onSuccess: (id) => {
       setResources((r) => r.filter((s) => s.id !== id));
       toast({ description: 'Successfully removed.' });
     },
-    onError: (error) => {
+    onError: () => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
@@ -156,7 +161,11 @@ export default function ResourcesTable(props: {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
-        <AddNewWebResource chatId={props.chatId} setResources={setResources} initialUrl={props.initialUrl} />
+        <AddNewWebResource
+          chatId={props.chatId}
+          setResources={setResources}
+          initialUrl={props.initialUrl}
+        />
         <AddTextResource chatId={props.chatId} setResources={setResources} />
       </div>
 
@@ -227,7 +236,11 @@ function ResourceStatusLabel(props: { resource: ChatResource }) {
   );
 }
 
-function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?: string, chatId: string }) {
+function AddNewWebResource(props: {
+  setResources: (r: any) => void;
+  initialUrl?: string;
+  chatId: string;
+}) {
   const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const [urls, setUrls] = useState<string[]>([]);
@@ -247,13 +260,17 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   const inspectResourceMutation = useMutation({
     mutationFn: async (mutationProps: { url: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.inspectResource(accessTokenRaw, props.chatId, mutationProps.url);
+      return chatService.inspectResource(
+        accessTokenRaw,
+        props.chatId,
+        mutationProps.url,
+      );
     },
     onSuccess: (data) => {
       setUrls(data.urls);
       addForm.setValue('urls', data.urls.join('\n'));
     },
-    onError: (error) => {
+    onError: () => {
       toast({ description: `Sorry, something went wrong. Please try again.` });
     },
   });
@@ -261,7 +278,11 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   const addResourcesMutation = useMutation({
     mutationFn: (mutationProps: { urls: string[] }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addWebResource(accessTokenRaw, props.chatId, mutationProps.urls);
+      return chatService.addWebResource(
+        accessTokenRaw,
+        props.chatId,
+        mutationProps.urls,
+      );
     },
     onSuccess: (data) => {
       props.setResources((r: any) => [...r, ...data]);
@@ -400,7 +421,10 @@ function AddNewWebResource(props: { setResources: (r: any) => void, initialUrl?:
   );
 }
 
-function AddTextResource(props: { setResources: (r: any) => void, chatId: string }) {
+function AddTextResource(props: {
+  setResources: (r: any) => void;
+  chatId: string;
+}) {
   const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
   const inspectForm = useForm<z.infer<typeof addTextFormSchema>>({
@@ -412,10 +436,7 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
   });
 
   const addTextMutation = useMutation({
-    mutationFn: async (mutationProps: {
-      text: string;
-      title: string;
-    }) => {
+    mutationFn: async (mutationProps: { text: string; title: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
       return chatService.addTextResource(
         accessTokenRaw,
@@ -494,11 +515,7 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
                 <FormItem>
                   <FormLabel>Text</FormLabel>
                   <FormControl>
-                    <Textarea
-                      rows={10}
-                      placeholder="Content....."
-                      {...field}
-                    />
+                    <Textarea rows={10} placeholder="Content....." {...field} />
                   </FormControl>
 
                   <FormMessage />

@@ -1,11 +1,10 @@
-import { Job } from 'bullmq';
-import { IngestJob } from '@src/modules/documents/ingest-job';
+import { DocumentsProcessor } from '@src/modules/documents/documents.processor';
 import {
-  DocumentsService,
-  errorMessage,
+  type DocumentsService,
   PermanentIngestError,
 } from '@src/modules/documents/documents.service';
-import { DocumentsProcessor } from '@src/modules/documents/documents.processor';
+import type { IngestJob } from '@src/modules/documents/ingest-job';
+import type { Job } from 'bullmq';
 
 describe('DocumentsProcessor', () => {
   const processJob = jest.fn();

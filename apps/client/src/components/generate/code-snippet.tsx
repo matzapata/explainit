@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { Button } from '../ui/button';
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard';
-import { toast } from '../ui/use-toast';
 import {
   generateInstallSnippet,
   launcherSrc,
   publicApiUrl,
 } from '@/lib/install-snippet';
+import { Button } from '../ui/button';
+import { toast } from '../ui/use-toast';
 
 export default function CodeSnippet(props: {
   id: string;
@@ -32,7 +32,7 @@ export default function CodeSnippet(props: {
         apiUrl: publicApiUrl(),
       }),
     );
-  }, [props.id, origins.join('|')]);
+  }, [props.id, origins.length]);
 
   if (!origins.length) {
     return (
@@ -66,7 +66,8 @@ export default function CodeSnippet(props: {
           codeTagProps={{
             style: {
               fontSize: '0.75rem',
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              fontFamily:
+                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
             },
           }}
         >

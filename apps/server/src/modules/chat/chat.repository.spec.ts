@@ -1,4 +1,4 @@
-import { PrismaService } from '@src/infra/database/prisma.service';
+import type { PrismaService } from '@src/infra/database/prisma.service';
 import { ChatRepository } from './chat.repository';
 
 describe('ChatRepository', () => {

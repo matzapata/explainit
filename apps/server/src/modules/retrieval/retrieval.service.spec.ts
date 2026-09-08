@@ -1,6 +1,6 @@
 import { RunnableLambda } from '@langchain/core/runnables';
-import { LlmService } from '@src/infra/llm/llm.service';
-import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
+import type { LlmService } from '@src/infra/llm/llm.service';
+import type { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { MessageAgent } from '../chat/message';
 import { RetrievalService } from './retrieval.service';
 

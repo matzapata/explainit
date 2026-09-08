@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import type { Reflector } from '@nestjs/core';
+import type { RateLimitOptions } from '@src/infra/http/decorators/rate-limit.decorator';
+import type { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
 import { RateLimiterRes } from 'rate-limiter-flexible';
-import { RateLimitOptions } from '@src/infra/http/decorators/rate-limit.decorator';
-import { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
 import { RateLimiterGuard } from './rate-limiter.guard';
 
 describe('RateLimiterGuard', () => {

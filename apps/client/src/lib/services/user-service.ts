@@ -1,21 +1,22 @@
-import { apiService } from "@/lib/services/api-service"
-import { AxiosInstance } from "axios"
+import type { AxiosInstance } from 'axios';
+import { apiService } from '@/lib/services/api-service';
 
 export interface UserDto {
-    id: string;
-    email: string;
-    name?: string;
-    isAdmin?: boolean;
+  id: string;
+  email: string;
+  name?: string;
+  isAdmin?: boolean;
 }
 
 export class UserService {
+  constructor(private readonly client: AxiosInstance) {}
 
-    constructor(private readonly client: AxiosInstance) { }
-
-    async get(accessToken: string): Promise<UserDto> {
-        const res = await this.client.get('/api/users', { headers: { Authorization: `Bearer ${accessToken}` } })
-        return res.data
-    }
+  async get(accessToken: string): Promise<UserDto> {
+    const res = await this.client.get('/api/users', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.data;
+  }
 }
 
-export const userService = new UserService(apiService.client)
+export const userService = new UserService(apiService.client);

@@ -1,11 +1,11 @@
 import { TestBed } from '@automock/jest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { AuthGuard } from '@src/infra/http/guards/auth.guard';
+import { ResourceStatus } from '@prisma/client';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
-import { DocumentsController } from './documents.controller';
+import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
-import { ResourceStatus } from '@prisma/client';
+import { DocumentsController } from './documents.controller';
 
 describe('DocumentsController', () => {
   let documentsController: DocumentsController;

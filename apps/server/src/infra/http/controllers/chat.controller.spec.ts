@@ -1,15 +1,15 @@
 import { TestBed } from '@automock/jest';
 import { NotFoundException } from '@nestjs/common';
-import { AuthGuard } from '@src/infra/http/guards/auth.guard';
-import { AdminGuard } from '@src/infra/http/guards/admin.guard';
+import { ResourceStatus } from '@prisma/client';
+import { EnvService } from '@src/infra/env/env.service';
 import { RATE_LIMIT_OPTIONS } from '@src/infra/http/decorators/rate-limit.decorator';
-import { ChatController } from './chat.controller';
+import { AdminGuard } from '@src/infra/http/guards/admin.guard';
+import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ConversationService } from '@src/modules/chat/conversation.service';
-import { DocumentsService } from '@src/modules/documents/documents.service';
-import { EnvService } from '@src/infra/env/env.service';
-import { ResourceStatus } from '@prisma/client';
 import { MessageAgent } from '@src/modules/chat/message';
+import { DocumentsService } from '@src/modules/documents/documents.service';
+import { ChatController } from './chat.controller';
 
 const HOST_ORIGIN = 'https://docs.example.com';
 const DASHBOARD_ORIGIN = 'http://localhost:3000';
@@ -703,7 +703,9 @@ describe('ChatController', () => {
         res as never,
       );
 
-      expect(chatsService.incrementPoints).toHaveBeenCalledWith(publishedChat.id);
+      expect(chatsService.incrementPoints).toHaveBeenCalledWith(
+        publishedChat.id,
+      );
       expect(conversationService.resolveConversationId).toHaveBeenCalledWith(
         publishedChat.id,
         'client-conv',

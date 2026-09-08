@@ -1,11 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import GenerateLayout from '@/layouts/generate-layout';
-import ChatDetailsForm from './chat-details-form';
-import ConversationStartersTable from './conversation-starters-table';
-import HostOriginsTable from './host-origins-table';
+import { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,10 +15,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
+import GenerateLayout from '@/layouts/generate-layout';
 import { useAccessToken } from '@/lib/auth/use-session';
 import { useRouter } from '@/lib/router';
 import { chatService } from '@/lib/services/chat-service';
+import { cn } from '@/lib/utils';
+import ChatDetailsForm from './chat-details-form';
+import ConversationStartersTable from './conversation-starters-table';
+import HostOriginsTable from './host-origins-table';
 
 export function EditChat({ user, chat }: { user: any; chat: any }) {
   const [hostOrigins, setHostOrigins] = useState<string[]>(

@@ -1,5 +1,5 @@
-import { PrismaService } from '@src/infra/database/prisma.service';
-import { EmbeddingsService } from '@src/infra/llm/embeddings.service';
+import type { PrismaService } from '@src/infra/database/prisma.service';
+import type { EmbeddingsService } from '@src/infra/llm/embeddings.service';
 import { PgVectorProvider } from './pg-vector.provider';
 
 describe('PgVectorProvider', () => {

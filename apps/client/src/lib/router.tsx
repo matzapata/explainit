@@ -1,4 +1,9 @@
-import { Link as RouterLink, useNavigate, useRouter as useTanstackRouter, useRouterState } from '@tanstack/react-router';
+import {
+  Link as RouterLink,
+  useNavigate,
+  useRouterState,
+  useRouter as useTanstackRouter,
+} from '@tanstack/react-router';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 
 type AppLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {

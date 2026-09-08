@@ -1,5 +1,5 @@
+import type { MessageAgent } from '@src/modules/chat/message';
 import { IsArray, IsOptional, IsString } from 'class-validator';
-import { MessageAgent } from '@src/modules/chat/message';
 
 export class PostMessageDto {
   @IsString()

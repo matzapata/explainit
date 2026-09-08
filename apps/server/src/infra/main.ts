@@ -1,10 +1,10 @@
 // OpenTelemetry must initialize before Nest boots so auto-instrumentation can patch HTTP/Pino.
-import tracingService from './observability/tracing';
 
 import { NestFactory } from '@nestjs/core';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { EnvService } from './env/env.service';
+import tracingService from './observability/tracing';
 
 async function bootstrap() {
   tracingService.start();

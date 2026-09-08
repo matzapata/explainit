@@ -1,7 +1,8 @@
 'use client';
 
-import { ChatPanel } from './chat-panel';
-import { ChatTranscript } from './chat-transcript';
+import { Plus, X } from 'lucide-react';
+import useChat from '../../lib/hooks/use-chat';
+import type { ChatMetadata } from '../../lib/types';
 import {
   Dialog,
   DialogClose,
@@ -10,9 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-import { Plus, X } from 'lucide-react';
-import useChat from '../../lib/hooks/use-chat';
-import { ChatMetadata } from '../../lib/types';
+import { ChatPanel } from './chat-panel';
+import { ChatTranscript } from './chat-transcript';
 
 export type PageContext = {
   pageUrl?: string;

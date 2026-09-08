@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 import { apiBaseUrl } from '@/lib/auth/config';
 
 export class ApiService {

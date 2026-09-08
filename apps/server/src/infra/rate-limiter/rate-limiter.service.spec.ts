@@ -1,5 +1,5 @@
+import type { RedisService } from '@src/infra/redis/redis.service';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
-import { RedisService } from '@src/infra/redis/redis.service';
 import { RateLimiterService } from './rate-limiter.service';
 
 jest.mock('rate-limiter-flexible', () => ({

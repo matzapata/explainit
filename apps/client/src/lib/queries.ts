@@ -1,7 +1,7 @@
-import { QueryClient } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
+import { getAccessToken } from '@/lib/auth/config';
 import { chatService } from '@/lib/services/chat-service';
 import { userService } from '@/lib/services/user-service';
-import { getAccessToken } from '@/lib/auth/config';
 
 export const queries = {
   user: () => ({

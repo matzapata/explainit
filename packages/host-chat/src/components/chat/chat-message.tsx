@@ -2,21 +2,21 @@
 
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-
+import { type ChatMessage as IChatMessage, MessageRole } from '../../lib/types';
 import { CodeBlock } from '../ui/codeblock';
-import { MemoizedReactMarkdown } from './markdown';
 import { MessageSources } from './chat-message-context';
-import {
-  ChatMessage as IChatMessage,
-  MessageRole,
-} from '../../lib/types';
+import { MemoizedReactMarkdown } from './markdown';
 
 export interface ChatMessageProps {
   message: IChatMessage;
   isStreaming?: boolean;
 }
 
-export function ChatMessage({ message, isStreaming = false, ...props }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  isStreaming = false,
+  ...props
+}: ChatMessageProps) {
   const isUser = message.role === MessageRole.user;
   const content = isStreaming ? `${message.content}▍` : message.content;
 
@@ -40,15 +40,7 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
           remarkPlugins={[remarkGfm, remarkMath]}
           components={{
             p({ children }) {
-              if (children.length) {
-                return (
-                  <p className="mb-2 last:mb-0">
-                    {children.map((c, i) => (
-                      <span key={i}>{c}</span>
-                    ))}
-                  </p>
-                );
-              } else return <p className="mb-2 last:mb-0">{children}</p>;
+              return <p className="mb-2 last:mb-0">{children}</p>;
             },
             strong({ children }) {
               return (
@@ -59,11 +51,9 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
             },
             code({ node, inline, className, children, ...props }) {
               if (children?.length) {
-                if (children[0] == '▍') {
+                if (children[0] === '▍') {
                   return (
-                    <span className="mt-1 animate-pulse cursor-default">
-                      ▍
-                    </span>
+                    <span className="mt-1 animate-pulse cursor-default">▍</span>
                   );
                 }
 
@@ -85,7 +75,7 @@ export function ChatMessage({ message, isStreaming = false, ...props }: ChatMess
 
               return (
                 <CodeBlock
-                  language={(match && match[1]) || ''}
+                  language={match?.[1] || ''}
                   value={String(children).replace(/\n$/, '')}
                   {...props}
                 />

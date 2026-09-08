@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { LlmService } from '@src/infra/llm/llm.service';
+import { Injectable } from '@nestjs/common';
+import type { LlmService } from '@src/infra/llm/llm.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
+import type { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { MessageAgent } from '../chat/message';
 import { CONDENSE_QUESTION_PROMPT } from '../chat/prompts/rag-system.prompt';
 import { preferPageMatches } from '../chat/visitor-context';

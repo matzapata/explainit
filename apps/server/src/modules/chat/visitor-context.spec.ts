@@ -74,7 +74,10 @@ describe('visitor-context', () => {
   describe('requestOrigin', () => {
     it('prefers Origin over Referer', () => {
       expect(
-        requestOrigin('https://docs.example.com', 'https://other.example.com/x'),
+        requestOrigin(
+          'https://docs.example.com',
+          'https://other.example.com/x',
+        ),
       ).toBe('https://docs.example.com');
     });
 
@@ -92,7 +95,9 @@ describe('visitor-context', () => {
   describe('parseDashboardOrigins', () => {
     it('splits and trims CORS_ORIGIN', () => {
       expect(
-        parseDashboardOrigins('http://localhost:3000, https://app.example.com/'),
+        parseDashboardOrigins(
+          'http://localhost:3000, https://app.example.com/',
+        ),
       ).toEqual(['http://localhost:3000', 'https://app.example.com']);
     });
 
@@ -121,9 +126,13 @@ describe('visitor-context', () => {
 
     it('allows dashboard CORS origins', () => {
       expect(
-        visitorOriginAllowed('http://localhost:3000', ['https://docs.example.com'], {
-          dashboardOrigins: ['http://localhost:3000'],
-        }),
+        visitorOriginAllowed(
+          'http://localhost:3000',
+          ['https://docs.example.com'],
+          {
+            dashboardOrigins: ['http://localhost:3000'],
+          },
+        ),
       ).toBe(true);
     });
 

@@ -1,12 +1,12 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import type { Job } from 'bullmq';
 import {
-  DocumentsService,
+  type DocumentsService,
   errorMessage,
   PermanentIngestError,
 } from './documents.service';
-import { INGEST_QUEUE, IngestJob } from './ingest-job';
+import { INGEST_QUEUE, type IngestJob } from './ingest-job';
 
 @Processor(INGEST_QUEUE, {
   concurrency: 1,

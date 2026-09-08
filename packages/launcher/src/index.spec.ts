@@ -20,7 +20,9 @@ describe('explainit()', () => {
     });
     document.head
       .querySelectorAll('script[data-explainit-widget]')
-      .forEach((n) => n.remove());
+      .forEach((n) => {
+        n.remove();
+      });
     delete window.ExplainitWidget;
     vi.stubGlobal('location', {
       ...window.location,
@@ -104,9 +106,9 @@ describe('explainit()', () => {
       }),
     );
     expect(
-      document.getElementById('explainit-widget-host')?.classList.contains(
-        'is-open',
-      ),
+      document
+        .getElementById('explainit-widget-host')
+        ?.classList.contains('is-open'),
     ).toBe(true);
     expect(document.querySelector('iframe')).toBeNull();
   });
@@ -133,9 +135,9 @@ describe('explainit()', () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(unmount).toHaveBeenCalled();
     expect(
-      document.getElementById('explainit-widget-host')?.classList.contains(
-        'is-open',
-      ),
+      document
+        .getElementById('explainit-widget-host')
+        ?.classList.contains('is-open'),
     ).toBe(false);
   });
 

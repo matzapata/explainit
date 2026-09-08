@@ -2,11 +2,11 @@ import { TestBed } from '@automock/jest';
 import { getQueueToken } from '@nestjs/bullmq';
 import { BadRequestException } from '@nestjs/common';
 import { ResourceStatus } from '@prisma/client';
-import { Queue } from 'bullmq';
 import { ChunkingService } from '@src/infra/chunking/chunking.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
+import type { Queue } from 'bullmq';
 import { DocumentsRepository } from './documents.repository';
 import { DocumentsService, PermanentIngestError } from './documents.service';
 import { INGEST_QUEUE } from './ingest-job';
@@ -144,11 +144,14 @@ describe('DocumentsService', () => {
       expect(crawlerService.scrape).toHaveBeenCalledWith({
         urls: ['https://docs.example.com'],
       });
-      expect(documentsRepository.update).toHaveBeenLastCalledWith('resource-1', {
-        status: ResourceStatus.ready,
-        embeddingIds: ['emb-1'],
-        error: null,
-      });
+      expect(documentsRepository.update).toHaveBeenLastCalledWith(
+        'resource-1',
+        {
+          status: ResourceStatus.ready,
+          embeddingIds: ['emb-1'],
+          error: null,
+        },
+      );
     });
 
     it('skips deleted and already-ready resources', async () => {
@@ -379,9 +382,9 @@ describe('DocumentsService', () => {
         'resources/chat-1/text-1.md',
       );
       expect(objectStorage.deleteFile).toHaveBeenCalledTimes(1);
-      expect(vectorStoreService.deleteDocumentsByNamespace).toHaveBeenCalledWith(
-        'chat-1',
-      );
+      expect(
+        vectorStoreService.deleteDocumentsByNamespace,
+      ).toHaveBeenCalledWith('chat-1');
     });
   });
 });

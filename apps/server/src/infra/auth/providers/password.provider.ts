@@ -1,8 +1,8 @@
+import * as crypto from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
-import * as crypto from 'crypto';
+import type { EnvService } from '@src/infra/env/env.service';
 import * as jwt from 'jsonwebtoken';
-import { AuthService, JwtPayload } from './auth.provider';
+import { AuthService, type JwtPayload } from './auth.provider';
 import { payloadFromClaims } from './claims';
 
 @Injectable()

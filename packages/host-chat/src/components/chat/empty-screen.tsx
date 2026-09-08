@@ -1,5 +1,4 @@
-import { IconArrowRight } from "../ui/icons";
-
+import { IconArrowRight } from '../ui/icons';
 
 export function EmptyScreen(props: {
   append: (value: string) => void;
@@ -14,9 +13,10 @@ export function EmptyScreen(props: {
       </p>
       {props.starters.length ? (
         <div className="mt-4 flex flex-col items-start space-y-2">
-          {props.starters.map((message, index) => (
+          {props.starters.map((message) => (
             <button
-              key={index}
+              key={message}
+              type="button"
               className="h-auto p-0 text-start text-sm text-gray-900 hover:underline dark:text-white"
               onClick={() => props.append(message)}
             >

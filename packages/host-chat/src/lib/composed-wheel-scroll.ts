@@ -58,9 +58,7 @@ export function allowWheelThroughScrollLock(
 ): void {
   const scrollable =
     scrollableFromComposedPath(event) ??
-    (shadowRoot
-      ? scrollableFromShadowPoint(shadowRoot, event)
-      : undefined);
+    (shadowRoot ? scrollableFromShadowPoint(shadowRoot, event) : undefined);
   if (!scrollable) {
     return;
   }

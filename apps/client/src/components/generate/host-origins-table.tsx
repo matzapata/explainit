@@ -1,8 +1,14 @@
 'use client';
 
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { Button } from '../ui/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useAccessToken } from '@/lib/auth/use-session';
+import { chatService } from '@/lib/services/chat-service';
+import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
@@ -21,12 +27,6 @@ import {
   FormMessage,
 } from '../ui/form';
 import { Input } from '../ui/input';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useAccessToken } from '@/lib/auth/use-session';
-import { chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 
 const MAX_HOST_ORIGINS = 20;
@@ -127,9 +127,7 @@ export default function HostOriginsTable(props: {
             <Button
               onClick={() => {
                 if (
-                  window.confirm(
-                    'Remove this Host origin from the allowlist?',
-                  )
+                  window.confirm('Remove this Host origin from the allowlist?')
                 ) {
                   deleteOriginMutation.mutate({ origin });
                 }
@@ -172,10 +170,7 @@ export default function HostOriginsTable(props: {
                     <FormItem>
                       <FormLabel>Host URL or origin</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://www.demo.com"
-                          {...field}
-                        />
+                        <Input placeholder="https://www.demo.com" {...field} />
                       </FormControl>
 
                       <FormMessage />
@@ -184,10 +179,7 @@ export default function HostOriginsTable(props: {
                 />
 
                 <DialogFooter>
-                  <Button
-                    type="submit"
-                    isLoading={addOriginMutation.isPending}
-                  >
+                  <Button type="submit" isLoading={addOriginMutation.isPending}>
                     Add
                   </Button>
                 </DialogFooter>

@@ -30,9 +30,7 @@ export function MessageSources(props: { context: SourceHit[] }) {
   }
 
   const label =
-    sources.length === 1
-      ? 'Used 1 source'
-      : `Used ${sources.length} sources`;
+    sources.length === 1 ? 'Used 1 source' : `Used ${sources.length} sources`;
 
   return (
     <details className="group mt-2">

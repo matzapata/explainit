@@ -1,15 +1,15 @@
 import {
   createContext,
+  type ReactNode,
   useContext,
   useLayoutEffect,
   useSyncExternalStore,
-  type ReactNode,
 } from 'react';
 import {
-  parseHostTheme,
-  resolveHostTheme,
   type HostTheme,
+  parseHostTheme,
   type ResolvedHostTheme,
+  resolveHostTheme,
 } from '../../lib/host-theme';
 import { usePortalContainer } from '../../lib/portal-container';
 

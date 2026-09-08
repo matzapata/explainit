@@ -1,5 +1,5 @@
 import {
-  Attributes,
+  type Attributes,
   SpanKind,
   SpanStatusCode,
   trace,

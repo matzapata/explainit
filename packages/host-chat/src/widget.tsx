@@ -1,13 +1,16 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AskAiOverlay, type PageContext } from './components/chat/ask-ai-overlay';
+import {
+  AskAiOverlay,
+  type PageContext,
+} from './components/chat/ask-ai-overlay';
 import { HostThemeRoot } from './components/chat/host-theme-root';
 import { TooltipProvider } from './components/ui/tooltip';
-import { PortalContainerContext } from './lib/portal-container';
 import { allowWheelThroughScrollLock } from './lib/composed-wheel-scroll';
-import { type HostTheme } from './lib/host-theme';
-import { ChatMetadata } from './lib/types';
+import type { HostTheme } from './lib/host-theme';
+import { PortalContainerContext } from './lib/portal-container';
+import type { ChatMetadata } from './lib/types';
 import { getChat } from './lib/visitor-api';
 import './lib/api-base';
 import './index.css';
@@ -46,6 +49,9 @@ export function WidgetApp(props: {
   }, [props.chatId]);
 
   useEffect(() => {
+    if (!open) {
+      return;
+    }
     setPageContext({
       pageUrl: window.location.href,
       selectedText: window.getSelection()?.toString()?.trim() || undefined,
@@ -88,10 +94,7 @@ export function WidgetApp(props: {
   );
 }
 
-function mount(
-  shadowRoot: ShadowRoot,
-  opts: WidgetMountOptions,
-): () => void {
+function mount(shadowRoot: ShadowRoot, opts: WidgetMountOptions): () => void {
   window.__EXPLAINIT_WIDGET__ = true;
   window.__EXPLAINIT_API_BASE__ = opts.apiUrl.replace(/\/$/, '');
   window.__EXPLAINIT_CHAT_ID__ = opts.chatId;

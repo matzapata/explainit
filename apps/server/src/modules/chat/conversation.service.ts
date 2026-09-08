@@ -1,7 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
-import { ConversationRepository } from './conversation.repository';
+import type { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
+import type { ConversationRepository } from './conversation.repository';
 import { MessageAgent } from './message';
 
 @Injectable()
@@ -17,9 +17,8 @@ export class ConversationService {
     cookieConversationId: string | undefined,
   ): Promise<string> {
     if (cookieConversationId) {
-      const existing = await this.conversationRepository.findById(
-        cookieConversationId,
-      );
+      const existing =
+        await this.conversationRepository.findById(cookieConversationId);
       if (existing && existing.chatId === chatId) {
         return existing.id;
       }

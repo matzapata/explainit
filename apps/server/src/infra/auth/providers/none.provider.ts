@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
-import { AuthService, JwtPayload } from './auth.provider';
+import type { EnvService } from '@src/infra/env/env.service';
+import { AuthService, type JwtPayload } from './auth.provider';
 
 @Injectable()
 export class NoneProvider extends AuthService {

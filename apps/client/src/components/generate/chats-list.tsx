@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Navbar from '@/components/navbar/app';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -34,11 +33,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useAccessToken } from '@/lib/auth/use-session';
 import { Link, useRouter } from '@/lib/router';
-import { ChatMetadataDto, chatService } from '@/lib/services/chat-service';
-import { UserDto } from '@/lib/services/user-service';
+import { type ChatMetadataDto, chatService } from '@/lib/services/chat-service';
+import type { UserDto } from '@/lib/services/user-service';
 
 const createChatSchema = z.object({
   name: z.string().min(2, {
@@ -54,7 +54,13 @@ const createChatSchema = z.object({
     }),
 });
 
-export function ChatsList({ user, chats }: { user: UserDto; chats: ChatMetadataDto[] }) {
+export function ChatsList({
+  user,
+  chats,
+}: {
+  user: UserDto;
+  chats: ChatMetadataDto[];
+}) {
   const router = useRouter();
   const accessToken = useAccessToken();
   const queryClient = useQueryClient();
@@ -108,63 +114,63 @@ export function ChatsList({ user, chats }: { user: UserDto; chats: ChatMetadataD
                     Add Chat
                   </Button>
                 </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Chat</DialogTitle>
-                      <DialogDescription>
-                        Give the new chat a name and short description.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit((values) =>
-                          createMutation.mutate(values),
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Chat</DialogTitle>
+                    <DialogDescription>
+                      Give the new chat a name and short description.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit((values) =>
+                        createMutation.mutate(values),
+                      )}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Docs assistant" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Docs assistant" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Answers questions about our product docs."
-                                  className="text-sm"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <DialogFooter>
-                          <Button
-                            type="submit"
-                            isLoading={createMutation.isPending}
-                          >
-                            Create
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-              )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Answers questions about our product docs."
+                                className="text-sm"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter>
+                        <Button
+                          type="submit"
+                          isLoading={createMutation.isPending}
+                        >
+                          Create
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           {chats.length === 0 ? (

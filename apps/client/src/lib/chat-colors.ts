@@ -22,7 +22,9 @@ export const CHAT_COLOR_CLASSES: Record<ChatColorName, string> = {
   gray: 'bg-gray-400',
 };
 
-export function isChatColor(value: string | undefined | null): value is ChatColorName {
+export function isChatColor(
+  value: string | undefined | null,
+): value is ChatColorName {
   return !!value && (CHAT_COLORS as readonly string[]).includes(value);
 }
 
@@ -33,7 +35,9 @@ export function chatColorClass(color?: string | null): string {
   return CHAT_COLOR_CLASSES.blue;
 }
 
-export function nextAvailableColor(existing: Array<string | undefined | null>): ChatColorName {
+export function nextAvailableColor(
+  existing: Array<string | undefined | null>,
+): ChatColorName {
   const counts = Object.fromEntries(
     CHAT_COLORS.map((color) => [color, 0]),
   ) as Record<ChatColorName, number>;

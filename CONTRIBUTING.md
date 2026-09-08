@@ -35,8 +35,7 @@ The API enqueues website jobs; the worker process scrapes and embeds. Text inges
 ## Common commands
 
 - Backend tests: `cd apps/server && npm test`
-- Backend lint: `cd apps/server && npm run lint`
-- Frontend lint: `cd apps/client && npm run lint`
+- Lint/format: `make lint` / `make format` from the repo root
 - Frontend tests: `cd apps/client && npm test`
 - Host Chat tests: `cd packages/host-chat && npm test`
 

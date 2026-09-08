@@ -1,8 +1,8 @@
 import { TestBed } from '@automock/jest';
-import { UsersController } from './users.controller';
-import { UsersService } from '@src/modules/user/users.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { SerializeInterceptor } from '@src/infra/http/interceptors/serialize.interceptor';
+import { UsersService } from '@src/modules/user/users.service';
+import { UsersController } from './users.controller';
 
 describe('UsersController', () => {
   let userController: UsersController;

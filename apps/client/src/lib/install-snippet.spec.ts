@@ -9,7 +9,9 @@ describe('generateInstallSnippet', () => {
       apiUrl: 'https://api.example.com',
     });
 
-    expect(snippet).toBe(`<button type="button" id="explainit-ask-ai">Ask AI</button>
+    expect(
+      snippet,
+    ).toBe(`<button type="button" id="explainit-ask-ai">Ask AI</button>
 <script src="https://cdn.example.com/launcher.js"></script>
 <script>
   explainit({

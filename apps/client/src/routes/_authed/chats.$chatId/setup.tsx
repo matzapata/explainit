@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import GenerateLayout from '@/layouts/generate-layout';
-import VisibilityForm from '@/components/generate/visibility-form';
 import CodeSnippet from '@/components/generate/code-snippet';
+import VisibilityForm from '@/components/generate/visibility-form';
+import GenerateLayout from '@/layouts/generate-layout';
 import { ensureOwnerWorkspace } from '@/lib/queries';
 
 export const Route = createFileRoute('/_authed/chats/$chatId/setup')({

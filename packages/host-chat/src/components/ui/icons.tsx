@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
@@ -88,9 +88,9 @@ function IconDownload({ className, ...props }: React.ComponentProps<'svg'>) {
 
 export {
   IconArrowDown,
-  IconArrowRight,
   IconArrowElbow,
-  IconCopy,
+  IconArrowRight,
   IconCheck,
+  IconCopy,
   IconDownload,
 };

@@ -3,12 +3,8 @@ import Textarea from 'react-textarea-autosize';
 
 import { useEnterSubmit } from '../../lib/hooks/use-enter-submit';
 import { Button } from '../ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '../ui/tooltip';
 import { IconArrowElbow } from '../ui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 interface PromptProps {
   onSubmit: (value: string) => unknown;

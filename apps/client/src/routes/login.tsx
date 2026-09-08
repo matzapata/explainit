@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { LoginForm } from '@/components/login-form';
 import Logo from '@/components/brand/logo';
 import Loading from '@/components/loading';
+import { LoginForm } from '@/components/login-form';
 import { getAccessToken, loginHref, safeReturnTo } from '@/lib/auth/config';
 
 export const Route = createFileRoute('/login')({
