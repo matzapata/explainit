@@ -18,7 +18,10 @@ declare global {
 }
 
 export function apiBaseUrl(): string {
-  if (typeof window !== 'undefined' && window.__EXPLAINIT_API_BASE__ !== undefined) {
+  if (
+    typeof window !== 'undefined' &&
+    window.__EXPLAINIT_API_BASE__ !== undefined
+  ) {
     return window.__EXPLAINIT_API_BASE__.replace(/\/$/, '');
   }
   const raw = import.meta.env.VITE_API_BASE_URL;

@@ -1,4 +1,4 @@
-import { PrismaService } from '@src/infra/database/prisma.service';
+import type { PrismaService } from '@src/infra/database/prisma.service';
 import { DocumentsRepository } from './documents.repository';
 
 describe('DocumentsRepository', () => {

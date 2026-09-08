@@ -1,4 +1,4 @@
-import { EnvService } from '@src/infra/env/env.service';
+import type { EnvService } from '@src/infra/env/env.service';
 import * as jwt from 'jsonwebtoken';
 import { PasswordProvider } from './password.provider';
 

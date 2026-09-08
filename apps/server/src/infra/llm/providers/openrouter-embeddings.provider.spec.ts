@@ -1,4 +1,4 @@
-import { EnvService } from '@src/infra/env/env.service';
+import type { EnvService } from '@src/infra/env/env.service';
 import { OpenRouterEmbeddingsProvider } from './openrouter-embeddings.provider';
 
 describe('OpenRouterEmbeddingsProvider', () => {

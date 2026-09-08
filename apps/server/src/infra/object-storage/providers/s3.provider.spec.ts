@@ -1,5 +1,5 @@
-import { EnvService } from '@src/infra/env/env.service';
-import { S3Client } from '@aws-sdk/client-s3';
+import type { S3Client } from '@aws-sdk/client-s3';
+import type { EnvService } from '@src/infra/env/env.service';
 import { S3StorageProvider } from './s3.provider';
 
 describe('S3StorageProvider', () => {

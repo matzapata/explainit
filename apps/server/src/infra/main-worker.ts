@@ -1,8 +1,7 @@
-import tracingService from './observability/tracing';
-
-import { INestApplicationContext } from '@nestjs/common';
+import type { INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
+import tracingService from './observability/tracing';
 import { WorkerModule } from './worker.module';
 
 let app: INestApplicationContext | undefined;

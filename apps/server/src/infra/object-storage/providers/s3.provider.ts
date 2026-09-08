@@ -1,5 +1,3 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -7,10 +5,12 @@ import {
   PutObjectAclCommand,
   PutObjectCommand,
   S3Client,
-  S3ClientConfig,
+  type S3ClientConfig,
 } from '@aws-sdk/client-s3';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+import type { EnvService } from '@src/infra/env/env.service';
 import sharp from 'sharp';
-import { ObjectStorageProvider } from './object-storage.provider';
+import type { ObjectStorageProvider } from './object-storage.provider';
 
 export const S3_CLIENT = 'S3_CLIENT';
 

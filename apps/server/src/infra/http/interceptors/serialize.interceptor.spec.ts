@@ -1,4 +1,4 @@
-import { CallHandler } from '@nestjs/common';
+import type { CallHandler } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
 import { UserDto } from '../controllers/dto/user.dto';
 import { SerializeInterceptor } from './serialize.interceptor';

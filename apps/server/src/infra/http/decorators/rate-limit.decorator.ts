@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { Request } from 'express';
-import { RateLimitConsumeOptions } from '@src/infra/rate-limiter/rate-limiter.service';
+import type { RateLimitConsumeOptions } from '@src/infra/rate-limiter/rate-limiter.service';
+import type { Request } from 'express';
 
 export const RATE_LIMIT_OPTIONS = 'rateLimit';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import type { RedisService } from '@src/infra/redis/redis.service';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
-import { RedisService } from '@src/infra/redis/redis.service';
 
 export interface RateLimitConsumeOptions {
   keyPrefix: string;

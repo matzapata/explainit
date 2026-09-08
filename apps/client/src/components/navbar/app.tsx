@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Logo from "../brand/logo";
+import { LogoutLink } from '@/lib/auth/links';
 import { Link } from '@/lib/router';
-import { LogoutLink } from "@/lib/auth/links";
+import Logo from '../brand/logo';
 
 export interface NavbarProps {
   items?: NavbarItem[];
@@ -24,9 +24,9 @@ export default function Navbar(props: NavbarProps) {
           <Logo />
           {items.length > 0 && (
             <div className="hidden md:flex items-center gap-4">
-              {items.map((item, i) => (
+              {items.map((item) => (
                 <Link
-                  key={i}
+                  key={item.link}
                   href={item.link}
                   className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                 >

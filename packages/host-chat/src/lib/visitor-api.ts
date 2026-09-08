@@ -1,5 +1,5 @@
 import { apiBaseUrl } from './api-base';
-import { ChatMessage, ChatMetadata, MessageRole } from './types';
+import { type ChatMessage, type ChatMetadata, MessageRole } from './types';
 
 export async function getChat(id: string): Promise<ChatMetadata> {
   const res = await fetch(`${apiBaseUrl()}/api/chats/${id}`);

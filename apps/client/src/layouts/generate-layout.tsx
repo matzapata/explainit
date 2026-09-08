@@ -1,9 +1,12 @@
 'use client';
 
-import Navbar, { NavbarItem, NavbarProps } from '@/components/navbar/app';
 import { PreviewChat } from '@/components/chat/preview-chat';
+import Navbar, {
+  type NavbarItem,
+  type NavbarProps,
+} from '@/components/navbar/app';
 import { Link, usePathname } from '@/lib/router';
-import { ChatMetadataDto } from '@/lib/services/chat-service';
+import type { ChatMetadataDto } from '@/lib/services/chat-service';
 
 interface GenerateLayoutProps extends NavbarProps {
   className?: string;
@@ -66,11 +69,11 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
           </div>
 
           <nav className="flex gap-5 border-b border-gray-200 dark:border-white/10">
-            {nestedItems.map((item, i) => {
+            {nestedItems.map((item) => {
               const active = pathsMatch(item.link, pathname);
               return (
                 <Link
-                  key={i}
+                  key={item.link}
                   href={item.link}
                   data-text={item.title}
                   className={`tab-link py-2 text-sm -mb-px ${

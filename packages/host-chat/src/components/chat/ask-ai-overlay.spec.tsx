@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type ChatMessage, MessageRole } from '../../lib/types';
 import { TooltipProvider } from '../ui/tooltip';
-import { ChatMessage, MessageRole } from '../../lib/types';
 import { AskAiOverlay } from './ask-ai-overlay';
 
 const { session } = vi.hoisted(() => ({
@@ -16,7 +16,8 @@ vi.mock('../../lib/hooks/use-chat', () => ({
     const applyMessages = (
       next: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[]),
     ) => {
-      const resolved = typeof next === 'function' ? next(session.messages) : next;
+      const resolved =
+        typeof next === 'function' ? next(session.messages) : next;
       session.messages = resolved;
       setMessages(resolved);
     };
@@ -62,7 +63,9 @@ describe('AskAiOverlay', () => {
     render(<OverlayHarness />);
 
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: 'Ask AI' })).toBeVisible();
+    expect(
+      within(dialog).getByRole('heading', { name: 'Ask AI' }),
+    ).toBeVisible();
     expect(within(dialog).queryByRole('img')).not.toBeInTheDocument();
     expect(
       within(dialog).getByRole('button', { name: 'Send message' }),

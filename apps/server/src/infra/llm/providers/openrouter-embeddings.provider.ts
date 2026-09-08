@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { EmbeddingsProvider } from './embeddings.provider';
-import { EnvService } from '@src/infra/env/env.service';
+import type { EnvService } from '@src/infra/env/env.service';
+import type { EmbeddingsProvider } from './embeddings.provider';
 
 @Injectable()
 export class OpenRouterEmbeddingsProvider implements EmbeddingsProvider {

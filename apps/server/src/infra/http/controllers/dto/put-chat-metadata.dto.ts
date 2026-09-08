@@ -1,3 +1,4 @@
+import { CHAT_COLORS } from '@src/modules/chat/chat-colors';
 import {
   ArrayMaxSize,
   IsArray,
@@ -8,7 +9,6 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { CHAT_COLORS } from '@src/modules/chat/chat-colors';
 
 export class UpdateChatMetadataDto {
   @IsOptional()

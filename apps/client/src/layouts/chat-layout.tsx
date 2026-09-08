@@ -1,5 +1,8 @@
-import Navbar, { NavbarItem, NavbarProps } from "@/components/navbar/app";
-import {  RectangleStackIcon } from "@heroicons/react/24/outline";
+import { RectangleStackIcon } from '@heroicons/react/24/outline';
+import Navbar, {
+  type NavbarItem,
+  type NavbarProps,
+} from '@/components/navbar/app';
 
 interface ChatLayoutProps extends NavbarProps {
   children: React.ReactNode;
@@ -9,8 +12,8 @@ interface ChatLayoutProps extends NavbarProps {
 export default function ChatLayout(props: ChatLayoutProps) {
   const navbarItems = props.navbarItems ?? [
     {
-      title: "Chats",
-      link: "/chat",
+      title: 'Chats',
+      link: '/chat',
       icon: <RectangleStackIcon className="h-5 w-5 text-gray-500" />,
     },
   ];

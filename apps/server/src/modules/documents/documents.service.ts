@@ -1,16 +1,16 @@
+import { randomUUID } from 'node:crypto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { ChatResource, ResourceStatus } from '@prisma/client';
-import { Queue } from 'bullmq';
-import { randomUUID } from 'crypto';
-import { ChunkingService } from '@src/infra/chunking/chunking.service';
-import { CrawlerService } from '@src/infra/crawler/crawler.service';
-import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
+import type { Prisma } from '@prisma/client';
+import { type ChatResource, ResourceStatus } from '@prisma/client';
+import type { ChunkingService } from '@src/infra/chunking/chunking.service';
+import type { CrawlerService } from '@src/infra/crawler/crawler.service';
+import type { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
-import { Prisma } from '@prisma/client';
-import { DocumentsRepository } from './documents.repository';
-import { INGEST_QUEUE, IngestJob } from './ingest-job';
+import type { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
+import type { Queue } from 'bullmq';
+import type { DocumentsRepository } from './documents.repository';
+import { INGEST_QUEUE, type IngestJob } from './ingest-job';
 
 export class PermanentIngestError extends Error {
   constructor(message: string) {
@@ -63,7 +63,9 @@ export class DocumentsService {
 
     await this.vectorStoreService.deleteDocuments(resource.embeddingIds);
     if (resource.type === 'text') {
-      await this.objectStorage.deleteFile(textObjectKey(resource.chatId, resource.id));
+      await this.objectStorage.deleteFile(
+        textObjectKey(resource.chatId, resource.id),
+      );
     }
     await this.documentsRepository.delete(id);
     return resource;

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
+import type { EnvService } from '@src/infra/env/env.service';
 import * as jwt from 'jsonwebtoken';
-import jwksClient, { JwksClient } from 'jwks-rsa';
-import { AuthService, JwtPayload } from './auth.provider';
+import jwksClient, { type JwksClient } from 'jwks-rsa';
+import { AuthService, type JwtPayload } from './auth.provider';
 import { payloadFromClaims } from './claims';
 
 @Injectable()

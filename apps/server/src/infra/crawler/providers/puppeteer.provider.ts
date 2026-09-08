@@ -1,6 +1,6 @@
-import puppeteer from 'puppeteer';
-import { CrawlerProvider, ScrapeResult } from './crawler.provider';
 import { Injectable } from '@nestjs/common';
+import puppeteer from 'puppeteer';
+import type { CrawlerProvider, ScrapeResult } from './crawler.provider';
 
 @Injectable()
 export class PuppeteerCrawlerProvider implements CrawlerProvider {

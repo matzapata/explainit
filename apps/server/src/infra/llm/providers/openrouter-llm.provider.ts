@@ -1,8 +1,8 @@
+import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatOpenRouter } from '@langchain/openrouter';
 import { Injectable } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { LlmProvider } from './llm.provider';
+import type { EnvService } from '@src/infra/env/env.service';
+import type { LlmProvider } from './llm.provider';
 
 @Injectable()
 export class OpenRouterLlmProvider implements LlmProvider {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@src/infra/database/prisma.service';
+import type { PrismaService } from '@src/infra/database/prisma.service';
 
 type NewMessage = {
   conversationId: string;

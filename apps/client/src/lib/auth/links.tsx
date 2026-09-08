@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from '@/lib/router';
-import { loginHref, logoutHref, clearAccessToken } from './config';
+import { clearAccessToken, loginHref, logoutHref } from './config';
 
 interface AuthLinkProps {
   children: ReactNode;

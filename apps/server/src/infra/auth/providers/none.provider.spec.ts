@@ -1,4 +1,4 @@
-import { EnvService } from '@src/infra/env/env.service';
+import type { EnvService } from '@src/infra/env/env.service';
 import { NoneProvider } from './none.provider';
 
 describe('NoneProvider', () => {

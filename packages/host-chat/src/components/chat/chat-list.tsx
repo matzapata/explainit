@@ -1,6 +1,7 @@
-import { ChatMessage } from "./chat-message";
-import { ChatMessage as IChatMessage, MessageRole } from '../../lib/types';
-import { ChatMessageLoading } from "./chat-message-loading";
+// biome-ignore-all lint/suspicious/noArrayIndexKey: messages have no stable id
+import { type ChatMessage as IChatMessage, MessageRole } from '../../lib/types';
+import { ChatMessage } from './chat-message';
+import { ChatMessageLoading } from './chat-message-loading';
 
 export function ChatList(props: {
   messages: IChatMessage[];

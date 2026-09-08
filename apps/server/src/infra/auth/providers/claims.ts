@@ -1,4 +1,4 @@
-import { JwtPayload } from './auth.provider';
+import type { JwtPayload } from './auth.provider';
 
 export function emailFromClaims(
   decoded: Record<string, unknown>,

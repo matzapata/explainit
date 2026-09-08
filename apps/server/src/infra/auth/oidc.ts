@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'node:crypto';
 
 export interface OidcDiscovery {
   authorization_endpoint: string;
@@ -7,7 +7,7 @@ export interface OidcDiscovery {
 }
 
 export function safeReturnTo(value?: string | null, fallback = '/'): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+  if (!value?.startsWith('/') || value.startsWith('//')) {
     return fallback;
   }
   return value;

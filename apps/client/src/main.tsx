@@ -1,10 +1,10 @@
 import { QueryClient } from '@tanstack/react-query';
-import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { createRouter, RouterProvider } from '@tanstack/react-router';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { routeTree } from './routeTree.gen';
-import type { AuthMode } from './lib/auth/config';
 import Loading from './components/loading';
+import type { AuthMode } from './lib/auth/config';
+import { routeTree } from './routeTree.gen';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -32,7 +32,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root');
+if (!root) {
+  throw new Error('Root element #root not found');
+}
+
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <RouterProvider router={router} />
   </React.StrictMode>,

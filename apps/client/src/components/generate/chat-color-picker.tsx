@@ -3,8 +3,8 @@
 import { useId } from 'react';
 import {
   CHAT_COLORS,
-  chatColorClass,
   type ChatColorName,
+  chatColorClass,
 } from '@/lib/chat-colors';
 
 export function ChatColorDot({

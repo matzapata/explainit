@@ -1,9 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { UsersService } from '@src/modules/user/users.service';
-import { AuthService } from '@src/infra/auth/auth.service';
-import { EnvService } from '@src/infra/env/env.service';
-import { AuthUser } from '@src/modules/user/auth-user';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
+import type { AuthService } from '@src/infra/auth/auth.service';
+import type { EnvService } from '@src/infra/env/env.service';
+import type { AuthUser } from '@src/modules/user/auth-user';
+import type { UsersService } from '@src/modules/user/users.service';
+import type { NextFunction, Request, Response } from 'express';
 
 declare module 'express' {
   interface Request {
@@ -19,7 +19,7 @@ export class CurrentUserMiddleware implements NestMiddleware {
     private env: EnvService,
   ) {}
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: Request, _res: Response, next: NextFunction) {
     const token = this.extractTokenFromHeader(req);
     const payload = await this.authService.verifyToken(token);
 

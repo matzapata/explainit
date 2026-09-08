@@ -10,19 +10,19 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@src/infra/http/guards/auth.guard';
+import type { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
+import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import { AuthUser } from '@src/modules/user/auth-user';
-import { ChatsService } from '@src/modules/chat/chat.service';
-import { CrawlerService } from '@src/infra/crawler/crawler.service';
-import { DocumentsService } from '@src/modules/documents/documents.service';
+import type { ChatsService } from '@src/modules/chat/chat.service';
+import type { DocumentsService } from '@src/modules/documents/documents.service';
+import type { AuthUser } from '@src/modules/user/auth-user';
 import { GetResourceDto } from './dto/get-resource.dto';
-import { PostResourceInspectDto } from './dto/post-resource-inspect.dto';
-import {
+import type {
   PostTextResourceDto,
   PostWebResourceDto,
 } from './dto/post-resource.dto';
+import type { PostResourceInspectDto } from './dto/post-resource-inspect.dto';
 
 @Controller('api/chats')
 export class DocumentsController {
@@ -117,9 +117,8 @@ export class DocumentsController {
       throw new NotFoundException('Resource not found');
     }
 
-    const deleted = await this.documentsService.deleteWithEmbeddings(
-      resource_id,
-    );
+    const deleted =
+      await this.documentsService.deleteWithEmbeddings(resource_id);
     if (!deleted) {
       throw new NotFoundException('Resource not found');
     }

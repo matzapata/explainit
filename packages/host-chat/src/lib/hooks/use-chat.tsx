@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { streamMessage } from '../visitor-api';
-import { ChatMessage, MessageRole } from '../types';
 import type { PageContext } from '../../components/chat/ask-ai-overlay';
+import { type ChatMessage, MessageRole } from '../types';
+import { streamMessage } from '../visitor-api';
 
 function conversationStorageKey(chatId: string): string {
   return `explainit_conversation:${chatId}`;

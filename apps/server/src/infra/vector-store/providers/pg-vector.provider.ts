@@ -1,8 +1,11 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { VectorStoreProvider, EmbeddingHit } from './vector-store.provider';
-import { PrismaService } from '@src/infra/database/prisma.service';
-import { EmbeddingsService } from '@src/infra/llm/embeddings.service';
+import type { PrismaService } from '@src/infra/database/prisma.service';
+import type { EmbeddingsService } from '@src/infra/llm/embeddings.service';
+import type {
+  EmbeddingHit,
+  VectorStoreProvider,
+} from './vector-store.provider';
 
 @Injectable()
 export class PgVectorProvider implements VectorStoreProvider {

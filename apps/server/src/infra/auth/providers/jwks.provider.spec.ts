@@ -1,5 +1,5 @@
+import type { EnvService } from '@src/infra/env/env.service';
 import * as jwt from 'jsonwebtoken';
-import { EnvService } from '@src/infra/env/env.service';
 import { JwksProvider } from './jwks.provider';
 
 const getSigningKey = jest.fn();

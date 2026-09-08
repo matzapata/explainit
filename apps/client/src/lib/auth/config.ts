@@ -47,11 +47,8 @@ export async function fetchAuthMode(): Promise<AuthMode> {
   return mode;
 }
 
-export function safeReturnTo(
-  value?: string | null,
-  fallback = '/',
-): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+export function safeReturnTo(value?: string | null, fallback = '/'): string {
+  if (!value?.startsWith('/') || value.startsWith('//')) {
     return fallback;
   }
   return value;
@@ -63,7 +60,9 @@ export function readCookie(name: string): string {
   }
 
   const prefix = `${name}=`;
-  const found = document.cookie.split('; ').find((part) => part.startsWith(prefix));
+  const found = document.cookie
+    .split('; ')
+    .find((part) => part.startsWith(prefix));
   return found ? decodeURIComponent(found.slice(prefix.length)) : '';
 }
 

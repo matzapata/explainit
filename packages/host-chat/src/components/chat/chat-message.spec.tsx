@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { ChatMessage } from './chat-message';
 import {
-  ChatMessage as ChatMessageDto,
+  type ChatMessage as ChatMessageDto,
   MessageRole,
 } from '../../lib/types';
 import { TooltipProvider } from '../ui/tooltip';
+import { ChatMessage } from './chat-message';
 
 function renderMessage(message: ChatMessageDto) {
   return render(

@@ -1,11 +1,7 @@
 'use client';
 
-import { buttonVariants } from '../ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { toast } from '../ui/use-toast';
-import { useAccessToken } from '@/lib/auth/use-session';
-import { chatService } from '@/lib/services/chat-service';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,9 +13,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
-
+import { useAccessToken } from '@/lib/auth/use-session';
 import { confettiAnimation } from '@/lib/confetti-animation';
+import { chatService } from '@/lib/services/chat-service';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '../ui/button';
+import { toast } from '../ui/use-toast';
 
 export default function VisibilityForm(props: {
   published: boolean;
@@ -44,7 +43,7 @@ export default function VisibilityForm(props: {
       });
 
       if (data.published) {
-        confettiAnimation()
+        confettiAnimation();
       }
     },
     onError: (error) => {

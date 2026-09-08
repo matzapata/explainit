@@ -1,18 +1,18 @@
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   HttpException,
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Request, Response } from 'express';
-import { RateLimiterRes } from 'rate-limiter-flexible';
+import type { Reflector } from '@nestjs/core';
 import {
   RATE_LIMIT_OPTIONS,
-  RateLimitOptions,
+  type RateLimitOptions,
 } from '@src/infra/http/decorators/rate-limit.decorator';
-import { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
+import type { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
+import type { Request, Response } from 'express';
+import { RateLimiterRes } from 'rate-limiter-flexible';
 
 @Injectable()
 export class RateLimiterGuard implements CanActivate {

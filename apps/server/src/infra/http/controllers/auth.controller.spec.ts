@@ -1,7 +1,7 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { EnvService } from '@src/infra/env/env.service';
+import type { AuthService } from '@src/infra/auth/auth.service';
+import type { EnvService } from '@src/infra/env/env.service';
 import { AuthController } from './auth.controller';
-import { AuthService } from '@src/infra/auth/auth.service';
 
 function mockRes() {
   const res = {

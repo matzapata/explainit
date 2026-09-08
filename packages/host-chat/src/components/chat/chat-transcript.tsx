@@ -1,7 +1,7 @@
+import type { ChatMessage, ChatMetadata } from '../../lib/types';
 import { ChatList } from './chat-list';
 import { ChatScrollAnchor } from './chat-scroll-anchor';
 import { EmptyScreen } from './empty-screen';
-import { ChatMessage, ChatMetadata } from '../../lib/types';
 
 export function ChatTranscript(props: {
   chat: ChatMetadata;

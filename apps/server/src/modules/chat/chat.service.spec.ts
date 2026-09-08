@@ -1,7 +1,7 @@
 import { RunnableLambda } from '@langchain/core/runnables';
-import { LlmService } from '@src/infra/llm/llm.service';
-import { RetrievalService } from '@src/modules/retrieval/retrieval.service';
-import { ChatRepository } from './chat.repository';
+import type { LlmService } from '@src/infra/llm/llm.service';
+import type { RetrievalService } from '@src/modules/retrieval/retrieval.service';
+import type { ChatRepository } from './chat.repository';
 import { ChatsService, tokenText } from './chat.service';
 import { MessageAgent } from './message';
 

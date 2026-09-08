@@ -1,8 +1,8 @@
+import type { AuthService } from '@src/infra/auth/auth.service';
+import type { EnvService } from '@src/infra/env/env.service';
+import type { UsersService } from '@src/modules/user/users.service';
+import type { Request, Response } from 'express';
 import { CurrentUserMiddleware } from './current-user.middleware';
-import { UsersService } from '@src/modules/user/users.service';
-import { AuthService } from '@src/infra/auth/auth.service';
-import { EnvService } from '@src/infra/env/env.service';
-import { Request, Response } from 'express';
 
 describe('CurrentUserMiddleware', () => {
   const next = jest.fn();

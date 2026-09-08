@@ -1,10 +1,10 @@
 'use client';
 
 import { AskAiOverlay, HostThemeRoot } from '@explainit/host-chat';
-import { getAccessToken } from '@/lib/auth/config';
-import { Button, type ButtonProps } from '@/components/ui/button';
-import { ChatMetadataDto } from '@/lib/services/chat-service';
 import { useState } from 'react';
+import { Button, type ButtonProps } from '@/components/ui/button';
+import { getAccessToken } from '@/lib/auth/config';
+import type { ChatMetadataDto } from '@/lib/services/chat-service';
 
 export function PreviewChat(props: {
   chat: ChatMetadataDto;

@@ -1,0 +1,14 @@
+{
+  "name": "explainit",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "format": "biome format --write .",
+    "lint": "biome lint --write .",
+    "check": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.11",
+    "husky": "^9.1.7"
+  }
+}

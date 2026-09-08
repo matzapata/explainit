@@ -1,8 +1,14 @@
 'use client';
 
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { Button } from '../ui/button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useAccessToken } from '@/lib/auth/use-session';
+import { chatService } from '@/lib/services/chat-service';
+import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
@@ -21,12 +27,6 @@ import {
   FormMessage,
 } from '../ui/form';
 import { Input } from '../ui/input';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useAccessToken } from '@/lib/auth/use-session';
-import { chatService } from '@/lib/services/chat-service';
 import { toast } from '../ui/use-toast';
 
 const formSchema = z.object({
@@ -75,7 +75,9 @@ export default function ConversationStartersTable(props: {
     mutationFn: (mutationProps: { starter: string }) => {
       if (!accessTokenRaw) throw new Error('No access token');
       return chatService.updateOwnerChat(accessTokenRaw, props.chatId, {
-        conversationStarters: starters.filter((s) => s !== mutationProps.starter),
+        conversationStarters: starters.filter(
+          (s) => s !== mutationProps.starter,
+        ),
       });
     },
     onSuccess: (data) => {
@@ -95,9 +97,9 @@ export default function ConversationStartersTable(props: {
   return (
     <div>
       <ul className="divide-y divide-gray-100 dark:divide-white/5">
-        {starters.map((s, i) => (
+        {starters.map((s) => (
           <li
-            key={i}
+            key={s}
             className="flex justify-between items-center py-2.5 text-sm"
           >
             <span>{s}</span>

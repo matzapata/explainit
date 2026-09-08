@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
-import { AuthMode, NONE_ACCESS_TOKEN } from './config';
+import type React from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import { type AuthMode, NONE_ACCESS_TOKEN } from './config';
 
 export interface SessionUser {
   email?: string;
