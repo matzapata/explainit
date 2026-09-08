@@ -98,11 +98,13 @@ model ChatResource {
   id           String         @id @default(uuid()) @db.Uuid
   type         String
   data         String
+  title        String?
   embeddingIds String[]
   status       ResourceStatus @default(ready)
   error        String?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId String @db.Uuid

@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { GetResourceDto } from './get-resource.dto';
 
 export class ChatMetadataDto {
   @Expose()
@@ -11,14 +12,9 @@ export class ChatMetadataDto {
   conversationStarters: string[];
   @Expose()
   published: boolean;
-  @Expose() // TODO: transform here
-  resources: {
-    id: string;
-    type: string;
-    data: string;
-    status: string;
-    error: string | null;
-  }[];
+  @Expose()
+  @Type(() => GetResourceDto)
+  resources: GetResourceDto[];
   @Expose()
   description: string;
   @Expose()

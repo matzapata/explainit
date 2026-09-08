@@ -424,10 +424,12 @@ describe('ChatController', () => {
           id: 'resource-1',
           type: 'website',
           data: 'https://docs.example.com',
+          title: null,
           status: ResourceStatus.ready,
           error: null,
           embeddingIds: ['emb-1'],
           createdAt: new Date(),
+          updatedAt: new Date(),
           chatId: chat.id,
         },
       ];

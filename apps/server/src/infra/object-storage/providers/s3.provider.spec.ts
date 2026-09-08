@@ -79,6 +79,26 @@ describe('S3StorageProvider', () => {
     });
   });
 
+  it('uploads markdown as text/markdown', async () => {
+    const provider = new S3StorageProvider(
+      config({ S3_BUCKET: 'explainit' }),
+      client,
+    );
+    const body = Buffer.from('# Notes');
+
+    await provider.uploadFile('resources/chat-1/resource-1.md', body);
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const command = send.mock.calls[0][0];
+    expect(command.input).toMatchObject({
+      Bucket: 'explainit',
+      Key: 'resources/chat-1/resource-1.md',
+      Body: body,
+      ContentType: 'text/markdown',
+      ACL: 'public-read',
+    });
+  });
+
   it('retries upload without ACL when the bucket rejects it', async () => {
     send.mockRejectedValueOnce({ name: 'AccessControlListNotSupported' });
     const provider = new S3StorageProvider(

@@ -19,8 +19,10 @@ export interface ChatResource {
     id: string;
     type: string;
     data: string;
+    title?: string | null;
     status?: 'pending' | 'processing' | 'ready' | 'failed';
     error?: string | null;
+    updatedAt?: string;
 }
 
 export class ChatService {
@@ -72,9 +74,9 @@ export class ChatService {
         }
     }
 
-    async addTextResource(accessToken: string, id: string, text: string, title: string, source: string): Promise<ChatResource[]> {
+    async addTextResource(accessToken: string, id: string, text: string, title: string): Promise<ChatResource[]> {
         try {
-            const res = await this.client.post(`/api/chats/${id}/resources/text`, { text, title, source }, { headers: { Authorization: `Bearer ${accessToken}` } })
+            const res = await this.client.post(`/api/chats/${id}/resources/text`, { text, title }, { headers: { Authorization: `Bearer ${accessToken}` } })
             return res.data
         } catch (error: any) {
             console.error(error)

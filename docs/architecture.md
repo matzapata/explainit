@@ -50,7 +50,7 @@ Current infrastructure folders and responsibilities:
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
-- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `host-chat` one-shots upload `launcher.js` and `widget.js`/`widget.css`. The dashboard does not.
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `host-chat` one-shots upload `launcher.js` and `widget.js`/`widget.css`. Text resources upload public markdown under `resources/{chatId}/{id}.md`.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 

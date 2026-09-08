@@ -56,4 +56,24 @@ aws s3api put-bucket-policy \
   --policy file:///tmp/cdn-policy.json \
   --endpoint-url "$ENDPOINT"
 
+# Pasted text resources are public citation URLs (resources/{chatId}/{id}.md).
+cat >/tmp/doc-policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadTextResources",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::${DOC_BUCKET}/resources/*"
+    }
+  ]
+}
+EOF
+aws s3api put-bucket-policy \
+  --bucket "$DOC_BUCKET" \
+  --policy file:///tmp/doc-policy.json \
+  --endpoint-url "$ENDPOINT"
+
 echo "Floci ready: buckets=${DOC_BUCKET},${CDN_BUCKET}"

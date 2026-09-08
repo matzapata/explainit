@@ -68,7 +68,6 @@ export class DocumentsController {
 
     const created = await this.documentsService.createTextResource(chat.id, {
       text: resource.text,
-      source: resource.source,
       title: resource.title,
     });
 

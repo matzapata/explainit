@@ -5,10 +5,16 @@ import { ResourceStatus } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { ChunkingService } from '@src/infra/chunking/chunking.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
+import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { DocumentsRepository } from './documents.repository';
 import { DocumentsService, PermanentIngestError } from './documents.service';
 import { INGEST_QUEUE } from './ingest-job';
+
+jest.mock('crypto', () => ({
+  ...jest.requireActual('crypto'),
+  randomUUID: () => 'resource-1',
+}));
 
 describe('DocumentsService', () => {
   let service: DocumentsService;
@@ -17,6 +23,7 @@ describe('DocumentsService', () => {
   let crawlerService: jest.Mocked<CrawlerService>;
   let chunkingService: jest.Mocked<ChunkingService>;
   let vectorStoreService: jest.Mocked<VectorStoreService>;
+  let objectStorage: jest.Mocked<ObjectStorageService>;
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(DocumentsService).compile();
@@ -26,6 +33,7 @@ describe('DocumentsService', () => {
     crawlerService = unitRef.get(CrawlerService);
     chunkingService = unitRef.get(ChunkingService);
     vectorStoreService = unitRef.get(VectorStoreService);
+    objectStorage = unitRef.get(ObjectStorageService);
   });
 
   beforeEach(() => {
@@ -232,39 +240,77 @@ describe('DocumentsService', () => {
   });
 
   describe('createTextResource', () => {
-    it('chunks, embeds, and marks the resource ready', async () => {
+    it('uploads, chunks, embeds, and stores the public URL', async () => {
+      const publicUrl =
+        'http://localhost:4566/explainit/resources/chat-1/resource-1.md';
+      objectStorage.uploadFile.mockResolvedValue(undefined);
+      objectStorage.buildPublicUrl.mockReturnValue(publicUrl);
       chunkingService.generateDocsFromText.mockResolvedValue([
-        { content: 'hello', namespace: 'chat-1', metadata: {} },
+        {
+          content: 'hello',
+          namespace: 'chat-1',
+          metadata: { source: publicUrl, title: 'Notes' },
+        },
       ]);
       vectorStoreService.addDocuments.mockResolvedValue(['emb-1']);
       documentsRepository.create.mockResolvedValue({
         id: 'resource-1',
         type: 'text',
+        data: publicUrl,
+        title: 'Notes',
         status: ResourceStatus.ready,
         embeddingIds: ['emb-1'],
       } as never);
 
       const result = await service.createTextResource('chat-1', {
         text: 'hello',
-        source: 'manual',
         title: 'Notes',
       });
 
+      expect(objectStorage.uploadFile).toHaveBeenCalledWith(
+        'resources/chat-1/resource-1.md',
+        Buffer.from('hello'),
+      );
       expect(chunkingService.generateDocsFromText).toHaveBeenCalledWith(
-        { text: 'hello', source: 'manual', title: 'Notes' },
+        { text: 'hello', source: publicUrl, title: 'Notes' },
         'chat-1',
       );
-      expect(vectorStoreService.addDocuments).toHaveBeenCalledWith([
-        { content: 'hello', namespace: 'chat-1', metadata: {} },
-      ]);
       expect(documentsRepository.create).toHaveBeenCalledWith({
-        data: 'Notes',
+        id: 'resource-1',
+        data: publicUrl,
+        title: 'Notes',
         type: 'text',
         status: ResourceStatus.ready,
         embeddingIds: ['emb-1'],
         chat: { connect: { id: 'chat-1' } },
       });
       expect(result.id).toBe('resource-1');
+    });
+
+    it('deletes the object and embeddings when create fails', async () => {
+      const publicUrl =
+        'http://localhost:4566/explainit/resources/chat-1/resource-1.md';
+      objectStorage.uploadFile.mockResolvedValue(undefined);
+      objectStorage.buildPublicUrl.mockReturnValue(publicUrl);
+      chunkingService.generateDocsFromText.mockResolvedValue([
+        { content: 'hello', namespace: 'chat-1', metadata: {} },
+      ]);
+      vectorStoreService.addDocuments.mockResolvedValue(['emb-1']);
+      documentsRepository.create.mockRejectedValue(new Error('db down'));
+
+      await expect(
+        service.createTextResource('chat-1', {
+          text: 'hello',
+          title: 'Notes',
+        }),
+      ).rejects.toThrow('db down');
+
+      expect(vectorStoreService.deleteDocuments).toHaveBeenCalledWith([
+        'emb-1',
+      ]);
+      expect(objectStorage.deleteFile).toHaveBeenCalledWith(
+        'resources/chat-1/resource-1.md',
+      );
     });
   });
 
@@ -276,9 +322,11 @@ describe('DocumentsService', () => {
       expect(vectorStoreService.deleteDocuments).not.toHaveBeenCalled();
     });
 
-    it('deletes vectors then the resource row', async () => {
+    it('deletes vectors, the object for text resources, then the row', async () => {
       const resource = {
         id: 'resource-1',
+        chatId: 'chat-1',
+        type: 'text',
         embeddingIds: ['emb-1', 'emb-2'],
       };
       documentsRepository.findById.mockResolvedValue(resource as never);
@@ -291,7 +339,49 @@ describe('DocumentsService', () => {
         'emb-1',
         'emb-2',
       ]);
+      expect(objectStorage.deleteFile).toHaveBeenCalledWith(
+        'resources/chat-1/resource-1.md',
+      );
       expect(documentsRepository.delete).toHaveBeenCalledWith('resource-1');
+    });
+
+    it('does not delete an S3 object for website resources', async () => {
+      const resource = {
+        id: 'resource-1',
+        chatId: 'chat-1',
+        type: 'website',
+        embeddingIds: ['emb-1'],
+      };
+      documentsRepository.findById.mockResolvedValue(resource as never);
+      documentsRepository.delete.mockResolvedValue(resource as never);
+
+      await service.deleteWithEmbeddings('resource-1');
+
+      expect(objectStorage.deleteFile).not.toHaveBeenCalled();
+      expect(documentsRepository.delete).toHaveBeenCalledWith('resource-1');
+    });
+  });
+
+  describe('deleteChatNamespace', () => {
+    it('deletes text objects then the chat embedding namespace', async () => {
+      documentsRepository.findByChatId.mockResolvedValue([
+        { id: 'text-1', type: 'text' },
+        { id: 'web-1', type: 'website' },
+      ] as never);
+      objectStorage.deleteFile.mockResolvedValue(undefined);
+      vectorStoreService.deleteDocumentsByNamespace.mockResolvedValue(
+        undefined as never,
+      );
+
+      await service.deleteChatNamespace('chat-1');
+
+      expect(objectStorage.deleteFile).toHaveBeenCalledWith(
+        'resources/chat-1/text-1.md',
+      );
+      expect(objectStorage.deleteFile).toHaveBeenCalledTimes(1);
+      expect(vectorStoreService.deleteDocumentsByNamespace).toHaveBeenCalledWith(
+        'chat-1',
+      );
     });
   });
 });

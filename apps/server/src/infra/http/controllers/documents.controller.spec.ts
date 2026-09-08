@@ -61,10 +61,12 @@ describe('DocumentsController', () => {
           id: 'resource-1',
           type: 'website',
           data: 'https://docs.example.com',
+          title: null,
           status: ResourceStatus.pending,
           error: null,
           embeddingIds: [],
           createdAt: new Date(),
+          updatedAt: new Date(),
           chatId: chat.id,
         },
       ];
@@ -112,24 +114,26 @@ describe('DocumentsController', () => {
       const created = {
         id: 'resource-1',
         type: 'text',
-        data: 'Notes',
+        data: 'http://localhost:4566/explainit/resources/chatId/resource-1.md',
+        title: 'Notes',
         status: ResourceStatus.ready,
         error: null,
         embeddingIds: ['emb-1'],
         createdAt: new Date(),
+        updatedAt: new Date(),
         chatId: chat.id,
       };
       documentsService.createTextResource.mockResolvedValue(created);
 
       const result = await documentsController.loadTextResource(
         authUser,
-        { text: 'hello', source: 'manual', title: 'Notes' },
+        { text: 'hello', title: 'Notes' },
         chat.id,
       );
 
       expect(documentsService.createTextResource).toHaveBeenCalledWith(
         chat.id,
-        { text: 'hello', source: 'manual', title: 'Notes' },
+        { text: 'hello', title: 'Notes' },
       );
       expect(result).toEqual([created]);
     });
@@ -164,10 +168,12 @@ describe('DocumentsController', () => {
         id: 'resource-1',
         type: 'website',
         data: 'https://docs.example.com',
+        title: null,
         status: ResourceStatus.ready,
         error: null,
         embeddingIds: ['emb-1'],
         createdAt: new Date(),
+        updatedAt: new Date(),
         chatId: chat.id,
       };
       documentsService.findById.mockResolvedValue(resource);

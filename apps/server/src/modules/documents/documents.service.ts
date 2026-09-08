@@ -2,8 +2,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ChatResource, ResourceStatus } from '@prisma/client';
 import { Queue } from 'bullmq';
+import { randomUUID } from 'crypto';
 import { ChunkingService } from '@src/infra/chunking/chunking.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
+import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
 import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import { Prisma } from '@prisma/client';
@@ -27,6 +29,7 @@ export class DocumentsService {
     private readonly crawlerService: CrawlerService,
     private readonly chunkingService: ChunkingService,
     private readonly vectorStoreService: VectorStoreService,
+    private readonly objectStorage: ObjectStorageService,
   ) {}
 
   create(chatId: string, data: Omit<Prisma.ChatResourceCreateInput, 'chat'>) {
@@ -59,6 +62,9 @@ export class DocumentsService {
     }
 
     await this.vectorStoreService.deleteDocuments(resource.embeddingIds);
+    if (resource.type === 'text') {
+      await this.objectStorage.deleteFile(textObjectKey(resource.chatId, resource.id));
+    }
     await this.documentsRepository.delete(id);
     return resource;
   }
@@ -78,25 +84,53 @@ export class DocumentsService {
   }
 
   async deleteChatNamespace(chatId: string) {
+    const resources = await this.findByChatId(chatId);
+    await Promise.all(
+      resources
+        .filter((resource) => resource.type === 'text')
+        .map((resource) =>
+          this.objectStorage.deleteFile(textObjectKey(chatId, resource.id)),
+        ),
+    );
     await this.vectorStoreService.deleteDocumentsByNamespace(chatId);
   }
 
   async createTextResource(
     chatId: string,
-    data: { text: string; source: string; title: string },
+    data: { text: string; title: string },
   ): Promise<ChatResource> {
-    const documents = await this.chunkingService.generateDocsFromText(
-      data,
-      chatId,
-    );
-    const ids = await this.addDocuments(documents);
+    const id = randomUUID();
+    const key = textObjectKey(chatId, id);
+    await this.objectStorage.uploadFile(key, Buffer.from(data.text));
+    const publicUrl = this.objectStorage.buildPublicUrl(key);
 
-    return this.create(chatId, {
-      data: data.title,
-      type: 'text',
-      status: ResourceStatus.ready,
-      embeddingIds: ids,
-    });
+    let embeddingIds: string[] = [];
+    try {
+      const documents = await this.chunkingService.generateDocsFromText(
+        {
+          text: data.text,
+          source: publicUrl,
+          title: data.title,
+        },
+        chatId,
+      );
+      embeddingIds = await this.addDocuments(documents);
+
+      return await this.create(chatId, {
+        id,
+        data: publicUrl,
+        title: data.title,
+        type: 'text',
+        status: ResourceStatus.ready,
+        embeddingIds,
+      });
+    } catch (error) {
+      if (embeddingIds.length > 0) {
+        await this.deleteDocuments(embeddingIds);
+      }
+      await this.objectStorage.deleteFile(key);
+      throw error;
+    }
   }
 
   async enqueueWebsiteUrls(
@@ -205,6 +239,10 @@ export class DocumentsService {
       error,
     });
   }
+}
+
+export function textObjectKey(chatId: string, resourceId: string): string {
+  return `resources/${chatId}/${resourceId}.md`;
 }
 
 export function errorMessage(error: unknown): string {

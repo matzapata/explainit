@@ -43,7 +43,6 @@ const addTextFormSchema = z.object({
     .string()
     .min(1000, { message: 'Please provide at least 1000 characters' }),
   title: z.string().min(5, { message: 'Please provide a title' }),
-  source: z.string().min(5, { message: 'Please provide a source' }),
 });
 const inspectFormSchema = z.object({
   url: z.string().url({ message: 'Invalid URL' }),
@@ -61,6 +60,39 @@ function stringIsAValidUrl(s: string): boolean {
   } catch (err) {
     return false;
   }
+}
+
+function formatResourceDate(value?: string | Date | null, empty = '—') {
+  if (!value) {
+    return empty;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return empty;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function ResourceSourceLabel(props: { resource: ChatResource }) {
+  const label = props.resource.title || props.resource.data;
+  if (stringIsAValidUrl(props.resource.data)) {
+    return (
+      <a
+        href={props.resource.data}
+        target="_blank"
+        rel="noreferrer"
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {label}
+      </a>
+    );
+  }
+  return <>{label}</>;
 }
 
 export default function ResourcesTable(props: {
@@ -138,15 +170,21 @@ export default function ResourcesTable(props: {
             <TableRow>
               <TableHead>Source</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Updated</TableHead>
               <TableHead className="w-8 pr-0" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {resources.map((s) => (
               <TableRow key={s.id}>
-                <TableCell className="font-medium">{s.data}</TableCell>
+                <TableCell className="font-medium">
+                  <ResourceSourceLabel resource={s} />
+                </TableCell>
                 <TableCell>
                   <ResourceStatusLabel resource={s} />
+                </TableCell>
+                <TableCell className="text-gray-500 dark:text-gray-400">
+                  {formatResourceDate(s.updatedAt)}
                 </TableCell>
                 <TableCell className="pr-0 text-right">
                   <Button
@@ -369,7 +407,6 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
     resolver: zodResolver(addTextFormSchema),
     defaultValues: {
       text: '',
-      source: '',
       title: '',
     },
   });
@@ -377,11 +414,15 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
   const addTextMutation = useMutation({
     mutationFn: async (mutationProps: {
       text: string;
-      source: string;
       title: string;
     }) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addTextResource(accessTokenRaw, props.chatId, mutationProps.text, mutationProps.title, mutationProps.source);
+      return chatService.addTextResource(
+        accessTokenRaw,
+        props.chatId,
+        mutationProps.text,
+        mutationProps.title,
+      );
     },
     onSuccess: (data) => {
       props.setResources((r: any) => [...r, ...data]);
@@ -424,7 +465,6 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
           </DialogDescription>
         </DialogHeader>
 
-        {/* Inspect form */}
         <Form {...inspectForm}>
           <form
             onSubmit={inspectForm.handleSubmit(onAddTextSubmit)}
@@ -449,32 +489,16 @@ function AddTextResource(props: { setResources: (r: any) => void, chatId: string
             />
             <FormField
               control={inspectForm.control}
-              name="source"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://lorem..." {...field} />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={inspectForm.control}
               name="text"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Text</FormLabel>
                   <FormControl>
-                    <FormControl>
-                      <Textarea
-                        rows={10}
-                        placeholder="Content....."
-                        {...field}
-                      />
-                    </FormControl>
+                    <Textarea
+                      rows={10}
+                      placeholder="Content....."
+                      {...field}
+                    />
                   </FormControl>
 
                   <FormMessage />
