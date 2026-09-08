@@ -174,6 +174,12 @@ function contentTypeFor(path: string): string {
   if (path.endsWith('.gif')) {
     return 'image/gif';
   }
+  if (path.endsWith('.md')) {
+    return 'text/markdown';
+  }
+  if (path.endsWith('.txt')) {
+    return 'text/plain';
+  }
   return 'application/octet-stream';
 }
 

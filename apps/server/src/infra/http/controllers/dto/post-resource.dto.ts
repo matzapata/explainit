@@ -10,7 +10,5 @@ export class PostTextResourceDto {
   @Length(1000)
   text: string;
   @IsString()
-  source: string;
-  @IsString()
   title: string;
 }
