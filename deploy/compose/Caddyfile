@@ -1,0 +1,25 @@
+:80 {
+	# SSE chat answers — disable buffering and keep the connection open.
+	handle /api/* {
+		reverse_proxy api:4000 {
+			flush_interval -1
+			transport http {
+				read_timeout 0
+				write_timeout 0
+			}
+		}
+	}
+
+	handle /health {
+		reverse_proxy api:4000
+	}
+
+	# Path-style MinIO: {PUBLIC_URL}/explainit/{key}
+	handle /explainit/* {
+		reverse_proxy minio:9000
+	}
+
+	handle {
+		reverse_proxy client:80
+	}
+}

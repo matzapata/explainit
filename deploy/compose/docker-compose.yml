@@ -1,0 +1,152 @@
+# Production self-host stack (Sessy-style).
+# From this directory: cp .env.example .env && docker compose up -d
+# See docs/docker-deployment.md
+
+services:
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      client:
+        condition: service_started
+      minio:
+        condition: service_started
+
+  client:
+    image: ghcr.io/matzapata/explainit-client:main
+    build:
+      context: ../..
+      dockerfile: ../docker/client.Dockerfile
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/matzapata/explainit-server:main
+    build:
+      context: ../../apps/server
+      dockerfile: ../docker/server.Dockerfile
+    restart: unless-stopped
+    environment: &server-env
+      NODE_ENV: production
+      PORT: '4000'
+      DATABASE_URL: postgresql://explainit:${POSTGRES_PASSWORD:-explainit}@postgres:5432/explainit
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      CORS_ORIGIN: ${PUBLIC_URL:-http://localhost}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-4o-mini}
+      OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-ada-002}
+      HTTP_AUTH_USERNAME: ${HTTP_AUTH_USERNAME:-}
+      HTTP_AUTH_PASSWORD: ${HTTP_AUTH_PASSWORD:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      S3_BUCKET: explainit
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: ${PUBLIC_URL:-http://localhost}
+      S3_FORCE_PATH_STYLE: 'true'
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-explainit}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-explainitsecret}
+      OTEL_SERVICE_NAME: explainit
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://127.0.0.1:4318/v1/traces}
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  worker:
+    image: ghcr.io/matzapata/explainit-server:main
+    build:
+      context: ../../apps/server
+      dockerfile: ../docker/server.Dockerfile
+    restart: unless-stopped
+    command: ['node', 'dist/infra/main-worker.js']
+    shm_size: '1gb'
+    environment:
+      <<: *server-env
+      OTEL_SERVICE_NAME: explainit-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: explainit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-explainit}
+      POSTGRES_DB: explainit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U explainit -d explainit']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-explainit}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-explainitsecret}
+      # Community MinIO: global CORS only (bucket CORS is AIStor-only).
+      MINIO_API_CORS_ALLOW_ORIGIN: '*'
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    restart: 'no'
+    depends_on:
+      - minio
+    volumes:
+      - ./minio-init.sh:/minio-init.sh:ro
+    entrypoint: ['/bin/sh', '/minio-init.sh']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-explainit}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-explainitsecret}
+      S3_BUCKET: explainit
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

@@ -1,9 +1,17 @@
+function pageOrigin(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return '';
+}
+
 export function launcherSrc(): string {
   const raw = import.meta.env.VITE_LAUNCHER_SRC;
   if (raw?.trim()) {
     return raw.replace(/\/$/, '');
   }
-  return 'http://localhost:4566/explainit-cdn/launcher.js';
+  const origin = pageOrigin();
+  return origin ? `${origin}/cdn/launcher.js` : '/cdn/launcher.js';
 }
 
 /** Public API origin embedded in the Host Install snippet. */
@@ -12,7 +20,7 @@ export function publicApiUrl(): string {
   if (raw?.trim()) {
     return raw.replace(/\/$/, '');
   }
-  return 'http://localhost:4000';
+  return pageOrigin();
 }
 
 export function generateInstallSnippet(opts: {

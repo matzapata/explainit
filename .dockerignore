@@ -2,6 +2,10 @@
 **/node_modules
 **/dist
 **/.env*
+!.env.example
 apps/server
-packages/launcher
 *.tsbuildinfo
+internal
+.scratch
+docs
+config

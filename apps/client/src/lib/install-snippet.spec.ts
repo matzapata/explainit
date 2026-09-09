@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { generateInstallSnippet } from './install-snippet';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  generateInstallSnippet,
+  launcherSrc,
+  publicApiUrl,
+} from './install-snippet';
 
 describe('generateInstallSnippet', () => {
   it('emits InstantSearch-style explainit() with apiUrl and no origin whitelist on the Host page', () => {
@@ -24,5 +28,19 @@ describe('generateInstallSnippet', () => {
     expect(snippet).not.toContain('data-allowed-origin');
     expect(snippet).not.toContain('appUrl');
     expect(snippet).not.toContain('type="module"');
+  });
+});
+
+describe('same-origin fallbacks', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('defaults launcher and api URLs to the page origin when VITE_* are unset', () => {
+    vi.stubEnv('VITE_LAUNCHER_SRC', '');
+    vi.stubEnv('VITE_PUBLIC_API_URL', '');
+
+    expect(launcherSrc()).toBe(`${window.location.origin}/cdn/launcher.js`);
+    expect(publicApiUrl()).toBe(window.location.origin);
   });
 });
