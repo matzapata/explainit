@@ -46,7 +46,8 @@ HTTP controllers live in `infra/http/controllers` with request/response DTOs in 
 Current infrastructure folders and responsibilities:
 
 - `auth`: `AUTH_MODE=none|oidc|password`. `NoneProvider` bootstraps `ADMIN_EMAIL`; `JwksProvider` verifies standard `sub` + `email` (any OIDC issuer, including Kinde); `PasswordProvider` issues/verifies a local HS256 JWT
-- `crawler`: website crawling/scraping and URL inspection (`PuppeteerCrawlerProvider`)
+- `scraper`: fetch one URL to HTML (`PuppeteerScraperProvider`; swappable later for Firecrawl etc.)
+- `crawler`: pure link policy — `nextUrls({ html, pageUrl, seedUrl })` with no HTTP
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
@@ -105,39 +106,41 @@ sequenceDiagram
 flowchart TD
   Source[Source URL or content] --> API[API creates pending ChatResource]
   API --> Queue[BullMQ ingest queue]
-  Queue --> Worker[Ingest worker]
-  Worker --> Crawl[Crawler provider scrape]
-  Crawl --> Chunk[Split content into chunks]
+  Queue --> Worker[DocumentsProcessor]
+  Worker --> Scrape[ScraperService scrape]
+  Scrape --> Chunk[Split content into chunks]
   Chunk --> Embed[Embeddings provider]
   Embed --> Store[Persist metadata + vectors in Postgres]
   Store --> Ready[ChatResource status ready]
+  Ready --> CrawlJob{job.name crawl?}
+  CrawlJob -->|yes| NextUrls[CrawlerService nextUrls]
+  NextUrls --> Kids[pending children + enqueue crawl]
+  Kids --> Queue
 ```
 
-Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability. Website ingest is asynchronous: `POST /api/chats/:id/resources/web` enqueues one BullMQ job per URL and returns `202` with `pending` resources. A worker processor scrapes, chunks, embeds, and marks the row `ready` or `failed`. URL inspect stays synchronous on the API. Text resources are still ingested inline.
+Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability. Website ingest is asynchronous:
+
+- `POST /api/chats/:id/resources/web` enqueues one scrape job per URL (`name: website`) and returns `202` with `pending` resources.
+- `POST /api/chats/:id/resources/web/crawl` creates a seed pending resource and enqueues a crawl job (`name: crawl`, depth 0). After indexing, the worker may create more pending resources and enqueue further crawl jobs (same host, path prefix of the seed, max depth 4, max 50 website resources per Chat).
+
+`DocumentsProcessor` (`modules/documents/documents.processor.ts`) scrapes, chunks, embeds, and marks the row `ready` or `failed`. The API never launches Chromium. Text resources are still ingested inline.
 
 ### Queue infrastructure
 
 Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across the two process roots:
 
 - `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
-- `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `IngestJob` payload type), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
-- `IngestWebResourceService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk`. Payload is `{ resourceId, chatId, url }` — never HTML.
-- `infra/worker/ingest.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process.
+- `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `ScrapeJob` / `CrawlJob` payloads), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
+- `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields) — never HTML.
+- `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`.
 - Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.
-- Compose runs Redis. `infra/worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.
+- Compose runs Redis. `infra/main-worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.
 
-### Crawler infrastructure
+### Scraper and crawler infrastructure
 
-Crawler responsibilities are implemented under `apps/server/src/infra/crawler`:
-
-- `CrawlerProvider` defines three capabilities:
-  - `inspect`: discover in-domain URLs from a seed page
-  - `crawl`: recursively collect HTML pages up to `maxRequests`
-  - `scrape`: fetch and extract specific URL lists
-- Active implementation uses Puppeteer with headless Chromium.
-- Output contract (`ScrapeResult`) includes `url`, `title`, and raw `html`.
-
-This design keeps crawling provider-specific details isolated while exposing a stable API to ingestion use-cases.
+- **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. Active adapter is Puppeteer; a future Firecrawl (or similar) adapter should keep the same HTML contract so crawl can extract links.
+- **Crawler** (`apps/server/src/infra/crawler`): pure policy, no HTTP. `CrawlerService.nextUrls({ html, pageUrl, seedUrl })` resolves links, keeps same-host / seed-path URLs, strips hashes, skips assets, and dedupes.
+- Documents orchestrates both: scrape jobs ignore links; crawl jobs call `nextUrls` after a successful ingest and fan out within budget.
 
 ### Embeddings infrastructure
 

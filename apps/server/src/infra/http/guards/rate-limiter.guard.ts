@@ -5,12 +5,12 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import {
   RATE_LIMIT_OPTIONS,
   type RateLimitOptions,
 } from '@src/infra/http/decorators/rate-limit.decorator';
-import type { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
+import { RateLimiterService } from '@src/infra/rate-limiter/rate-limiter.service';
 import type { Request, Response } from 'express';
 import { RateLimiterRes } from 'rate-limiter-flexible';
 

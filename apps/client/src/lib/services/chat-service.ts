@@ -134,6 +134,24 @@ export class ChatService {
     }
   }
 
+  async crawlWebResource(
+    accessToken: string,
+    id: string,
+    url: string,
+  ): Promise<ChatResource[]> {
+    try {
+      const res = await this.client.post(
+        `/api/chats/${id}/resources/web/crawl`,
+        { url },
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      return res.data;
+    } catch (error: any) {
+      console.error(error);
+      throw new Error(error?.response?.data?.message ?? '');
+    }
+  }
+
   async addTextResource(
     accessToken: string,
     id: string,
@@ -153,19 +171,6 @@ export class ChatService {
     }
   }
 
-  async inspectResource(
-    accessToken: string,
-    id: string,
-    url: string,
-  ): Promise<{ urls: string[] }> {
-    const res = await this.client.post(
-      `/api/chats/${id}/resources/web/inspect`,
-      { url },
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-    return res.data;
-  }
-
   async deleteResource(
     accessToken: string,
     id: string,
@@ -174,7 +179,7 @@ export class ChatService {
     await this.client.delete(`/api/chats/${id}/resources/${resource_id}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    return id;
+    return resource_id;
   }
 }
 

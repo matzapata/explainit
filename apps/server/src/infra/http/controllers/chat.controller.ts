@@ -13,27 +13,27 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Chat } from '@prisma/client';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { RateLimit } from '@src/infra/http/decorators/rate-limit.decorator';
 import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import type { ChatsService } from '@src/modules/chat/chat.service';
-import type { ConversationService } from '@src/modules/chat/conversation.service';
+import { ChatsService } from '@src/modules/chat/chat.service';
+import { ConversationService } from '@src/modules/chat/conversation.service';
 import {
   normalizeHostOrigins,
   parseDashboardOrigins,
   requestOrigin,
   visitorOriginAllowed,
 } from '@src/modules/chat/visitor-context';
-import type { DocumentsService } from '@src/modules/documents/documents.service';
+import { DocumentsService } from '@src/modules/documents/documents.service';
 import type { AuthUser } from '@src/modules/user/auth-user';
 import type { Request, Response } from 'express';
 import { ChatMetadataDto } from './dto/get-chat-metadata.dto';
 import { ChatOverviewDto } from './dto/get-chat-overview.dto';
-import type { PostMessageDto } from './dto/post-message.dto';
-import type { UpdateChatMetadataDto } from './dto/put-chat-metadata.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { UpdateChatMetadataDto } from './dto/put-chat-metadata.dto';
 
 @Controller('api/chats')
 export class ChatController {

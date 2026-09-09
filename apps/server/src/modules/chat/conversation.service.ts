@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import type { EmbeddingHit } from '@src/infra/vector-store/providers/vector-store.provider';
-import type { ConversationRepository } from './conversation.repository';
+import { ConversationRepository } from './conversation.repository';
 import { MessageAgent } from './message';
 
 @Injectable()

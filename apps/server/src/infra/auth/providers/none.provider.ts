@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import { AuthService, type JwtPayload } from './auth.provider';
 
 @Injectable()

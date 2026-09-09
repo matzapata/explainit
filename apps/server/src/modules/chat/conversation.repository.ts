@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PrismaService } from '@src/infra/database/prisma.service';
+import { PrismaService } from '@src/infra/database/prisma.service';
 import { MessageAgent } from './message';
 
 type NewMessage = {

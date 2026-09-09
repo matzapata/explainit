@@ -1,8 +1,8 @@
 import { Injectable, type NestMiddleware } from '@nestjs/common';
-import type { AuthService } from '@src/infra/auth/auth.service';
-import type { EnvService } from '@src/infra/env/env.service';
+import { AuthService } from '@src/infra/auth/auth.service';
+import { EnvService } from '@src/infra/env/env.service';
 import type { AuthUser } from '@src/modules/user/auth-user';
-import type { UsersService } from '@src/modules/user/users.service';
+import { UsersService } from '@src/modules/user/users.service';
 import type { NextFunction, Request, Response } from 'express';
 
 declare module 'express' {

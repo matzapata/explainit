@@ -1,8 +1,12 @@
-import { IsString, Length } from 'class-validator';
-
+import { IsString, IsUrl, Length } from 'class-validator';
 export class PostWebResourceDto {
   @IsString({ each: true })
   urls: string[];
+}
+
+export class PostWebCrawlDto {
+  @IsUrl()
+  url: string;
 }
 
 export class PostTextResourceDto {

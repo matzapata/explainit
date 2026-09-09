@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import type { EmbeddingsProvider } from './embeddings.provider';
 
 @Injectable()

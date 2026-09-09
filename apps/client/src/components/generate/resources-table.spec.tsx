@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChatResource } from '@/lib/services/chat-service';
+import { chatService } from '@/lib/services/chat-service';
 import ResourcesTable from './resources-table';
 
 vi.mock('@/lib/auth/use-session', () => ({
@@ -14,7 +15,7 @@ vi.mock('@/lib/services/chat-service', () => ({
     getOwnerChatById: vi.fn(),
     addTextResource: vi.fn(),
     addWebResource: vi.fn(),
-    inspectResource: vi.fn(),
+    crawlWebResource: vi.fn(),
     deleteResource: vi.fn(),
   },
 }));
@@ -31,6 +32,12 @@ function renderTable(resources: ChatResource[]) {
 }
 
 describe('ResourcesTable', () => {
+  beforeEach(() => {
+    vi.mocked(chatService.addWebResource).mockReset();
+    vi.mocked(chatService.crawlWebResource).mockReset();
+    vi.mocked(chatService.deleteResource).mockReset();
+  });
+
   it('links URL sources and shows Updated dates', () => {
     renderTable([
       {
@@ -83,5 +90,89 @@ describe('ResourcesTable', () => {
     expect(screen.getByLabelText('Title')).toBeInTheDocument();
     expect(screen.getByLabelText('Text')).toBeInTheDocument();
     expect(screen.queryByLabelText('Source')).not.toBeInTheDocument();
+  });
+
+  it('adds only the entered url when Add this page is clicked', async () => {
+    const user = userEvent.setup();
+    vi.mocked(chatService.addWebResource).mockResolvedValue([
+      {
+        id: 'resource-1',
+        type: 'website',
+        data: 'https://docs.example.com/guide',
+        status: 'pending',
+      },
+    ]);
+    renderTable([]);
+
+    await user.click(screen.getByRole('button', { name: 'Add website' }));
+    await user.type(
+      screen.getByLabelText('Website URL'),
+      'https://docs.example.com/guide',
+    );
+    await user.click(screen.getByRole('button', { name: 'Add this page' }));
+
+    expect(chatService.addWebResource).toHaveBeenCalledWith('token', 'chat-1', [
+      'https://docs.example.com/guide',
+    ]);
+    expect(chatService.crawlWebResource).not.toHaveBeenCalled();
+  });
+
+  it('crawls the site when Crawl this site is clicked', async () => {
+    const user = userEvent.setup();
+    vi.mocked(chatService.crawlWebResource).mockResolvedValue([
+      {
+        id: 'resource-1',
+        type: 'website',
+        data: 'https://docs.example.com/guide',
+        status: 'pending',
+      },
+    ]);
+    renderTable([]);
+
+    await user.click(screen.getByRole('button', { name: 'Add website' }));
+    await user.type(
+      screen.getByLabelText('Website URL'),
+      'https://docs.example.com/guide',
+    );
+    await user.click(screen.getByRole('button', { name: 'Crawl this site' }));
+
+    expect(chatService.crawlWebResource).toHaveBeenCalledWith(
+      'token',
+      'chat-1',
+      'https://docs.example.com/guide',
+    );
+    expect(chatService.addWebResource).not.toHaveBeenCalled();
+  });
+
+  it('removes the deleted resource from the table after success', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(chatService.deleteResource).mockResolvedValue('chat-1');
+
+    renderTable([
+      {
+        id: 'resource-1',
+        type: 'website',
+        data: 'https://docs.example.com/guide',
+        title: null,
+        status: 'ready',
+        updatedAt: '2026-09-08T12:00:00.000Z',
+      },
+    ]);
+
+    await user.click(screen.getByRole('button', { name: 'Remove resource' }));
+
+    expect(chatService.deleteResource).toHaveBeenCalledWith(
+      'token',
+      'chat-1',
+      'resource-1',
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('link', { name: 'https://docs.example.com/guide' }),
+      ).not.toBeInTheDocument();
+    });
+
+    vi.mocked(window.confirm).mockRestore();
   });
 });

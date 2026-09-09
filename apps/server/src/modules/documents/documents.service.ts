@@ -3,14 +3,21 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { type ChatResource, ResourceStatus } from '@prisma/client';
-import type { ChunkingService } from '@src/infra/chunking/chunking.service';
-import type { CrawlerService } from '@src/infra/crawler/crawler.service';
-import type { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
+import { ChunkingService } from '@src/infra/chunking/chunking.service';
+import { CrawlerService } from '@src/infra/crawler/crawler.service';
+import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
 import { Span } from '@src/infra/observability/decorators/span.decorator';
-import type { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
+import { ScraperService } from '@src/infra/scraper/scraper.service';
+import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import type { Queue } from 'bullmq';
-import type { DocumentsRepository } from './documents.repository';
-import { INGEST_QUEUE, type IngestJob } from './ingest-job';
+import { DocumentsRepository } from './documents.repository';
+import {
+  CRAWL_MAX_DEPTH,
+  CRAWL_MAX_PAGES,
+  type CrawlJob,
+  INGEST_QUEUE,
+  type ScrapeJob,
+} from './ingest-job';
 
 export class PermanentIngestError extends Error {
   constructor(message: string) {
@@ -26,6 +33,7 @@ export class DocumentsService {
   constructor(
     private readonly documentsRepository: DocumentsRepository,
     @InjectQueue(INGEST_QUEUE) private readonly ingestQueue: Queue,
+    private readonly scraperService: ScraperService,
     private readonly crawlerService: CrawlerService,
     private readonly chunkingService: ChunkingService,
     private readonly vectorStoreService: VectorStoreService,
@@ -166,7 +174,7 @@ export class DocumentsService {
             resourceId: resource.id,
             chatId,
             url: resource.data,
-          },
+          } satisfies ScrapeJob,
         })),
       );
     } catch (error) {
@@ -181,17 +189,132 @@ export class DocumentsService {
     return created;
   }
 
+  async enqueueWebsiteCrawl(
+    chatId: string,
+    url: string,
+  ): Promise<ChatResource> {
+    try {
+      new URL(url);
+    } catch {
+      throw new BadRequestException('Invalid URL');
+    }
+
+    const existing = await this.findByUrl(chatId, url);
+    if (existing) {
+      throw new BadRequestException('URL already added');
+    }
+
+    const resources = await this.findByChatId(chatId);
+    const websiteCount = resources.filter((r) => r.type === 'website').length;
+    if (websiteCount >= CRAWL_MAX_PAGES) {
+      throw new BadRequestException(
+        `Chat already has ${CRAWL_MAX_PAGES} website resources`,
+      );
+    }
+
+    const created = await this.create(chatId, {
+      data: url,
+      type: 'website',
+      status: ResourceStatus.pending,
+      embeddingIds: [],
+    });
+
+    try {
+      await this.ingestQueue.add('crawl', {
+        resourceId: created.id,
+        chatId,
+        url,
+        seedUrl: url,
+        depth: 0,
+        maxDepth: CRAWL_MAX_DEPTH,
+        maxPages: CRAWL_MAX_PAGES,
+      } satisfies CrawlJob);
+    } catch (error) {
+      await this.markFailed(created.id, errorMessage(error));
+      throw error;
+    }
+
+    return created;
+  }
+
   @Span({ name: 'ingest' })
-  async process(job: IngestJob): Promise<void> {
+  async process(job: ScrapeJob): Promise<void> {
+    await this.ingestPage(job);
+  }
+
+  @Span({ name: 'ingest-crawl' })
+  async processCrawl(job: CrawlJob): Promise<void> {
+    const page = await this.ingestPage(job);
+    if (!page) {
+      return;
+    }
+
+    if (job.depth >= job.maxDepth) {
+      return;
+    }
+
+    const candidates = this.crawlerService.nextUrls({
+      html: page.html,
+      pageUrl: job.url,
+      seedUrl: job.seedUrl,
+    });
+
+    const resources = await this.findByChatId(job.chatId);
+    const websiteCount = resources.filter((r) => r.type === 'website').length;
+    let slots = job.maxPages - websiteCount;
+    if (slots <= 0) {
+      return;
+    }
+
+    const existingUrls = new Set(
+      resources.map((resource) => resource.data.toLowerCase()),
+    );
+
+    for (const candidate of candidates) {
+      if (slots <= 0) {
+        break;
+      }
+      if (existingUrls.has(candidate.toLowerCase())) {
+        continue;
+      }
+
+      const created = await this.create(job.chatId, {
+        data: candidate,
+        type: 'website',
+        status: ResourceStatus.pending,
+        embeddingIds: [],
+      });
+      existingUrls.add(candidate.toLowerCase());
+      slots -= 1;
+
+      try {
+        await this.ingestQueue.add('crawl', {
+          resourceId: created.id,
+          chatId: job.chatId,
+          url: candidate,
+          seedUrl: job.seedUrl,
+          depth: job.depth + 1,
+          maxDepth: job.maxDepth,
+          maxPages: job.maxPages,
+        } satisfies CrawlJob);
+      } catch (error) {
+        await this.markFailed(created.id, errorMessage(error));
+      }
+    }
+  }
+
+  private async ingestPage(
+    job: ScrapeJob,
+  ): Promise<{ html: string; title: string; url: string } | null> {
     const resource = await this.findById(job.resourceId);
     if (!resource) {
       this.logger.warn(
         `Skipping ingest for deleted resource ${job.resourceId}`,
       );
-      return;
+      return null;
     }
     if (resource.status === ResourceStatus.ready) {
-      return;
+      return null;
     }
 
     try {
@@ -205,8 +328,7 @@ export class DocumentsService {
       error: null,
     });
 
-    const scraped = await this.crawlerService.scrape({ urls: [job.url] });
-    const page = scraped[0];
+    const page = await this.scraperService.scrape({ url: job.url });
     if (!page?.html) {
       throw new PermanentIngestError(`Empty scrape for ${job.url}`);
     }
@@ -220,14 +342,17 @@ export class DocumentsService {
     const stillExists = await this.findById(job.resourceId);
     if (!stillExists) {
       await this.deleteDocuments(ids);
-      return;
+      return null;
     }
 
     await this.update(job.resourceId, {
       status: ResourceStatus.ready,
+      title: page.title || stillExists.title,
       embeddingIds: ids,
       error: null,
     });
+
+    return page;
   }
 
   async markFailed(resourceId: string, error: string): Promise<void> {

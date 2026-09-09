@@ -1,7 +1,7 @@
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatOpenRouter } from '@langchain/openrouter';
 import { Injectable } from '@nestjs/common';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import type { LlmProvider } from './llm.provider';
 
 @Injectable()

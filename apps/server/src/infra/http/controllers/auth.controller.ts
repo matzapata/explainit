@@ -9,7 +9,7 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { AuthService } from '@src/infra/auth/auth.service';
+import { AuthService } from '@src/infra/auth/auth.service';
 import {
   clientOrigin,
   createPkce,
@@ -18,9 +18,9 @@ import {
   readCookie,
   safeReturnTo,
 } from '@src/infra/auth/oidc';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import type { Request, Response } from 'express';
-import type { LoginDto } from './dto/login.dto';
+import { LoginDto } from './dto/login.dto';
 
 const TOKEN_MAX_AGE = 60 * 60 * 24 * 7;
 const OIDC_COOKIE_MAX_AGE = 60 * 10;
