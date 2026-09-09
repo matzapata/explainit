@@ -10,4 +10,4 @@ Vite + React SPA for the Owner dashboard. It talks to the NestJS API (`apps/serv
 
 ## Environment
 
-Copy `.env.example` to `.env.local`. `VITE_API_BASE_URL` is the browser-facing API origin. Auth mode is read from `GET /api/auth/mode` at runtime.
+Copy `.env.example` to `.env.local`. `VITE_API_BASE_URL` is the browser-facing API origin. Whether password login is required is read from `GET /api/auth/mode` at runtime (`password` when `HTTP_AUTH_USERNAME` and `HTTP_AUTH_PASSWORD` are set, otherwise `none`).

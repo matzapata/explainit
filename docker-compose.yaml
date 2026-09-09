@@ -7,8 +7,6 @@ services:
       PORT: '4000'
       NODE_ENV: development
       DATABASE_URL: postgresql://explainit:explainit@postgres:5432/explainit
-      AUTH_MODE: none
-      ADMIN_EMAIL: admin@example.com
       CORS_ORIGIN: http://localhost:3000
       OTEL_SERVICE_NAME: explainit
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
@@ -47,8 +45,6 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://explainit:explainit@postgres:5432/explainit
-      AUTH_MODE: none
-      ADMIN_EMAIL: admin@example.com
       OTEL_SERVICE_NAME: explainit-worker
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
       REDIS_HOST: redis

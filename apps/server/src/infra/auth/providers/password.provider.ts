@@ -11,27 +11,30 @@ export class PasswordProvider extends AuthService {
     super();
   }
 
-  login(email: string, password: string): string | null {
-    const adminEmail = this.env.get('ADMIN_EMAIL');
-    const adminPassword = this.env.get('ADMIN_PASSWORD');
-    const secret = this.env.get('AUTH_SECRET');
+  login(username: string, password: string): string | null {
+    const adminUsername = this.env.get('HTTP_AUTH_USERNAME');
+    const adminPassword = this.env.get('HTTP_AUTH_PASSWORD');
+    const secret = this.jwtSecret();
 
-    if (!adminEmail || !adminPassword || !secret) {
+    if (!adminUsername || !adminPassword || !secret) {
       return null;
     }
 
-    if (!safeEqual(email, adminEmail) || !safeEqual(password, adminPassword)) {
+    if (
+      !safeEqual(username, adminUsername) ||
+      !safeEqual(password, adminPassword)
+    ) {
       return null;
     }
 
-    return jwt.sign({ sub: 'local', email: adminEmail }, secret, {
+    return jwt.sign({ sub: 'local', email: adminUsername }, secret, {
       algorithm: 'HS256',
       expiresIn: '7d',
     });
   }
 
   async verifyToken(token: string | undefined): Promise<JwtPayload | null> {
-    const secret = this.env.get('AUTH_SECRET');
+    const secret = this.jwtSecret();
     if (!token || !secret) {
       return null;
     }
@@ -42,6 +45,23 @@ export class PasswordProvider extends AuthService {
     } catch {
       return null;
     }
+  }
+
+  private jwtSecret(): string | undefined {
+    const secret = this.env.get('AUTH_SECRET');
+    if (secret) {
+      return secret;
+    }
+
+    const password = this.env.get('HTTP_AUTH_PASSWORD');
+    if (!password) {
+      return undefined;
+    }
+
+    return crypto
+      .createHash('sha256')
+      .update(`explainit:${password}`)
+      .digest('hex');
   }
 }
 

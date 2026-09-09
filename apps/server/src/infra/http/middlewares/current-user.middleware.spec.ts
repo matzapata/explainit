@@ -1,5 +1,4 @@
 import type { AuthService } from '@src/infra/auth/auth.service';
-import type { EnvService } from '@src/infra/env/env.service';
 import type { UsersService } from '@src/modules/user/users.service';
 import type { Request, Response } from 'express';
 import { CurrentUserMiddleware } from './current-user.middleware';
@@ -19,15 +18,10 @@ describe('CurrentUserMiddleware', () => {
     verifyToken: jest.fn(),
   } as unknown as AuthService;
 
-  const env = {
-    get: jest.fn().mockReturnValue('admin@example.com'),
-  } as unknown as EnvService;
-
-  const middleware = new CurrentUserMiddleware(usersService, authService, env);
+  const middleware = new CurrentUserMiddleware(usersService, authService);
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (env.get as jest.Mock).mockReturnValue('admin@example.com');
     (usersService.findOrCreate as jest.Mock).mockResolvedValue({
       id: 'db-id',
       email: 'admin@example.com',
@@ -62,7 +56,7 @@ describe('CurrentUserMiddleware', () => {
     expect(req.currentUser).toBeNull();
   });
 
-  it('extracts a Bearer token and marks non-admins', async () => {
+  it('extracts a Bearer token', async () => {
     (authService.verifyToken as jest.Mock).mockResolvedValue({
       id: 'local',
       email: 'user@example.com',
@@ -81,7 +75,7 @@ describe('CurrentUserMiddleware', () => {
     expect(req.currentUser).toEqual({
       id: 'user-id',
       email: 'user@example.com',
-      isAdmin: false,
+      isAdmin: true,
     });
   });
 });

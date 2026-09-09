@@ -45,7 +45,7 @@ HTTP controllers live in `infra/http/controllers` with request/response DTOs in 
 
 Current infrastructure folders and responsibilities:
 
-- `auth`: `AUTH_MODE=none|oidc|password`. `NoneProvider` bootstraps `ADMIN_EMAIL`; `JwksProvider` verifies standard `sub` + `email` (any OIDC issuer, including Kinde); `PasswordProvider` issues/verifies a local HS256 JWT
+- `auth`: password login when `HTTP_AUTH_USERNAME` and `HTTP_AUTH_PASSWORD` are set (`PasswordProvider` issues/verifies a local HS256 JWT); otherwise `NoneProvider` bootstraps an unsecured local owner
 - `scraper`: fetch one URL to HTML (`PuppeteerScraperProvider`; swappable later for Firecrawl etc.)
 - `crawler`: pure link policy — `nextUrls({ html, pageUrl, seedUrl })` with no HTTP
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process

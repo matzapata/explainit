@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
 import { Route as AuthedChatsChatIdIndexRouteImport } from './routes/_authed/chats.$chatId/index'
 import { Route as AuthedChatsChatIdResourcesRouteImport } from './routes/_authed/chats.$chatId/resources'
@@ -32,11 +31,6 @@ const AuthedIndexRoute = AuthedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedRoute,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const ChatIdRoute = ChatIdRouteImport.update({
   id: '/chat/$id',
@@ -69,7 +63,6 @@ const AuthedChatsChatIdSetupRoute = AuthedChatsChatIdSetupRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthedIndexRoute
   '/login': typeof LoginRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
   '/chats/$chatId/settings': typeof AuthedChatsChatIdSettingsRoute
@@ -78,7 +71,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/': typeof AuthedIndexRoute
   '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
@@ -90,7 +82,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
@@ -103,7 +94,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/auth/callback'
     | '/chat/$id'
     | '/chats/$chatId/resources'
     | '/chats/$chatId/settings'
@@ -112,7 +102,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/auth/callback'
     | '/chat/$id'
     | '/'
     | '/chats/$chatId/resources'
@@ -123,7 +112,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authed'
     | '/login'
-    | '/auth/callback'
     | '/chat/$id'
     | '/_authed/'
     | '/_authed/chats/$chatId/resources'
@@ -135,7 +123,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
   ChatIdRoute: typeof ChatIdRoute
 }
 
@@ -161,13 +148,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthedIndexRouteImport
       parentRoute: typeof AuthedRoute
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/chat/$id': {
       id: '/chat/$id'
@@ -229,7 +209,6 @@ const AuthedRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
   ChatIdRoute: ChatIdRoute,
 }
 export const routeTree = rootRouteImport

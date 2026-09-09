@@ -8,8 +8,6 @@ function mockRes() {
     redirect: jest.fn().mockReturnThis(),
     status: jest.fn().mockReturnThis(),
     json: jest.fn().mockReturnThis(),
-    cookie: jest.fn().mockReturnThis(),
-    clearCookie: jest.fn().mockReturnThis(),
   };
   return res;
 }
@@ -21,6 +19,7 @@ describe('AuthController', () => {
 
   const env = {
     get: jest.fn(),
+    authMode: jest.fn(),
   } as unknown as jest.Mocked<EnvService>;
 
   const controller = new AuthController(authService, env);
@@ -29,67 +28,64 @@ describe('AuthController', () => {
     jest.clearAllMocks();
     env.get.mockImplementation((key: string) => {
       if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
-      if (key === 'NODE_ENV') return 'test';
       return undefined;
     });
   });
 
   describe('mode', () => {
-    it('returns the configured auth mode', () => {
-      env.get.mockReturnValue('none');
+    it('returns none when password auth is not configured', () => {
+      env.authMode.mockReturnValue('none');
       expect(controller.mode()).toEqual({ mode: 'none' });
+    });
+
+    it('returns password when username and password are set', () => {
+      env.authMode.mockReturnValue('password');
+      expect(controller.mode()).toEqual({ mode: 'password' });
     });
   });
 
   describe('login', () => {
-    it('rejects login when AUTH_MODE is not password', () => {
-      env.get.mockReturnValue('none');
+    it('rejects login when password auth is not configured', () => {
+      env.authMode.mockReturnValue('none');
       expect(() =>
-        controller.login({ email: 'admin@example.com', password: 'x' }),
+        controller.login({ username: 'admin', password: 'x' }),
       ).toThrow(BadRequestException);
     });
 
     it('returns an access token for valid credentials', () => {
-      env.get.mockReturnValue('password');
+      env.authMode.mockReturnValue('password');
       authService.login.mockReturnValue('jwt-token');
 
-      expect(
-        controller.login({ email: 'admin@example.com', password: 'x' }),
-      ).toEqual({ access_token: 'jwt-token', expires_in: 60 * 60 * 24 * 7 });
+      expect(controller.login({ username: 'admin', password: 'x' })).toEqual({
+        access_token: 'jwt-token',
+        expires_in: 60 * 60 * 24 * 7,
+      });
     });
 
     it('rejects invalid credentials', () => {
-      env.get.mockReturnValue('password');
+      env.authMode.mockReturnValue('password');
       authService.login.mockReturnValue(null);
 
       expect(() =>
-        controller.login({ email: 'admin@example.com', password: 'x' }),
+        controller.login({ username: 'admin', password: 'x' }),
       ).toThrow(UnauthorizedException);
     });
   });
 
   describe('startLogin', () => {
-    it('redirects to the client when AUTH_MODE is none', async () => {
-      env.get.mockImplementation((key: string) => {
-        if (key === 'AUTH_MODE') return 'none';
-        if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
-        return undefined;
-      });
+    it('redirects to the client when auth is not configured', () => {
+      env.authMode.mockReturnValue('none');
       const res = mockRes();
-      await controller.startLogin('/settings', res as never);
+      controller.startLogin('/settings', res as never);
       expect(res.redirect).toHaveBeenCalledWith(
         'http://localhost:3000/settings',
       );
     });
 
-    it('redirects to the SPA login page in password mode', async () => {
-      env.get.mockImplementation((key: string) => {
-        if (key === 'AUTH_MODE') return 'password';
-        if (key === 'CORS_ORIGIN') return 'http://localhost:3000';
-        return undefined;
-      });
+    it('redirects to the SPA login page when password auth is enabled', () => {
+      env.authMode.mockReturnValue('password');
       const res = mockRes();
-      await controller.startLogin('/resources', res as never);
+      controller.startLogin('/resources', res as never);
       expect(res.redirect).toHaveBeenCalledWith(
         'http://localhost:3000/login?returnTo=%2Fresources',
       );

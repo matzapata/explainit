@@ -20,6 +20,12 @@ const booleanFromEnv = z
     return Boolean(value);
   });
 
+const optionalNonEmpty = z.preprocess(
+  (value) =>
+    typeof value === 'string' && value.trim() === '' ? undefined : value,
+  z.string().min(1).optional(),
+);
+
 export const envSchema = z
   .object({
     NODE_ENV: z
@@ -51,16 +57,9 @@ export const envSchema = z
     REDIS_HOST: z.string().default('localhost'),
     REDIS_PORT: z.coerce.number().default(6379),
 
-    AUTH_MODE: z.enum(['none', 'oidc', 'password']).default('none'),
-    ADMIN_EMAIL: z.string().min(1),
-    AUTH_JWKS_URI: z.string().url().optional(),
-    AUTH_ISSUER: z.string().optional(),
-    AUTH_AUDIENCE: z.string().optional(),
-    AUTH_CLIENT_ID: z.string().optional(),
-    AUTH_CLIENT_SECRET: z.string().optional(),
-    AUTH_REDIRECT_URI: z.string().url().optional(),
-    AUTH_SECRET: z.string().optional(),
-    ADMIN_PASSWORD: z.string().optional(),
+    HTTP_AUTH_USERNAME: optionalNonEmpty,
+    HTTP_AUTH_PASSWORD: optionalNonEmpty,
+    AUTH_SECRET: optionalNonEmpty,
 
     DATABASE_URL: z.string().min(1),
 
@@ -71,54 +70,30 @@ export const envSchema = z
       .default('http://localhost:4318/v1/traces'),
   })
   .superRefine((env, ctx) => {
-    if (env.AUTH_MODE === 'oidc') {
-      if (!env.AUTH_JWKS_URI) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['AUTH_JWKS_URI'],
-          message: 'AUTH_JWKS_URI is required when AUTH_MODE=oidc',
-        });
-      }
-      if (!env.AUTH_ISSUER) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['AUTH_ISSUER'],
-          message: 'AUTH_ISSUER is required when AUTH_MODE=oidc',
-        });
-      }
-      if (!env.AUTH_CLIENT_ID) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['AUTH_CLIENT_ID'],
-          message: 'AUTH_CLIENT_ID is required when AUTH_MODE=oidc',
-        });
-      }
-      if (!env.AUTH_REDIRECT_URI) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['AUTH_REDIRECT_URI'],
-          message: 'AUTH_REDIRECT_URI is required when AUTH_MODE=oidc',
-        });
-      }
+    if (!passwordAuthEnabled(env)) {
+      return;
     }
 
-    if (env.AUTH_MODE === 'password') {
-      if (!env.AUTH_SECRET || env.AUTH_SECRET.length < 16) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['AUTH_SECRET'],
-          message:
-            'AUTH_SECRET must be at least 16 characters when AUTH_MODE=password',
-        });
-      }
-      if (!env.ADMIN_PASSWORD) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['ADMIN_PASSWORD'],
-          message: 'ADMIN_PASSWORD is required when AUTH_MODE=password',
-        });
-      }
+    if (env.AUTH_SECRET && env.AUTH_SECRET.length < 16) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['AUTH_SECRET'],
+        message:
+          'AUTH_SECRET must be at least 16 characters when password auth is enabled',
+      });
     }
   });
 
 export type Env = z.infer<typeof envSchema>;
+
+export function passwordAuthEnabled(
+  env: Pick<Env, 'HTTP_AUTH_USERNAME' | 'HTTP_AUTH_PASSWORD'>,
+): boolean {
+  return Boolean(env.HTTP_AUTH_USERNAME && env.HTTP_AUTH_PASSWORD);
+}
+
+export function authMode(
+  env: Pick<Env, 'HTTP_AUTH_USERNAME' | 'HTTP_AUTH_PASSWORD'>,
+): 'none' | 'password' {
+  return passwordAuthEnabled(env) ? 'password' : 'none';
+}
