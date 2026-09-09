@@ -1,4 +1,4 @@
-export type AuthMode = 'none' | 'oidc' | 'password';
+export type AuthMode = 'none' | 'password';
 
 export const TOKEN_COOKIE = 'explainit_token';
 export const NONE_ACCESS_TOKEN = 'none';
@@ -41,8 +41,7 @@ export async function fetchAuthMode(): Promise<AuthMode> {
   }
 
   const data = (await res.json()) as { mode?: string };
-  const mode =
-    data.mode === 'oidc' || data.mode === 'password' ? data.mode : 'none';
+  const mode: AuthMode = data.mode === 'password' ? 'password' : 'none';
   cachedAuthMode = mode;
   return mode;
 }
@@ -85,20 +84,12 @@ export function clearAccessToken() {
 
 export function loginHref(returnTo = '/'): string {
   const target = safeReturnTo(returnTo);
-  const mode = getAuthMode();
-  if (mode === 'none') {
+  if (getAuthMode() === 'none') {
     return target;
-  }
-  if (mode === 'oidc') {
-    return `${apiBaseUrl()}/api/auth/login?returnTo=${encodeURIComponent(target)}`;
   }
   return `/login?returnTo=${encodeURIComponent(target)}`;
 }
 
 export function logoutHref(returnTo = '/'): string {
-  const target = safeReturnTo(returnTo);
-  if (getAuthMode() === 'oidc') {
-    return `${apiBaseUrl()}/api/auth/logout?returnTo=${encodeURIComponent(target)}`;
-  }
-  return target;
+  return safeReturnTo(returnTo);
 }

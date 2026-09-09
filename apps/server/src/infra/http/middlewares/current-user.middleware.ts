@@ -1,6 +1,5 @@
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import { AuthService } from '@src/infra/auth/auth.service';
-import { EnvService } from '@src/infra/env/env.service';
 import type { AuthUser } from '@src/modules/user/auth-user';
 import { UsersService } from '@src/modules/user/users.service';
 import type { NextFunction, Request, Response } from 'express';
@@ -16,7 +15,6 @@ export class CurrentUserMiddleware implements NestMiddleware {
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
-    private env: EnvService,
   ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
@@ -28,7 +26,7 @@ export class CurrentUserMiddleware implements NestMiddleware {
       req.currentUser = {
         id: user.id,
         email: user.email,
-        isAdmin: payload.email === this.env.get('ADMIN_EMAIL'),
+        isAdmin: true,
       };
     } else req.currentUser = null;
 

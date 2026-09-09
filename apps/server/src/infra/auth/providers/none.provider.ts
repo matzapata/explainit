@@ -9,7 +9,7 @@ export class NoneProvider extends AuthService {
   }
 
   async verifyToken(_token: string | undefined): Promise<JwtPayload | null> {
-    const email = this.env.get('ADMIN_EMAIL') ?? 'admin@localhost';
+    const email = this.env.get('HTTP_AUTH_USERNAME') ?? 'admin@localhost';
 
     return { id: 'local', email };
   }

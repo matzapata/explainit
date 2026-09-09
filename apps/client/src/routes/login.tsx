@@ -1,9 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { useEffect } from 'react';
 import Logo from '@/components/brand/logo';
-import Loading from '@/components/loading';
 import { LoginForm } from '@/components/login-form';
-import { getAccessToken, loginHref, safeReturnTo } from '@/lib/auth/config';
+import { getAccessToken, safeReturnTo } from '@/lib/auth/config';
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -23,17 +21,6 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const { returnTo, error } = Route.useSearch();
-  const { authMode } = Route.useRouteContext();
-
-  useEffect(() => {
-    if (authMode === 'oidc') {
-      window.location.replace(loginHref(returnTo));
-    }
-  }, [authMode, returnTo]);
-
-  if (authMode !== 'password') {
-    return <Loading />;
-  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
@@ -46,12 +33,12 @@ function LoginPage() {
             Sign in
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Use the admin email and password from your server env.
+            Use the username and password from your server env.
           </p>
         </div>
         {error ? (
           <p className="text-sm text-center text-red-500">
-            Sign in failed. Check your identity provider configuration.
+            Sign in failed. Check your username and password.
           </p>
         ) : null}
         <LoginForm returnTo={returnTo} />

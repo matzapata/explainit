@@ -1,6 +1,6 @@
-import { clientOrigin, readCookie, safeReturnTo } from './oidc';
+import { clientOrigin, safeReturnTo } from './redirect';
 
-describe('oidc helpers', () => {
+describe('auth redirect helpers', () => {
   describe('safeReturnTo', () => {
     it('rejects absolute and protocol-relative URLs', () => {
       expect(safeReturnTo('https://evil.example')).toBe('/');
@@ -18,15 +18,6 @@ describe('oidc helpers', () => {
         clientOrigin('http://localhost:3000,https://app.example.com'),
       ).toBe('http://localhost:3000');
       expect(clientOrigin('*')).toBe('http://localhost:3000');
-    });
-  });
-
-  describe('readCookie', () => {
-    it('reads a named cookie from the header', () => {
-      expect(
-        readCookie('a=1; explainit_oidc_state=abc', 'explainit_oidc_state'),
-      ).toBe('abc');
-      expect(readCookie(undefined, 'a')).toBeUndefined();
     });
   });
 });

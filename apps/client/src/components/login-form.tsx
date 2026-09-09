@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { apiBaseUrl, setAccessToken } from '@/lib/auth/config';
 
 export function LoginForm({ returnTo }: { returnTo: string }) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,17 +19,17 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
       const res = await fetch(`${apiBaseUrl()}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
-        setError('Invalid email or password');
+        setError('Invalid username or password');
         return;
       }
 
       const data = (await res.json()) as { access_token?: string };
       if (!data.access_token) {
-        setError('Invalid email or password');
+        setError('Invalid username or password');
         return;
       }
 
@@ -45,13 +45,13 @@ export function LoginForm({ returnTo }: { returnTo: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="username">Username</Label>
         <Input
-          id="email"
-          type="email"
+          id="username"
+          type="text"
           autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
       </div>

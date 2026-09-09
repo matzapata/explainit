@@ -1,57 +1,72 @@
-import { envSchema } from './env';
+import { authMode, envSchema, passwordAuthEnabled } from './env';
 
 const base = {
   OPENROUTER_API_KEY: 'sk-test',
-  ADMIN_EMAIL: 'admin@example.com',
   DATABASE_URL: 'postgres://localhost/explainit',
 };
 
 describe('envSchema', () => {
-  it('accepts the default none auth mode', () => {
+  it('accepts an unsecured instance when username and password are unset', () => {
     const parsed = envSchema.parse(base);
-    expect(parsed.AUTH_MODE).toBe('none');
+    expect(parsed.HTTP_AUTH_USERNAME).toBeUndefined();
+    expect(parsed.HTTP_AUTH_PASSWORD).toBeUndefined();
     expect(parsed.OPENROUTER_BASE_URL).toBe('https://openrouter.ai/api/v1');
+    expect(authMode(parsed)).toBe('none');
   });
 
-  it('requires AUTH_JWKS_URI when AUTH_MODE is oidc', () => {
-    const result = envSchema.safeParse({ ...base, AUTH_MODE: 'oidc' });
+  it('treats empty auth credentials as unset', () => {
+    const parsed = envSchema.parse({
+      ...base,
+      HTTP_AUTH_USERNAME: '',
+      HTTP_AUTH_PASSWORD: '  ',
+    });
+    expect(passwordAuthEnabled(parsed)).toBe(false);
+  });
+
+  it('does not enable password auth when only one credential is set', () => {
+    expect(
+      passwordAuthEnabled(
+        envSchema.parse({ ...base, HTTP_AUTH_USERNAME: 'admin' }),
+      ),
+    ).toBe(false);
+    expect(
+      passwordAuthEnabled(
+        envSchema.parse({ ...base, HTTP_AUTH_PASSWORD: 'secret' }),
+      ),
+    ).toBe(false);
+  });
+
+  it('enables password auth when username and password are set', () => {
+    const parsed = envSchema.parse({
+      ...base,
+      HTTP_AUTH_USERNAME: 'admin',
+      HTTP_AUTH_PASSWORD: 'secret',
+    });
+    expect(authMode(parsed)).toBe('password');
+  });
+
+  it('rejects a short AUTH_SECRET when password auth is enabled', () => {
+    const result = envSchema.safeParse({
+      ...base,
+      HTTP_AUTH_USERNAME: 'admin',
+      HTTP_AUTH_PASSWORD: 'secret',
+      AUTH_SECRET: 'too-short',
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0].path).toEqual(['AUTH_JWKS_URI']);
+      expect(result.error.issues[0].path).toEqual(['AUTH_SECRET']);
     }
   });
 
-  it('accepts oidc when issuer, client, JWKS, and redirect URI are set', () => {
+  it('accepts a long AUTH_SECRET with password auth', () => {
     const parsed = envSchema.parse({
       ...base,
-      AUTH_MODE: 'oidc',
-      AUTH_JWKS_URI: 'https://issuer.example.com/.well-known/jwks.json',
-      AUTH_ISSUER: 'https://issuer.example.com',
-      AUTH_CLIENT_ID: 'explainit',
-      AUTH_REDIRECT_URI: 'http://localhost:4000/api/auth/callback',
-    });
-    expect(parsed.AUTH_MODE).toBe('oidc');
-  });
-
-  it('requires a long AUTH_SECRET and ADMIN_PASSWORD for password mode', () => {
-    const missing = envSchema.safeParse({ ...base, AUTH_MODE: 'password' });
-    expect(missing.success).toBe(false);
-
-    const shortSecret = envSchema.safeParse({
-      ...base,
-      AUTH_MODE: 'password',
-      AUTH_SECRET: 'too-short',
-      ADMIN_PASSWORD: 'secret',
-    });
-    expect(shortSecret.success).toBe(false);
-
-    const parsed = envSchema.parse({
-      ...base,
-      AUTH_MODE: 'password',
+      HTTP_AUTH_USERNAME: 'admin',
+      HTTP_AUTH_PASSWORD: 'secret',
       AUTH_SECRET: 'test-secret-at-least-16-chars',
-      ADMIN_PASSWORD: 'secret',
     });
-    expect(parsed.AUTH_MODE).toBe('password');
+    expect(authMode(parsed)).toBe('password');
+    expect(parsed.AUTH_SECRET).toBe('test-secret-at-least-16-chars');
   });
 
   it('parses boolean-like S3_FORCE_PATH_STYLE values', () => {

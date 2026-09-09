@@ -1,14 +1,5 @@
 import type { JwtPayload } from './auth.provider';
 
-export function emailFromClaims(
-  decoded: Record<string, unknown>,
-): string | undefined {
-  const email =
-    decoded.email ?? decoded.preferred_username ?? decoded['x-hasura-email'];
-
-  return typeof email === 'string' && email.length > 0 ? email : undefined;
-}
-
 export function payloadFromClaims(decoded: unknown): JwtPayload | null {
   if (!decoded || typeof decoded !== 'object') {
     return null;
@@ -16,9 +7,9 @@ export function payloadFromClaims(decoded: unknown): JwtPayload | null {
 
   const claims = decoded as Record<string, unknown>;
   const sub = claims.sub;
-  const email = emailFromClaims(claims);
+  const email = claims.email;
 
-  if (typeof sub !== 'string' || !email) {
+  if (typeof sub !== 'string' || typeof email !== 'string' || !email) {
     return null;
   }
 
