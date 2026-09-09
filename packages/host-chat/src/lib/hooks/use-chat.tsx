@@ -79,38 +79,30 @@ export default function useChat(
     try {
       const ctx = livePageContext(pageContextRef.current);
       pageContextRef.current = ctx;
-      const response = await streamMessage(
-        chatId,
-        message,
-        messages.map((m) => ({
-          agent: m.role,
-          message: m.content,
-        })),
-        {
-          signal: controller.signal,
-          onToken: (text) => {
-            streamedRef.current += text;
-            const content = streamedRef.current;
-            setMessages((prev) => {
-              const next = [...prev];
-              const last = next[next.length - 1];
-              if (last?.role === MessageRole.ai) {
-                next[next.length - 1] = { ...last, content };
-                return next;
-              }
-              return [...next, { content, role: MessageRole.ai, context: [] }];
-            });
-          },
-          pageUrl: ctx?.pageUrl,
-          selectedText: ctx?.selectedText,
-          accessToken,
-          conversationId: conversationIdRef.current,
-          onConversationId: (id) => {
-            conversationIdRef.current = id;
-            writeStoredConversationId(chatId, id);
-          },
+      const response = await streamMessage(chatId, message, {
+        signal: controller.signal,
+        onToken: (text) => {
+          streamedRef.current += text;
+          const content = streamedRef.current;
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === MessageRole.ai) {
+              next[next.length - 1] = { ...last, content };
+              return next;
+            }
+            return [...next, { content, role: MessageRole.ai, context: [] }];
+          });
         },
-      );
+        pageUrl: ctx?.pageUrl,
+        selectedText: ctx?.selectedText,
+        accessToken,
+        conversationId: conversationIdRef.current,
+        onConversationId: (id) => {
+          conversationIdRef.current = id;
+          writeStoredConversationId(chatId, id);
+        },
+      });
       setMessages((prev) => {
         const next = [...prev];
         const last = next[next.length - 1];

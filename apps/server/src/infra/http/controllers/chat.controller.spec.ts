@@ -538,6 +538,7 @@ describe('ChatController', () => {
           status: ResourceStatus.ready,
           error: null,
           embeddingIds: ['emb-1'],
+          crawlId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           chatId: chat.id,
@@ -767,6 +768,7 @@ describe('ChatController', () => {
       conversationService.resolveConversationId.mockResolvedValue(
         conversationId,
       );
+      conversationService.historyFor.mockResolvedValue([]);
       conversationService.persistTurn.mockResolvedValue(undefined);
     });
 
@@ -787,9 +789,9 @@ describe('ChatController', () => {
     it('increments points and streams the answer as SSE with conversationId', async () => {
       const body = {
         question: 'what is this?',
-        chatHistory: [{ agent: MessageAgent.USER, message: 'hi' }],
         conversationId: 'client-conv',
       };
+      const history = [{ agent: MessageAgent.USER, message: 'hi' }];
       const answer = {
         question: body.question,
         answer: 'a product',
@@ -798,6 +800,7 @@ describe('ChatController', () => {
       const req = makeReq();
       const res = makeRes();
       chatsService.findFirstById.mockResolvedValue(publishedChat);
+      conversationService.historyFor.mockResolvedValue(history);
       chatsService.answer.mockImplementation(
         async (_q, _h, _k, _ns, onToken) => {
           onToken?.('a ');
@@ -820,13 +823,16 @@ describe('ChatController', () => {
         publishedChat.id,
         'client-conv',
       );
+      expect(conversationService.historyFor).toHaveBeenCalledWith(
+        conversationId,
+      );
       expect(res.setHeader).not.toHaveBeenCalledWith(
         'Set-Cookie',
         expect.anything(),
       );
       expect(chatsService.answer).toHaveBeenCalledWith(
         body.question,
-        body.chatHistory,
+        history,
         4,
         publishedChat.id,
         expect.any(Function),
@@ -855,6 +861,9 @@ describe('ChatController', () => {
         pageUrl: undefined,
         selectedText: undefined,
       });
+      expect(
+        conversationService.persistTurn.mock.invocationCallOrder[0],
+      ).toBeLessThan(res.end.mock.invocationCallOrder[0]);
       expect(res.end).toHaveBeenCalled();
       expect(req.off).toHaveBeenCalled();
     });
@@ -866,7 +875,7 @@ describe('ChatController', () => {
       chatsService.answer.mockRejectedValue(new Error('upstream down'));
 
       await chatController.postMessage(
-        { question: 'what?', chatHistory: [] },
+        { question: 'what?' },
         publishedChat.id,
         req as never,
         res as never,
@@ -884,7 +893,7 @@ describe('ChatController', () => {
 
       await expect(
         chatController.postMessage(
-          { question: 'what?', chatHistory: [] },
+          { question: 'what?' },
           'missing',
           makeReq() as never,
           makeRes() as never,
@@ -898,7 +907,7 @@ describe('ChatController', () => {
 
       await expect(
         chatController.postMessage(
-          { question: 'what?', chatHistory: [] },
+          { question: 'what?' },
           publishedChat.id,
           makeReq({ headers: { origin: 'https://evil.example.com' } }) as never,
           makeRes() as never,
@@ -913,7 +922,7 @@ describe('ChatController', () => {
 
       await expect(
         chatController.postMessage(
-          { question: 'what?', chatHistory: [] },
+          { question: 'what?' },
           chat.id,
           makeReq({ currentUser: null }) as never,
           makeRes() as never,
@@ -926,7 +935,7 @@ describe('ChatController', () => {
     it('streams successfully when the chat is unpublished and there is a current user', async () => {
       const chat = { ...publishedChat, published: false };
       const currentUser = { id: 'id', email: 'email', isAdmin: false };
-      const body = { question: 'what?', chatHistory: [] };
+      const body = { question: 'what?' };
       const answer = {
         question: body.question,
         answer: 'a product',
@@ -958,7 +967,6 @@ describe('ChatController', () => {
     it('passes pageUrl and selectedText from the body to answer and persistTurn', async () => {
       const body = {
         question: 'what is this?',
-        chatHistory: [],
         pageUrl: 'https://docs.example.com/docs',
         selectedText: 'highlighted passage',
       };
@@ -981,7 +989,7 @@ describe('ChatController', () => {
 
       expect(chatsService.answer).toHaveBeenCalledWith(
         body.question,
-        body.chatHistory,
+        [],
         4,
         publishedChat.id,
         expect.any(Function),

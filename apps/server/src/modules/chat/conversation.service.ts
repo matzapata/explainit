@@ -31,6 +31,17 @@ export class ConversationService {
     return created.id;
   }
 
+  async historyFor(conversationId: string) {
+    const messages = await this.conversationRepository.findRecentMessages(
+      conversationId,
+      20,
+    );
+    return messages.map((message) => ({
+      agent: message.role as MessageAgent,
+      message: message.content,
+    }));
+  }
+
   async persistTurn(input: {
     conversationId: string;
     chatId: string;

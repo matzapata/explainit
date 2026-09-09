@@ -54,6 +54,16 @@ export class ConversationRepository {
     return this.prisma.message.createMany({ data });
   }
 
+  async findRecentMessages(conversationId: string, take: number) {
+    const newestFirst = await this.prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: { role: true, content: true },
+    });
+    return newestFirst.reverse();
+  }
+
   async overviewStats(
     chatId: string,
     now = new Date(),
