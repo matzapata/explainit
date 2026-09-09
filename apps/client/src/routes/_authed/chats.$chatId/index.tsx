@@ -1,14 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { EditChat } from '@/components/generate/edit-chat';
-import { ensureOwnerWorkspace } from '@/lib/queries';
+import { ChatOverview } from '@/components/generate/chat-overview';
+import GenerateLayout from '@/layouts/generate-layout';
+import { ensureOwnerOverview } from '@/lib/queries';
 
 export const Route = createFileRoute('/_authed/chats/$chatId/')({
   loader: ({ context, params }) =>
-    ensureOwnerWorkspace(context.queryClient, params.chatId),
-  component: ChatGeneralPage,
+    ensureOwnerOverview(context.queryClient, params.chatId),
+  component: ChatOverviewPage,
 });
 
-function ChatGeneralPage() {
-  const { user, chat } = Route.useLoaderData();
-  return <EditChat chat={chat} user={user} />;
+function ChatOverviewPage() {
+  const { user, chat, overview } = Route.useLoaderData();
+
+  return (
+    <GenerateLayout user={{ email: user.email }} chat={chat}>
+      <ChatOverview chat={chat} overview={overview} />
+    </GenerateLayout>
+  );
 }

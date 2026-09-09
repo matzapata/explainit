@@ -29,6 +29,10 @@ export default function GenerateLayout(props: GenerateLayoutProps) {
   const nestedItems = props.nestedItems ?? [
     {
       link: `/chats/${chatId}`,
+      title: 'Overview',
+    },
+    {
+      link: `/chats/${chatId}/settings`,
       title: 'Settings',
     },
     {

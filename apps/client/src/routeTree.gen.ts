@@ -16,6 +16,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as ChatIdRouteImport } from './routes/chat.$id'
 import { Route as AuthedChatsChatIdIndexRouteImport } from './routes/_authed/chats.$chatId/index'
 import { Route as AuthedChatsChatIdResourcesRouteImport } from './routes/_authed/chats.$chatId/resources'
+import { Route as AuthedChatsChatIdSettingsRouteImport } from './routes/_authed/chats.$chatId/settings'
 import { Route as AuthedChatsChatIdSetupRouteImport } from './routes/_authed/chats.$chatId/setup'
 
 const AuthedRoute = AuthedRouteImport.update({
@@ -53,6 +54,12 @@ const AuthedChatsChatIdResourcesRoute =
     path: '/chats/$chatId/resources',
     getParentRoute: () => AuthedRoute,
   } as any)
+const AuthedChatsChatIdSettingsRoute =
+  AuthedChatsChatIdSettingsRouteImport.update({
+    id: '/chats/$chatId/settings',
+    path: '/chats/$chatId/settings',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedChatsChatIdSetupRoute = AuthedChatsChatIdSetupRouteImport.update({
   id: '/chats/$chatId/setup',
   path: '/chats/$chatId/setup',
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/chat/$id': typeof ChatIdRoute
   '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/chats/$chatId/settings': typeof AuthedChatsChatIdSettingsRoute
   '/chats/$chatId/setup': typeof AuthedChatsChatIdSetupRoute
   '/chats/$chatId/': typeof AuthedChatsChatIdIndexRoute
 }
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
   '/chat/$id': typeof ChatIdRoute
   '/': typeof AuthedIndexRoute
   '/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/chats/$chatId/settings': typeof AuthedChatsChatIdSettingsRoute
   '/chats/$chatId/setup': typeof AuthedChatsChatIdSetupRoute
   '/chats/$chatId': typeof AuthedChatsChatIdIndexRoute
 }
@@ -85,6 +94,7 @@ export interface FileRoutesById {
   '/chat/$id': typeof ChatIdRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/chats/$chatId/resources': typeof AuthedChatsChatIdResourcesRoute
+  '/_authed/chats/$chatId/settings': typeof AuthedChatsChatIdSettingsRoute
   '/_authed/chats/$chatId/setup': typeof AuthedChatsChatIdSetupRoute
   '/_authed/chats/$chatId/': typeof AuthedChatsChatIdIndexRoute
 }
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/chat/$id'
     | '/chats/$chatId/resources'
+    | '/chats/$chatId/settings'
     | '/chats/$chatId/setup'
     | '/chats/$chatId/'
   fileRoutesByTo: FileRoutesByTo
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/'
     | '/chats/$chatId/resources'
+    | '/chats/$chatId/settings'
     | '/chats/$chatId/setup'
     | '/chats/$chatId'
   id:
@@ -115,6 +127,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/_authed/'
     | '/_authed/chats/$chatId/resources'
+    | '/_authed/chats/$chatId/settings'
     | '/_authed/chats/$chatId/setup'
     | '/_authed/chats/$chatId/'
   fileRoutesById: FileRoutesById
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedChatsChatIdResourcesRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/chats/$chatId/settings': {
+      id: '/_authed/chats/$chatId/settings'
+      path: '/chats/$chatId/settings'
+      fullPath: '/chats/$chatId/settings'
+      preLoaderRoute: typeof AuthedChatsChatIdSettingsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/chats/$chatId/setup': {
       id: '/_authed/chats/$chatId/setup'
       path: '/chats/$chatId/setup'
@@ -190,6 +210,7 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedChatsChatIdResourcesRoute: typeof AuthedChatsChatIdResourcesRoute
+  AuthedChatsChatIdSettingsRoute: typeof AuthedChatsChatIdSettingsRoute
   AuthedChatsChatIdSetupRoute: typeof AuthedChatsChatIdSetupRoute
   AuthedChatsChatIdIndexRoute: typeof AuthedChatsChatIdIndexRoute
 }
@@ -197,6 +218,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedChatsChatIdResourcesRoute: AuthedChatsChatIdResourcesRoute,
+  AuthedChatsChatIdSettingsRoute: AuthedChatsChatIdSettingsRoute,
   AuthedChatsChatIdSetupRoute: AuthedChatsChatIdSetupRoute,
   AuthedChatsChatIdIndexRoute: AuthedChatsChatIdIndexRoute,
 }
