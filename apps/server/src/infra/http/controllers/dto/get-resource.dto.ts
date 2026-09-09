@@ -14,6 +14,8 @@ export class GetResourceDto {
   @Expose()
   error: string | null;
   @Expose()
+  crawlId: string | null;
+  @Expose()
   updatedAt: Date;
   @Expose()
   urls: string[];

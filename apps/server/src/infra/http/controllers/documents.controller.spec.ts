@@ -61,6 +61,7 @@ describe('DocumentsController', () => {
           title: null,
           status: ResourceStatus.pending,
           error: null,
+          crawlId: null,
           embeddingIds: [],
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -115,6 +116,7 @@ describe('DocumentsController', () => {
         title: null,
         status: ResourceStatus.pending,
         error: null,
+        crawlId: 'crawl-1',
         embeddingIds: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -131,8 +133,27 @@ describe('DocumentsController', () => {
       expect(documentsService.enqueueWebsiteCrawl).toHaveBeenCalledWith(
         chat.id,
         'https://docs.example.com/guide',
+        { unlimited: false },
       );
       expect(result).toEqual([pending]);
+    });
+
+    it('forwards unlimited when requested', async () => {
+      documentsService.enqueueWebsiteCrawl.mockResolvedValue({
+        id: 'resource-1',
+      } as never);
+
+      await documentsController.crawlWebResource(
+        authUser,
+        { url: 'https://docs.example.com/guide', unlimited: true },
+        chat.id,
+      );
+
+      expect(documentsService.enqueueWebsiteCrawl).toHaveBeenCalledWith(
+        chat.id,
+        'https://docs.example.com/guide',
+        { unlimited: true },
+      );
     });
   });
 
@@ -145,6 +166,7 @@ describe('DocumentsController', () => {
         title: 'Notes',
         status: ResourceStatus.ready,
         error: null,
+        crawlId: null,
         embeddingIds: ['emb-1'],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -175,6 +197,7 @@ describe('DocumentsController', () => {
         title: null,
         status: ResourceStatus.ready,
         error: null,
+        crawlId: null,
         embeddingIds: ['emb-1'],
         createdAt: new Date(),
         updatedAt: new Date(),

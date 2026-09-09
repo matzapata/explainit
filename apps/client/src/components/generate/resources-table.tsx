@@ -46,6 +46,7 @@ const addTextFormSchema = z.object({
 });
 const addWebFormSchema = z.object({
   url: z.string().url({ message: 'Invalid URL' }),
+  mode: z.enum(['page', 'site']).default('page'),
 });
 
 function stringIsAValidUrl(s: string): boolean {
@@ -88,6 +89,15 @@ function ResourceSourceLabel(props: { resource: ChatResource }) {
     );
   }
   return <>{label}</>;
+}
+
+function deleteConfirmMessage(resource: ChatResource): string {
+  const inflight =
+    resource.status === 'pending' || resource.status === 'processing';
+  if (inflight && resource.crawlId) {
+    return 'Stop this crawl? Other queued pages from this crawl will be removed too. Pages already indexed will stay.';
+  }
+  return "Are you sure you want to delete this resource? The ai won't know about that topic anymore.";
 }
 
 export default function ResourcesTable(props: {
@@ -135,7 +145,23 @@ export default function ResourcesTable(props: {
       );
     },
     onSuccess: (_data, variables) => {
-      setResources((r) => r.filter((s) => s.id !== variables.id));
+      const deleted = resources.find((r) => r.id === variables.id);
+      if (
+        deleted?.crawlId &&
+        (deleted.status === 'pending' || deleted.status === 'processing')
+      ) {
+        setResources((r) =>
+          r.filter(
+            (s) =>
+              !(
+                s.crawlId === deleted.crawlId &&
+                (s.status === 'pending' || s.status === 'processing')
+              ),
+          ),
+        );
+      } else {
+        setResources((r) => r.filter((s) => s.id !== variables.id));
+      }
       toast({ description: 'Successfully removed.' });
     },
     onError: () => {
@@ -143,13 +169,9 @@ export default function ResourcesTable(props: {
     },
   });
 
-  function onDeleteClick(id: string) {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this resource? The ai won't know about that topic anymore.",
-      )
-    ) {
-      deleteResourceMutation.mutate({ id });
+  function onDeleteClick(resource: ChatResource) {
+    if (window.confirm(deleteConfirmMessage(resource))) {
+      deleteResourceMutation.mutate({ id: resource.id });
     }
   }
 
@@ -192,7 +214,7 @@ export default function ResourcesTable(props: {
                 </TableCell>
                 <TableCell className="w-12 pr-0 text-right">
                   <Button
-                    onClick={() => onDeleteClick(s.id)}
+                    onClick={() => onDeleteClick(s)}
                     variant="ghost"
                     size="icon"
                     className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
@@ -242,41 +264,35 @@ function AddNewWebResource(props: {
     resolver: zodResolver(addWebFormSchema),
     defaultValues: {
       url: props.initialUrl ?? '',
+      mode: 'page',
     },
   });
 
-  const addPageMutation = useMutation({
-    mutationFn: async (url: string) => {
+  const addMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof addWebFormSchema>) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addWebResource(accessTokenRaw, props.chatId, [url]);
+      if (values.mode === 'site') {
+        return chatService.crawlWebResource(
+          accessTokenRaw,
+          props.chatId,
+          values.url,
+          { unlimited: true },
+        );
+      }
+      return chatService.addWebResource(accessTokenRaw, props.chatId, [
+        values.url,
+      ]);
     },
-    onSuccess: (data) => {
-      props.setResources((r: any) => [...r, ...data]);
-      toast({ description: 'Queued for indexing.' });
-      setOpen(false);
-      form.reset({ url: '' });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        description: `Sorry, something went wrong. Please try again. ${error?.message}`,
-      });
-    },
-  });
-
-  const crawlSiteMutation = useMutation({
-    mutationFn: async (url: string) => {
-      if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.crawlWebResource(accessTokenRaw, props.chatId, url);
-    },
-    onSuccess: (data) => {
+    onSuccess: (data, values) => {
       props.setResources((r: any) => [...r, ...data]);
       toast({
         description:
-          'Crawl queued. Linked pages will appear as they are found.',
+          values.mode === 'site'
+            ? 'Crawl queued. Linked pages will appear as they are found.'
+            : 'Queued for indexing.',
       });
       setOpen(false);
-      form.reset({ url: '' });
+      form.reset({ url: '', mode: 'page' });
     },
     onError: (error) => {
       toast({
@@ -285,15 +301,13 @@ function AddNewWebResource(props: {
       });
     },
   });
-
-  const isLoading = addPageMutation.isPending || crawlSiteMutation.isPending;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => {
         if (!o) {
-          form.reset({ url: props.initialUrl ?? '' });
+          form.reset({ url: props.initialUrl ?? '', mode: 'page' });
         }
         setOpen(o);
       }}
@@ -307,13 +321,16 @@ function AddNewWebResource(props: {
         <DialogHeader>
           <DialogTitle>Add a website</DialogTitle>
           <DialogDescription>
-            Index just this page, or crawl linked pages from the same site under
-            this URL (up to 50 pages, depth 4).
+            Index this page only, or crawl linked pages from the same site under
+            this URL.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit((values) => addMutation.mutate(values))}
+          >
             <FormField
               control={form.control}
               name="url"
@@ -330,27 +347,48 @@ function AddNewWebResource(props: {
                 </FormItem>
               )}
             />
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="outline"
-                isLoading={addPageMutation.isPending}
-                disabled={isLoading}
-                onClick={form.handleSubmit((values) =>
-                  addPageMutation.mutate(values.url),
-                )}
-              >
-                Add this page
-              </Button>
-              <Button
-                type="button"
-                isLoading={crawlSiteMutation.isPending}
-                disabled={isLoading}
-                onClick={form.handleSubmit((values) =>
-                  crawlSiteMutation.mutate(values.url),
-                )}
-              >
-                Crawl this site
+            <FormField
+              control={form.control}
+              name="mode"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormControl>
+                    <div
+                      role="radiogroup"
+                      aria-label="Indexing mode"
+                      className="space-y-2"
+                    >
+                      <label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-gray-900 dark:text-gray-100">
+                        <input
+                          type="radio"
+                          className="h-4 w-4 border-gray-300 text-brand-600 focus:ring-brand-600"
+                          name={field.name}
+                          value="page"
+                          checked={field.value === 'page'}
+                          onChange={() => field.onChange('page')}
+                        />
+                        Index only this page
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm font-normal text-gray-900 dark:text-gray-100">
+                        <input
+                          type="radio"
+                          className="h-4 w-4 border-gray-300 text-brand-600 focus:ring-brand-600"
+                          name={field.name}
+                          value="site"
+                          checked={field.value === 'site'}
+                          onChange={() => field.onChange('site')}
+                        />
+                        Index every linked page (depth 16, max 500)
+                      </label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" isLoading={addMutation.isPending}>
+                Add
               </Button>
             </DialogFooter>
           </form>

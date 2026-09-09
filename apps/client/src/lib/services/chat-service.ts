@@ -22,6 +22,7 @@ export interface ChatResource {
   title?: string | null;
   status?: 'pending' | 'processing' | 'ready' | 'failed';
   error?: string | null;
+  crawlId?: string | null;
   updatedAt?: string;
 }
 
@@ -138,11 +139,12 @@ export class ChatService {
     accessToken: string,
     id: string,
     url: string,
+    options: { unlimited?: boolean } = {},
   ): Promise<ChatResource[]> {
     try {
       const res = await this.client.post(
         `/api/chats/${id}/resources/web/crawl`,
-        { url },
+        { url, unlimited: options.unlimited === true },
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
       return res.data;
