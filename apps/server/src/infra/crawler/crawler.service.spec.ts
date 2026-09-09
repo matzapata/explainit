@@ -87,5 +87,17 @@ describe('CrawlerService', () => {
 
       expect(urls).toEqual(['https://docs.example.com/guide/a']);
     });
+    it('resolves relative links when the page URL has no trailing slash', () => {
+      const urls = service.nextUrls({
+        html: '<a href="setup.html">Setup</a><a href="/guide/install">Install</a>',
+        pageUrl: 'https://docs.example.com/guide',
+        seedUrl: 'https://docs.example.com/guide',
+      });
+
+      expect(urls).toEqual([
+        'https://docs.example.com/guide/setup.html',
+        'https://docs.example.com/guide/install',
+      ]);
+    });
   });
 });

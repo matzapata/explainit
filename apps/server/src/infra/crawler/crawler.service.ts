@@ -68,7 +68,8 @@ export class CrawlerService {
 
 function canonicalizeLink(href: string, pageUrl: URL): URL | null {
   try {
-    const url = new URL(href, pageUrl);
+    const base = asDirectoryBase(pageUrl);
+    const url = new URL(href, base);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return null;
     }
@@ -78,6 +79,23 @@ function canonicalizeLink(href: string, pageUrl: URL): URL | null {
   } catch {
     return null;
   }
+}
+
+/** Treat pathnames without a file extension as directories for relative resolution. */
+function asDirectoryBase(url: URL): URL {
+  const base = new URL(url.href);
+  if (base.pathname.endsWith('/')) {
+    return base;
+  }
+  if (hasAssetExtension(base.pathname)) {
+    return base;
+  }
+  const leaf = base.pathname.split('/').pop() ?? '';
+  if (leaf.includes('.')) {
+    return base;
+  }
+  base.pathname = `${base.pathname}/`;
+  return base;
 }
 
 function isSameHost(candidate: URL, seed: URL): boolean {
