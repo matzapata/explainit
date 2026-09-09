@@ -99,78 +99,76 @@ export function ChatsList({
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <div className="flex justify-between items-center">
             <h1 className="text-lg font-semibold">Chats</h1>
-            {user.isAdmin && (
-              <Dialog
-                open={open}
-                onOpenChange={(next) => {
-                  setOpen(next);
-                  if (!next) {
-                    form.reset();
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Add Chat
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Chat</DialogTitle>
-                    <DialogDescription>
-                      Give the new chat a name and short description.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit((values) =>
-                        createMutation.mutate(values),
+            <Dialog
+              open={open}
+              onOpenChange={(next) => {
+                setOpen(next);
+                if (!next) {
+                  form.reset();
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Add Chat
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Chat</DialogTitle>
+                  <DialogDescription>
+                    Give the new chat a name and short description.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((values) =>
+                      createMutation.mutate(values),
+                    )}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Docs assistant" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Docs assistant" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Answers questions about our product docs."
-                                className="text-sm"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <DialogFooter>
-                        <Button
-                          type="submit"
-                          isLoading={createMutation.isPending}
-                        >
-                          Create
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Answers questions about our product docs."
+                              className="text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button
+                        type="submit"
+                        isLoading={createMutation.isPending}
+                      >
+                        Create
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {chats.length === 0 ? (
@@ -178,17 +176,15 @@ export function ChatsList({
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 No chats yet.
               </p>
-              {user.isAdmin && (
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    className="text-sm text-gray-900 dark:text-gray-100 underline"
-                    onClick={() => setOpen(true)}
-                  >
-                    Add Chat
-                  </button>
-                </div>
-              )}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  className="text-sm text-gray-900 dark:text-gray-100 underline"
+                  onClick={() => setOpen(true)}
+                >
+                  Add Chat
+                </button>
+              </div>
             </div>
           ) : (
             <div className="-mx-4 -my-2 overflow-x-auto whitespace-nowrap sm:-mx-6 mt-6">

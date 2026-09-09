@@ -3,7 +3,6 @@ import { NotFoundException } from '@nestjs/common';
 import { ResourceStatus } from '@prisma/client';
 import { EnvService } from '@src/infra/env/env.service';
 import { RATE_LIMIT_OPTIONS } from '@src/infra/http/decorators/rate-limit.decorator';
-import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { ConversationService } from '@src/modules/chat/conversation.service';
@@ -51,7 +50,7 @@ describe('ChatController', () => {
     });
 
     it('should return the owner chats without resources', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const authUser = { id: 'id', email: 'email' };
       const chat = {
         id: 'id',
         name: 'name',
@@ -77,7 +76,7 @@ describe('ChatController', () => {
     });
 
     it('should create an example chat for the user if none exists', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const authUser = { id: 'id', email: 'email' };
       const chat = {
         id: 'id',
         name: 'Lorem Ipsum',
@@ -115,7 +114,7 @@ describe('ChatController', () => {
     });
 
     it('should update the chat', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const authUser = { id: 'id', email: 'email' };
       const data = { name: 'name', color: 'green' as const };
       const chat = {
         id: 'id',
@@ -144,7 +143,7 @@ describe('ChatController', () => {
     });
 
     it('normalizes hostOrigins to canonical origins', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const authUser = { id: 'id', email: 'email' };
       const data = {
         hostOrigins: [
           'https://www.demo.com/docs',
@@ -185,7 +184,7 @@ describe('ChatController', () => {
     });
 
     it('should allow any authenticated user to publish a chat', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: false };
+      const authUser = { id: 'id', email: 'email' };
       const data = { published: true };
       const chat = {
         id: 'id',
@@ -226,7 +225,7 @@ describe('ChatController', () => {
     });
 
     it('returns overview stats for the owner', async () => {
-      const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      const authUser = { id: 'ownerId', email: 'email' };
       const chat = {
         id: 'chat-1',
         name: 'name',
@@ -258,40 +257,8 @@ describe('ChatController', () => {
       expect(conversationService.overviewStats).toHaveBeenCalledWith(chat.id);
     });
 
-    it('returns overview stats for an admin who is not the owner', async () => {
-      const admin = { id: 'admin', email: 'email', isAdmin: true };
-      const chat = {
-        id: 'chat-1',
-        name: 'name',
-        color: 'blue' as const,
-        description: null,
-        points: 0,
-        published: true,
-        conversationStarters: [],
-        hostOrigins: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastUsedAt: null,
-        ownerId: 'ownerId',
-      };
-      const stats = {
-        since: new Date('2026-08-10T00:00:00.000Z'),
-        questionsToday: 0,
-        questions30d: 0,
-        questionsAllTime: 0,
-        conversations30d: 0,
-        series: [],
-      };
-      chatsService.findFirstById.mockResolvedValue(chat);
-      conversationService.overviewStats.mockResolvedValue(stats);
-
-      await expect(
-        chatController.getChatOverview(admin, chat.id),
-      ).resolves.toEqual(stats);
-    });
-
     it('throws when the chat is not owned by the user', async () => {
-      const authUser = { id: 'other', email: 'email', isAdmin: false };
+      const authUser = { id: 'other', email: 'email' };
       chatsService.findFirstById.mockResolvedValue({
         id: 'chat-1',
         name: 'name',
@@ -314,7 +281,7 @@ describe('ChatController', () => {
     });
 
     it('throws when the chat does not exist', async () => {
-      const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      const authUser = { id: 'ownerId', email: 'email' };
       chatsService.findFirstById.mockResolvedValue(null);
 
       await expect(
@@ -500,7 +467,7 @@ describe('ChatController', () => {
         lastUsedAt: null,
         ownerId: 'ownerId',
       };
-      const currentUser = { id: 'id', email: 'email', isAdmin: false };
+      const currentUser = { id: 'id', email: 'email' };
       chatsService.findFirstById.mockResolvedValue(chat);
 
       await expect(
@@ -538,13 +505,14 @@ describe('ChatController', () => {
           status: ResourceStatus.ready,
           error: null,
           embeddingIds: ['emb-1'],
+          contentHash: null,
           crawlId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           chatId: chat.id,
         },
       ];
-      const currentUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      const currentUser = { id: 'ownerId', email: 'email' };
       chatsService.findFirstById.mockResolvedValue(chat);
       documentsService.findByChatId.mockResolvedValue(resources);
 
@@ -561,14 +529,14 @@ describe('ChatController', () => {
     });
   });
 
-  describe('admin', () => {
-    it('requires an admin to list and create chats', () => {
+  describe('owner', () => {
+    it('requires authentication to list and create chats', () => {
       for (const handler of [
         ChatController.prototype.getAllChatsByOwner,
         ChatController.prototype.createChat,
       ]) {
         const guards = Reflect.getMetadata('__guards__', handler);
-        expect(new guards[0]()).toBeInstanceOf(AdminGuard);
+        expect(new guards[0]()).toBeInstanceOf(AuthGuard);
       }
     });
 
@@ -580,8 +548,8 @@ describe('ChatController', () => {
       expect(new guards[0]()).toBeInstanceOf(AuthGuard);
     });
 
-    it('lists chats for the admin owner', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: true };
+    it('lists chats for the owner', async () => {
+      const authUser = { id: 'id', email: 'email' };
       const chats = [
         {
           id: 'id',
@@ -606,8 +574,8 @@ describe('ChatController', () => {
       expect(chatsService.findManyByOwner).toHaveBeenCalledWith(authUser.id);
     });
 
-    it('creates a chat for the admin owner', async () => {
-      const authUser = { id: 'id', email: 'email', isAdmin: true };
+    it('creates a chat for the owner', async () => {
+      const authUser = { id: 'id', email: 'email' };
       const data = { name: 'Docs' };
       const chat = {
         id: 'id',
@@ -632,7 +600,7 @@ describe('ChatController', () => {
     });
 
     it('lets the owner delete a chat and its embedding namespace', async () => {
-      const owner = { id: 'ownerId', email: 'email', isAdmin: false };
+      const owner = { id: 'ownerId', email: 'email' };
       const chat = {
         id: 'chat-1',
         name: 'Docs',
@@ -660,34 +628,8 @@ describe('ChatController', () => {
       expect(chatsService.delete).toHaveBeenCalledWith(chat.id);
     });
 
-    it('lets an admin delete another owner chat', async () => {
-      const admin = { id: 'admin', email: 'email', isAdmin: true };
-      const chat = {
-        id: 'chat-1',
-        name: 'Docs',
-        color: 'blue' as const,
-        description: null,
-        points: 0,
-        published: false,
-        conversationStarters: [],
-        hostOrigins: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastUsedAt: null,
-        ownerId: 'ownerId',
-      };
-      chatsService.findFirstById.mockResolvedValue(chat);
-      documentsService.deleteChatNamespace.mockResolvedValue(undefined);
-      chatsService.delete.mockResolvedValue(chat);
-
-      await expect(chatController.deleteChat(admin, chat.id)).resolves.toEqual(
-        chat,
-      );
-      expect(chatsService.delete).toHaveBeenCalledWith(chat.id);
-    });
-
     it('does not let a non-owner delete a chat', async () => {
-      const other = { id: 'other', email: 'email', isAdmin: false };
+      const other = { id: 'other', email: 'email' };
       const chat = {
         id: 'chat-1',
         name: 'Docs',
@@ -712,7 +654,7 @@ describe('ChatController', () => {
     });
 
     it('throws when deleting a missing chat', async () => {
-      const owner = { id: 'ownerId', email: 'email', isAdmin: false };
+      const owner = { id: 'ownerId', email: 'email' };
       chatsService.findFirstById.mockResolvedValue(null);
 
       await expect(
@@ -934,7 +876,7 @@ describe('ChatController', () => {
 
     it('streams successfully when the chat is unpublished and there is a current user', async () => {
       const chat = { ...publishedChat, published: false };
-      const currentUser = { id: 'id', email: 'email', isAdmin: false };
+      const currentUser = { id: 'id', email: 'email' };
       const body = { question: 'what?' };
       const answer = {
         question: body.question,
