@@ -40,8 +40,12 @@ The API enqueues website jobs; the worker process scrapes and embeds. Text inges
 
 - Backend tests: `cd apps/server && npm test`
 - Lint/format: `make lint` / `make format` from the repo root
+- Check (lint + format, no write): `make check` from the repo root
 - Frontend tests: `cd apps/client && npm test`
 - Host Chat tests: `cd packages/host-chat && npm test`
+- Launcher tests: `cd packages/launcher && npm test`
+
+Pull requests and pushes to `main` run these as GitHub Actions (`CI`): Biome (`biome ci`) plus package tests.
 
 ## Deployment
 
@@ -63,7 +67,7 @@ Keep secrets in your platform secret manager instead of repository files.
 
 - Include a clear description of what changed and why.
 - Add or update docs when behavior or workflows change.
-- Run relevant lint and test commands before opening a pull request.
+- Run relevant lint and test commands before opening a pull request (`make check` and the package `npm test` scripts).
 - Link related issues when applicable.
 
 ## Commit style
