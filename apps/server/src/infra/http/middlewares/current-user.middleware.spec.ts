@@ -42,7 +42,6 @@ describe('CurrentUserMiddleware', () => {
     expect(req.currentUser).toEqual({
       id: 'db-id',
       email: 'admin@example.com',
-      isAdmin: true,
     });
     expect(next).toHaveBeenCalled();
   });
@@ -75,7 +74,6 @@ describe('CurrentUserMiddleware', () => {
     expect(req.currentUser).toEqual({
       id: 'user-id',
       email: 'user@example.com',
-      isAdmin: true,
     });
   });
 });

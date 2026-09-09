@@ -5,7 +5,6 @@ export interface UserDto {
   id: string;
   email: string;
   name?: string;
-  isAdmin?: boolean;
 }
 
 export class UserService {

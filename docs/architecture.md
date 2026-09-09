@@ -41,7 +41,7 @@ flowchart LR
 - A `<domain>.service.ts` file re-exports the active provider implementation.
 - `providers/` contains abstract contracts and one or more concrete adapters.
 
-HTTP controllers live in `infra/http/controllers` with request/response DTOs in `controllers/dto`. Use-cases live in `modules/{chat,documents,user}` (service + repository at the module root). Environment is validated with Zod (`infra/env`).
+HTTP controllers live in `infra/http/controllers` with request/response DTOs in `controllers/dto`. Use-cases live in `modules/{chat,documents,user}` (chat and documents: service + repository at the module root; user: a singleton Owner service). Environment is validated with Zod (`infra/env`).
 
 Current infrastructure folders and responsibilities:
 
@@ -122,7 +122,7 @@ Ingestion is intentionally decoupled from chat-time generation so indexing failu
 
 - `POST /api/chats/:id/resources/web` enqueues one scrape job per URL (`name: website`) and returns `202` with `pending` resources.
 - `POST /api/chats/:id/resources/web/crawl` creates a seed pending resource (with a shared `crawlId`) and enqueues a crawl job (`name: crawl`, depth 0). After indexing, the worker may create more pending resources and enqueue further crawl jobs (same host, path prefix of the seed). Default budget is max depth 4 / max 50 website resources per Chat. Optional `unlimited: true` raises the budget to a hidden safety ceiling (depth 16 / 500 pages).
-- Every ingest job uses a stable BullMQ `jobId` of `ingest:{resourceId}` so delete can remove waiting work without scanning the queue.
+- Every ingest job uses a stable BullMQ `jobId` of `ingest-{resourceId}` so delete can remove waiting work without scanning the queue. BullMQ forbids `:` in custom job ids.
 - `DELETE /api/chats/:id/resources/:resource_id` cancels work: a single-page pending/processing row removes that job then deletes the row; an inflight crawl row sets `ingest:cancelled:{crawlId}` (24h TTL), removes jobs and deletes all pending/processing siblings with that `crawlId`, and leaves ready/failed pages. An already-running Chromium job is cooperative — it finishes or hits the existing “resource gone” checks and discards embeddings.
 - Deleting a chat also removes ingest jobs for its resources before clearing the embedding namespace.
 
@@ -134,7 +134,7 @@ Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across t
 
 - `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
 - `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `ScrapeJob` / `CrawlJob` payloads + job id / cancel-key helpers), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
-- `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk` with `jobId: ingest:{resourceId}`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields and `crawlId`) — never HTML.
+- `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk` with `jobId: ingest-{resourceId}`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields and `crawlId`) — never HTML.
 - `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`. Crawl fan-out checks the cancel key before creating children.
 - Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.
 - Compose runs Redis. `infra/main-worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.

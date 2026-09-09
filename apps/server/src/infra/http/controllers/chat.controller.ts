@@ -16,7 +16,6 @@ import type { Chat } from '@prisma/client';
 import { EnvService } from '@src/infra/env/env.service';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { RateLimit } from '@src/infra/http/decorators/rate-limit.decorator';
-import { AdminGuard } from '@src/infra/http/guards/admin.guard';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
 import { ChatsService } from '@src/modules/chat/chat.service';
@@ -45,14 +44,14 @@ export class ChatController {
   ) {}
 
   @Get('/admin')
-  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
   async getAllChatsByOwner(@CurrentUser() user: AuthUser): Promise<Chat[]> {
     return this.chatsService.findManyByOwner(user.id);
   }
 
   @Post('/admin')
-  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard)
   @Serialize(ChatMetadataDto)
   async createChat(
     @CurrentUser() user: AuthUser,
@@ -96,7 +95,7 @@ export class ChatController {
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
-    if (chat.ownerId !== user.id && !user.isAdmin) {
+    if (chat.ownerId !== user.id) {
       throw new NotFoundException('Chat not found');
     }
 
@@ -115,7 +114,7 @@ export class ChatController {
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
-    if (chat.ownerId !== user.id && !user.isAdmin) {
+    if (chat.ownerId !== user.id) {
       throw new NotFoundException('Chat not found');
     }
 

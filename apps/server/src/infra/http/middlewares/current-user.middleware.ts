@@ -26,7 +26,6 @@ export class CurrentUserMiddleware implements NestMiddleware {
       req.currentUser = {
         id: user.id,
         email: user.email,
-        isAdmin: true,
       };
     } else req.currentUser = null;
 

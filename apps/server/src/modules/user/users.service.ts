@@ -1,28 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma, User } from '@prisma/client';
-import { UsersRepository } from './users.repository';
+import type { User } from '@prisma/client';
+import { PrismaService } from '@src/infra/database/prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private repo: UsersRepository) {}
+  constructor(private prisma: PrismaService) {}
 
-  findByEmail(email: string): Promise<User | null> {
-    return this.repo.findUserByEmail(email);
+  findById(id: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  findById(id: string, include?: Prisma.UserInclude): Promise<User | null> {
-    return this.repo.findUserById(id, include);
-  }
+  async findOrCreate(email: string): Promise<User> {
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return existing;
+    }
 
-  findOrCreate(email: string): Promise<User> {
-    return this.repo.findOrCreate({ email });
-  }
+    const owner = await this.prisma.user.findFirst({
+      orderBy: { createdAt: 'asc' },
+    });
+    if (owner) {
+      return this.prisma.user.update({
+        where: { id: owner.id },
+        data: { email },
+      });
+    }
 
-  create(email: string): Promise<User> {
-    return this.repo.createUser({ email });
-  }
-
-  update(id: string, name: string): Promise<User> {
-    return this.repo.updateUser(id, { name });
+    return this.prisma.user.create({ data: { email } });
   }
 }

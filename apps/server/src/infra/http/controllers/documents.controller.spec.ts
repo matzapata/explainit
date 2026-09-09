@@ -11,7 +11,7 @@ describe('DocumentsController', () => {
   let chatsService: jest.Mocked<ChatsService>;
   let documentsService: jest.Mocked<DocumentsService>;
 
-  const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
+  const authUser = { id: 'ownerId', email: 'email' };
   const chat = {
     id: 'chatId',
     name: 'name',
@@ -63,6 +63,7 @@ describe('DocumentsController', () => {
           error: null,
           crawlId: null,
           embeddingIds: [],
+          contentHash: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           chatId: chat.id,
@@ -118,6 +119,7 @@ describe('DocumentsController', () => {
         error: null,
         crawlId: 'crawl-1',
         embeddingIds: [],
+        contentHash: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         chatId: chat.id,
@@ -168,6 +170,7 @@ describe('DocumentsController', () => {
         error: null,
         crawlId: null,
         embeddingIds: ['emb-1'],
+        contentHash: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         chatId: chat.id,
@@ -199,6 +202,7 @@ describe('DocumentsController', () => {
         error: null,
         crawlId: null,
         embeddingIds: ['emb-1'],
+        contentHash: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         chatId: chat.id,

@@ -24,7 +24,7 @@ export type CrawlJob = ScrapeJob & {
 };
 
 export function ingestJobId(resourceId: string): string {
-  return `ingest:${resourceId}`;
+  return `ingest-${resourceId}`;
 }
 
 export function crawlCancelledKey(crawlId: string): string {

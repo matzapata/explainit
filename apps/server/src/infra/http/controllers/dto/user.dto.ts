@@ -9,7 +9,4 @@ export class UserDto {
 
   @Expose()
   name: string;
-
-  @Expose()
-  isAdmin: boolean;
 }
