@@ -214,6 +214,116 @@ describe('ChatController', () => {
     });
   });
 
+  describe('getChatOverview', () => {
+    it('should require authentication', () => {
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        ChatController.prototype.getChatOverview,
+      );
+      const guard = new guards[0]();
+
+      expect(guard).toBeInstanceOf(AuthGuard);
+    });
+
+    it('returns overview stats for the owner', async () => {
+      const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      const chat = {
+        id: 'chat-1',
+        name: 'name',
+        color: 'blue' as const,
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      };
+      const stats = {
+        since: new Date('2026-08-10T00:00:00.000Z'),
+        questionsToday: 1,
+        questions30d: 5,
+        questionsAllTime: 5,
+        conversations30d: 2,
+        series: [{ date: '2026-08-10', questions: 0 }],
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      conversationService.overviewStats.mockResolvedValue(stats);
+
+      await expect(
+        chatController.getChatOverview(authUser, chat.id),
+      ).resolves.toEqual(stats);
+      expect(conversationService.overviewStats).toHaveBeenCalledWith(chat.id);
+    });
+
+    it('returns overview stats for an admin who is not the owner', async () => {
+      const admin = { id: 'admin', email: 'email', isAdmin: true };
+      const chat = {
+        id: 'chat-1',
+        name: 'name',
+        color: 'blue' as const,
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      };
+      const stats = {
+        since: new Date('2026-08-10T00:00:00.000Z'),
+        questionsToday: 0,
+        questions30d: 0,
+        questionsAllTime: 0,
+        conversations30d: 0,
+        series: [],
+      };
+      chatsService.findFirstById.mockResolvedValue(chat);
+      conversationService.overviewStats.mockResolvedValue(stats);
+
+      await expect(
+        chatController.getChatOverview(admin, chat.id),
+      ).resolves.toEqual(stats);
+    });
+
+    it('throws when the chat is not owned by the user', async () => {
+      const authUser = { id: 'other', email: 'email', isAdmin: false };
+      chatsService.findFirstById.mockResolvedValue({
+        id: 'chat-1',
+        name: 'name',
+        color: 'blue' as const,
+        description: null,
+        points: 0,
+        published: true,
+        conversationStarters: [],
+        hostOrigins: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsedAt: null,
+        ownerId: 'ownerId',
+      });
+
+      await expect(
+        chatController.getChatOverview(authUser, 'chat-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(conversationService.overviewStats).not.toHaveBeenCalled();
+    });
+
+    it('throws when the chat does not exist', async () => {
+      const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
+      chatsService.findFirstById.mockResolvedValue(null);
+
+      await expect(
+        chatController.getChatOverview(authUser, 'missing'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(conversationService.overviewStats).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getChat', () => {
     const visitorReq = (overrides: Record<string, unknown> = {}) =>
       ({

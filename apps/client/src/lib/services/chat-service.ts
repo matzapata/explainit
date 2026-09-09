@@ -25,6 +25,20 @@ export interface ChatResource {
   updatedAt?: string;
 }
 
+export interface OverviewSeriesPoint {
+  date: string;
+  questions: number;
+}
+
+export interface ChatOverviewDto {
+  since: string;
+  questionsToday: number;
+  questions30d: number;
+  questionsAllTime: number;
+  conversations30d: number;
+  series: OverviewSeriesPoint[];
+}
+
 export class ChatService {
   constructor(private readonly client: AxiosInstance) {}
 
@@ -57,6 +71,16 @@ export class ChatService {
     id: string,
   ): Promise<ChatMetadataDto> {
     const res = await this.client.get(`/api/chats/${id}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.data;
+  }
+
+  async getOwnerChatOverview(
+    accessToken: string,
+    id: string,
+  ): Promise<ChatOverviewDto> {
+    const res = await this.client.get(`/api/chats/${id}/overview`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return res.data;

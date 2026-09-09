@@ -31,6 +31,7 @@ import type { DocumentsService } from '@src/modules/documents/documents.service'
 import type { AuthUser } from '@src/modules/user/auth-user';
 import type { Request, Response } from 'express';
 import { ChatMetadataDto } from './dto/get-chat-metadata.dto';
+import { ChatOverviewDto } from './dto/get-chat-overview.dto';
 import type { PostMessageDto } from './dto/post-message.dto';
 import type { UpdateChatMetadataDto } from './dto/put-chat-metadata.dto';
 
@@ -101,6 +102,24 @@ export class ChatController {
 
     await this.documentsService.deleteChatNamespace(chat.id);
     return this.chatsService.delete(chat.id);
+  }
+
+  @Get('/:id/overview')
+  @UseGuards(AuthGuard)
+  @Serialize(ChatOverviewDto)
+  async getChatOverview(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    const chat = await this.chatsService.findFirstById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+    if (chat.ownerId !== user.id && !user.isAdmin) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return this.conversationService.overviewStats(chat.id);
   }
 
   @Get('/:id')

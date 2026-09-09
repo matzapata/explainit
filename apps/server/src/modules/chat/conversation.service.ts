@@ -69,4 +69,8 @@ export class ConversationService {
       );
     }
   }
+
+  overviewStats(chatId: string) {
+    return this.conversationRepository.overviewStats(chatId);
+  }
 }
