@@ -12,7 +12,6 @@ export async function getChat(id: string): Promise<ChatMetadata> {
 export async function streamMessage(
   id: string,
   question: string,
-  chatHistory: { message: string; agent: MessageRole }[] | undefined,
   options: {
     onToken: (text: string) => void;
     signal?: AbortSignal;
@@ -37,7 +36,6 @@ export async function streamMessage(
     credentials: 'omit',
     body: JSON.stringify({
       question,
-      chatHistory: chatHistory ?? [],
       ...(options.pageUrl ? { pageUrl: options.pageUrl } : {}),
       ...(options.selectedText ? { selectedText: options.selectedText } : {}),
       ...(options.conversationId

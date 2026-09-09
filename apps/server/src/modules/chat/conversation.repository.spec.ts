@@ -51,6 +51,28 @@ describe('ConversationRepository', () => {
     });
   });
 
+  describe('findRecentMessages', () => {
+    it('loads the newest messages then returns them oldest-first', async () => {
+      prisma.message.findMany.mockResolvedValue([
+        { role: MessageAgent.AGENT, content: 'second' },
+        { role: MessageAgent.USER, content: 'first' },
+      ]);
+
+      const messages = await repo.findRecentMessages('conv-1', 20);
+
+      expect(prisma.message.findMany).toHaveBeenCalledWith({
+        where: { conversationId: 'conv-1' },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: { role: true, content: true },
+      });
+      expect(messages).toEqual([
+        { role: MessageAgent.USER, content: 'first' },
+        { role: MessageAgent.AGENT, content: 'second' },
+      ]);
+    });
+  });
+
   describe('overviewStats', () => {
     it('queries counts and builds a 30-day series from user messages', async () => {
       const now = new Date('2026-09-08T15:30:00.000Z');

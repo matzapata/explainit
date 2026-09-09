@@ -171,6 +171,8 @@ export class ChatController {
       chat.id,
       body.conversationId,
     );
+    const chatHistory =
+      await this.conversationService.historyFor(conversationId);
 
     // Server-Sent Events: stream tokens as they're generated instead of
     // waiting for the full answer. Kept inline since it's a handful of
@@ -192,7 +194,7 @@ export class ChatController {
     try {
       const result = await this.chatsService.answer(
         body.question,
-        body.chatHistory,
+        chatHistory,
         4,
         chat.id,
         (token) => {
@@ -209,7 +211,7 @@ export class ChatController {
 
       if (!abort.signal.aborted) {
         send('done', { ...result, conversationId });
-        void this.conversationService.persistTurn({
+        await this.conversationService.persistTurn({
           conversationId,
           chatId: chat.id,
           question: body.question,
