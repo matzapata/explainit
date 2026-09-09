@@ -121,7 +121,10 @@ flowchart TD
 Ingestion is intentionally decoupled from chat-time generation so indexing failures degrade freshness rather than total availability. Website ingest is asynchronous:
 
 - `POST /api/chats/:id/resources/web` enqueues one scrape job per URL (`name: website`) and returns `202` with `pending` resources.
-- `POST /api/chats/:id/resources/web/crawl` creates a seed pending resource and enqueues a crawl job (`name: crawl`, depth 0). After indexing, the worker may create more pending resources and enqueue further crawl jobs (same host, path prefix of the seed, max depth 4, max 50 website resources per Chat).
+- `POST /api/chats/:id/resources/web/crawl` creates a seed pending resource (with a shared `crawlId`) and enqueues a crawl job (`name: crawl`, depth 0). After indexing, the worker may create more pending resources and enqueue further crawl jobs (same host, path prefix of the seed). Default budget is max depth 4 / max 50 website resources per Chat. Optional `unlimited: true` raises the budget to a hidden safety ceiling (depth 16 / 500 pages).
+- Every ingest job uses a stable BullMQ `jobId` of `ingest:{resourceId}` so delete can remove waiting work without scanning the queue.
+- `DELETE /api/chats/:id/resources/:resource_id` cancels work: a single-page pending/processing row removes that job then deletes the row; an inflight crawl row sets `ingest:cancelled:{crawlId}` (24h TTL), removes jobs and deletes all pending/processing siblings with that `crawlId`, and leaves ready/failed pages. An already-running Chromium job is cooperative — it finishes or hits the existing “resource gone” checks and discards embeddings.
+- Deleting a chat also removes ingest jobs for its resources before clearing the embedding namespace.
 
 `DocumentsProcessor` (`modules/documents/documents.processor.ts`) scrapes, chunks, embeds, and marks the row `ready` or `failed`. The API never launches Chromium. Text resources are still ingested inline.
 
@@ -130,9 +133,9 @@ Ingestion is intentionally decoupled from chat-time generation so indexing failu
 Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across the two process roots:
 
 - `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
-- `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `ScrapeJob` / `CrawlJob` payloads), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
-- `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields) — never HTML.
-- `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`.
+- `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `ScrapeJob` / `CrawlJob` payloads + job id / cancel-key helpers), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
+- `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk` with `jobId: ingest:{resourceId}`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields and `crawlId`) — never HTML.
+- `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`. Crawl fan-out checks the cancel key before creating children.
 - Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.
 - Compose runs Redis. `infra/main-worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.
 
@@ -140,7 +143,7 @@ Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across t
 
 - **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. Active adapter is Puppeteer; a future Firecrawl (or similar) adapter should keep the same HTML contract so crawl can extract links.
 - **Crawler** (`apps/server/src/infra/crawler`): pure policy, no HTTP. `CrawlerService.nextUrls({ html, pageUrl, seedUrl })` resolves links, keeps same-host / seed-path URLs, strips hashes, skips assets, and dedupes.
-- Documents orchestrates both: scrape jobs ignore links; crawl jobs call `nextUrls` after a successful ingest and fan out within budget.
+- Documents orchestrates both: scrape jobs ignore links; crawl jobs call `nextUrls` after a successful ingest and fan out within budget (and only while the crawl is not cancelled).
 
 ### Embeddings infrastructure
 
@@ -185,7 +188,7 @@ An embedding is a dense numeric representation where semantically related text i
 
 - **User**: `id` UUID, unique `email`, optional `name`
 - **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points; `hostOrigins` for visitor Origin allowlisting
-- **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, and `embeddingIds` for the chunks it produced
+- **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, optional `crawlId` (shared across pages from one crawl campaign), and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
 
 Primary keys are UUID. There is no Mongo/Atlas dependency.

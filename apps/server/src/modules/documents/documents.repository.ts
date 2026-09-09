@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, ResourceStatus } from '@prisma/client';
 import { PrismaService } from '@src/infra/database/prisma.service';
 
 @Injectable()
@@ -32,6 +32,15 @@ export class DocumentsRepository {
           equals: url,
           mode: 'insensitive',
         },
+      },
+    });
+  }
+
+  findByCrawlIdAndStatuses(crawlId: string, statuses: ResourceStatus[]) {
+    return this.prisma.chatResource.findMany({
+      where: {
+        crawlId,
+        status: { in: statuses },
       },
     });
   }

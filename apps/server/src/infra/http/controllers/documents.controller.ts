@@ -56,6 +56,7 @@ export class DocumentsController {
     const created = await this.documentsService.enqueueWebsiteCrawl(
       chat.id,
       resource.url,
+      { unlimited: resource.unlimited === true },
     );
     return [created];
   }

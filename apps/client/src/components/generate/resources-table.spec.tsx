@@ -92,7 +92,7 @@ describe('ResourcesTable', () => {
     expect(screen.queryByLabelText('Source')).not.toBeInTheDocument();
   });
 
-  it('adds only the entered url when Add this page is clicked', async () => {
+  it('adds only the entered url when Index only this page is selected', async () => {
     const user = userEvent.setup();
     vi.mocked(chatService.addWebResource).mockResolvedValue([
       {
@@ -109,7 +109,10 @@ describe('ResourcesTable', () => {
       screen.getByLabelText('Website URL'),
       'https://docs.example.com/guide',
     );
-    await user.click(screen.getByRole('button', { name: 'Add this page' }));
+    expect(
+      screen.getByRole('radio', { name: 'Index only this page' }),
+    ).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(chatService.addWebResource).toHaveBeenCalledWith('token', 'chat-1', [
       'https://docs.example.com/guide',
@@ -117,7 +120,7 @@ describe('ResourcesTable', () => {
     expect(chatService.crawlWebResource).not.toHaveBeenCalled();
   });
 
-  it('crawls the site when Crawl this site is clicked', async () => {
+  it('crawls every linked page when that mode is selected', async () => {
     const user = userEvent.setup();
     vi.mocked(chatService.crawlWebResource).mockResolvedValue([
       {
@@ -125,6 +128,7 @@ describe('ResourcesTable', () => {
         type: 'website',
         data: 'https://docs.example.com/guide',
         status: 'pending',
+        crawlId: 'crawl-1',
       },
     ]);
     renderTable([]);
@@ -134,14 +138,81 @@ describe('ResourcesTable', () => {
       screen.getByLabelText('Website URL'),
       'https://docs.example.com/guide',
     );
-    await user.click(screen.getByRole('button', { name: 'Crawl this site' }));
+    await user.click(
+      screen.getByRole('radio', {
+        name: 'Index every linked page (depth 16, max 500)',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(chatService.crawlWebResource).toHaveBeenCalledWith(
       'token',
       'chat-1',
       'https://docs.example.com/guide',
+      { unlimited: true },
     );
     expect(chatService.addWebResource).not.toHaveBeenCalled();
+  });
+
+  it('warns about stopping the crawl when deleting an inflight crawl page', async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.mocked(chatService.deleteResource).mockResolvedValue('resource-1');
+
+    renderTable([
+      {
+        id: 'resource-1',
+        type: 'website',
+        data: 'https://docs.example.com/guide',
+        title: null,
+        status: 'pending',
+        crawlId: 'crawl-1',
+      },
+      {
+        id: 'resource-2',
+        type: 'website',
+        data: 'https://docs.example.com/guide/a',
+        title: null,
+        status: 'pending',
+        crawlId: 'crawl-1',
+      },
+      {
+        id: 'resource-3',
+        type: 'website',
+        data: 'https://docs.example.com/ready',
+        title: null,
+        status: 'ready',
+        crawlId: 'crawl-1',
+      },
+    ]);
+
+    await user.click(
+      screen.getAllByRole('button', { name: 'Remove resource' })[0],
+    );
+
+    expect(confirm).toHaveBeenCalledWith(
+      'Stop this crawl? Other queued pages from this crawl will be removed too. Pages already indexed will stay.',
+    );
+    expect(chatService.deleteResource).toHaveBeenCalledWith(
+      'token',
+      'chat-1',
+      'resource-1',
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('link', { name: 'https://docs.example.com/guide' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', {
+          name: 'https://docs.example.com/guide/a',
+        }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: 'https://docs.example.com/ready' }),
+      ).toBeInTheDocument();
+    });
+
+    confirm.mockRestore();
   });
 
   it('removes the deleted resource from the table after success', async () => {

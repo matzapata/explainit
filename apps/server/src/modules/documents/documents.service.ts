@@ -12,10 +12,15 @@ import { VectorStoreService } from '@src/infra/vector-store/vector-store.service
 import type { Queue } from 'bullmq';
 import { DocumentsRepository } from './documents.repository';
 import {
+  CRAWL_CANCEL_TTL_SECONDS,
   CRAWL_MAX_DEPTH,
   CRAWL_MAX_PAGES,
+  CRAWL_SAFETY_MAX_DEPTH,
+  CRAWL_SAFETY_MAX_PAGES,
   type CrawlJob,
+  crawlCancelledKey,
   INGEST_QUEUE,
+  ingestJobId,
   type ScrapeJob,
 } from './ingest-job';
 
@@ -69,13 +74,17 @@ export class DocumentsService {
       return null;
     }
 
-    await this.vectorStoreService.deleteDocuments(resource.embeddingIds);
-    if (resource.type === 'text') {
-      await this.objectStorage.deleteFile(
-        textObjectKey(resource.chatId, resource.id),
-      );
+    const inflight =
+      resource.status === ResourceStatus.pending ||
+      resource.status === ResourceStatus.processing;
+
+    if (inflight && resource.crawlId) {
+      await this.cancelCrawlCampaign(resource.crawlId);
+      return resource;
     }
-    await this.documentsRepository.delete(id);
+
+    await this.removeIngestJob(resource.id);
+    await this.deleteResourceRow(resource);
     return resource;
   }
 
@@ -95,6 +104,9 @@ export class DocumentsService {
 
   async deleteChatNamespace(chatId: string) {
     const resources = await this.findByChatId(chatId);
+    await Promise.all(
+      resources.map((resource) => this.removeIngestJob(resource.id)),
+    );
     await Promise.all(
       resources
         .filter((resource) => resource.type === 'text')
@@ -170,6 +182,7 @@ export class DocumentsService {
       await this.ingestQueue.addBulk(
         created.map((resource) => ({
           name: 'website',
+          opts: { jobId: ingestJobId(resource.id) },
           data: {
             resourceId: resource.id,
             chatId,
@@ -192,6 +205,7 @@ export class DocumentsService {
   async enqueueWebsiteCrawl(
     chatId: string,
     url: string,
+    options: { unlimited?: boolean } = {},
   ): Promise<ChatResource> {
     try {
       new URL(url);
@@ -204,31 +218,45 @@ export class DocumentsService {
       throw new BadRequestException('URL already added');
     }
 
+    const maxPages = options.unlimited
+      ? CRAWL_SAFETY_MAX_PAGES
+      : CRAWL_MAX_PAGES;
+    const maxDepth = options.unlimited
+      ? CRAWL_SAFETY_MAX_DEPTH
+      : CRAWL_MAX_DEPTH;
+
     const resources = await this.findByChatId(chatId);
     const websiteCount = resources.filter((r) => r.type === 'website').length;
-    if (websiteCount >= CRAWL_MAX_PAGES) {
+    if (websiteCount >= maxPages) {
       throw new BadRequestException(
-        `Chat already has ${CRAWL_MAX_PAGES} website resources`,
+        `Chat already has ${maxPages} website resources`,
       );
     }
 
+    const crawlId = randomUUID();
     const created = await this.create(chatId, {
       data: url,
       type: 'website',
       status: ResourceStatus.pending,
       embeddingIds: [],
+      crawlId,
     });
 
     try {
-      await this.ingestQueue.add('crawl', {
-        resourceId: created.id,
-        chatId,
-        url,
-        seedUrl: url,
-        depth: 0,
-        maxDepth: CRAWL_MAX_DEPTH,
-        maxPages: CRAWL_MAX_PAGES,
-      } satisfies CrawlJob);
+      await this.ingestQueue.add(
+        'crawl',
+        {
+          resourceId: created.id,
+          chatId,
+          url,
+          crawlId,
+          seedUrl: url,
+          depth: 0,
+          maxDepth,
+          maxPages,
+        } satisfies CrawlJob,
+        { jobId: ingestJobId(created.id) },
+      );
     } catch (error) {
       await this.markFailed(created.id, errorMessage(error));
       throw error;
@@ -253,6 +281,11 @@ export class DocumentsService {
       return;
     }
 
+    if (await this.isCrawlCancelled(job.crawlId)) {
+      this.logger.warn(`Skipping fan-out for cancelled crawl ${job.crawlId}`);
+      return;
+    }
+
     const candidates = this.crawlerService.nextUrls({
       html: page.html,
       pageUrl: job.url,
@@ -274,6 +307,12 @@ export class DocumentsService {
       if (slots <= 0) {
         break;
       }
+      if (await this.isCrawlCancelled(job.crawlId)) {
+        this.logger.warn(
+          `Stopping fan-out mid-loop for cancelled crawl ${job.crawlId}`,
+        );
+        return;
+      }
       if (existingUrls.has(candidate.toLowerCase())) {
         continue;
       }
@@ -283,20 +322,26 @@ export class DocumentsService {
         type: 'website',
         status: ResourceStatus.pending,
         embeddingIds: [],
+        crawlId: job.crawlId,
       });
       existingUrls.add(candidate.toLowerCase());
       slots -= 1;
 
       try {
-        await this.ingestQueue.add('crawl', {
-          resourceId: created.id,
-          chatId: job.chatId,
-          url: candidate,
-          seedUrl: job.seedUrl,
-          depth: job.depth + 1,
-          maxDepth: job.maxDepth,
-          maxPages: job.maxPages,
-        } satisfies CrawlJob);
+        await this.ingestQueue.add(
+          'crawl',
+          {
+            resourceId: created.id,
+            chatId: job.chatId,
+            url: candidate,
+            crawlId: job.crawlId,
+            seedUrl: job.seedUrl,
+            depth: job.depth + 1,
+            maxDepth: job.maxDepth,
+            maxPages: job.maxPages,
+          } satisfies CrawlJob,
+          { jobId: ingestJobId(created.id) },
+        );
       } catch (error) {
         await this.markFailed(created.id, errorMessage(error));
       }
@@ -365,6 +410,59 @@ export class DocumentsService {
       status: ResourceStatus.failed,
       error,
     });
+  }
+
+  private async cancelCrawlCampaign(crawlId: string): Promise<void> {
+    await this.flagCrawlCancelled(crawlId);
+
+    const inflight = await this.documentsRepository.findByCrawlIdAndStatuses(
+      crawlId,
+      [ResourceStatus.pending, ResourceStatus.processing],
+    );
+
+    await Promise.all(
+      inflight.map(async (resource) => {
+        await this.removeIngestJob(resource.id);
+        await this.deleteResourceRow(resource);
+      }),
+    );
+  }
+
+  private async deleteResourceRow(resource: ChatResource): Promise<void> {
+    await this.vectorStoreService.deleteDocuments(resource.embeddingIds);
+    if (resource.type === 'text') {
+      await this.objectStorage.deleteFile(
+        textObjectKey(resource.chatId, resource.id),
+      );
+    }
+    await this.documentsRepository.delete(resource.id);
+  }
+
+  private async removeIngestJob(resourceId: string): Promise<void> {
+    try {
+      const job = await this.ingestQueue.getJob(ingestJobId(resourceId));
+      if (!job) {
+        return;
+      }
+      await job.remove();
+    } catch (error) {
+      this.logger.warn(
+        `Could not remove ingest job for ${resourceId}: ${errorMessage(error)}`,
+      );
+    }
+  }
+
+  private async flagCrawlCancelled(crawlId: string): Promise<void> {
+    const client = await this.ingestQueue.client;
+    await client.set(crawlCancelledKey(crawlId), '1', {
+      EX: CRAWL_CANCEL_TTL_SECONDS,
+    });
+  }
+
+  private async isCrawlCancelled(crawlId: string): Promise<boolean> {
+    const client = await this.ingestQueue.client;
+    const value = await client.get(crawlCancelledKey(crawlId));
+    return value === '1';
   }
 }
 

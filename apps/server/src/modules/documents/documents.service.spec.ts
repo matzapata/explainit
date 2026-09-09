@@ -10,7 +10,15 @@ import { VectorStoreService } from '@src/infra/vector-store/vector-store.service
 import type { Queue } from 'bullmq';
 import { DocumentsRepository } from './documents.repository';
 import { DocumentsService, PermanentIngestError } from './documents.service';
-import { CRAWL_MAX_DEPTH, CRAWL_MAX_PAGES, INGEST_QUEUE } from './ingest-job';
+import {
+  CRAWL_MAX_DEPTH,
+  CRAWL_MAX_PAGES,
+  CRAWL_SAFETY_MAX_DEPTH,
+  CRAWL_SAFETY_MAX_PAGES,
+  crawlCancelledKey,
+  INGEST_QUEUE,
+  ingestJobId,
+} from './ingest-job';
 
 jest.mock('node:crypto', () => ({
   ...jest.requireActual('node:crypto'),
@@ -26,6 +34,7 @@ describe('DocumentsService', () => {
   let chunkingService: jest.Mocked<ChunkingService>;
   let vectorStoreService: jest.Mocked<VectorStoreService>;
   let objectStorage: jest.Mocked<ObjectStorageService>;
+  let redisClient: { get: jest.Mock; set: jest.Mock };
 
   beforeAll(() => {
     const { unit, unitRef } = TestBed.create(DocumentsService).compile();
@@ -41,6 +50,16 @@ describe('DocumentsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    redisClient = {
+      get: jest.fn().mockResolvedValue(null),
+      set: jest.fn().mockResolvedValue('OK'),
+    };
+    Object.defineProperty(ingestQueue, 'client', {
+      value: Promise.resolve(redisClient),
+      configurable: true,
+      writable: true,
+    });
+    ingestQueue.getJob.mockResolvedValue(undefined as never);
   });
 
   describe('enqueueWebsiteUrls', () => {
@@ -73,6 +92,7 @@ describe('DocumentsService', () => {
       expect(ingestQueue.addBulk).toHaveBeenCalledWith([
         {
           name: 'website',
+          opts: { jobId: ingestJobId('resource-1') },
           data: {
             resourceId: 'resource-1',
             chatId: 'chat-1',
@@ -124,6 +144,7 @@ describe('DocumentsService', () => {
         data: 'https://docs.example.com/guide',
         type: 'website',
         status: ResourceStatus.pending,
+        crawlId: 'resource-1',
       } as never);
       ingestQueue.add.mockResolvedValue({} as never);
 
@@ -132,16 +153,55 @@ describe('DocumentsService', () => {
         'https://docs.example.com/guide',
       );
 
-      expect(ingestQueue.add).toHaveBeenCalledWith('crawl', {
-        resourceId: 'resource-1',
-        chatId: 'chat-1',
-        url: 'https://docs.example.com/guide',
-        seedUrl: 'https://docs.example.com/guide',
-        depth: 0,
-        maxDepth: CRAWL_MAX_DEPTH,
-        maxPages: CRAWL_MAX_PAGES,
-      });
+      expect(documentsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          crawlId: 'resource-1',
+          status: ResourceStatus.pending,
+        }),
+      );
+      expect(ingestQueue.add).toHaveBeenCalledWith(
+        'crawl',
+        {
+          resourceId: 'resource-1',
+          chatId: 'chat-1',
+          url: 'https://docs.example.com/guide',
+          crawlId: 'resource-1',
+          seedUrl: 'https://docs.example.com/guide',
+          depth: 0,
+          maxDepth: CRAWL_MAX_DEPTH,
+          maxPages: CRAWL_MAX_PAGES,
+        },
+        { jobId: ingestJobId('resource-1') },
+      );
       expect(result.id).toBe('resource-1');
+    });
+
+    it('uses the safety ceiling when unlimited is true', async () => {
+      documentsRepository.findByUrl.mockResolvedValue(null);
+      documentsRepository.findByChatId.mockResolvedValue([]);
+      documentsRepository.create.mockResolvedValue({
+        id: 'resource-1',
+        data: 'https://docs.example.com/guide',
+        type: 'website',
+        status: ResourceStatus.pending,
+        crawlId: 'resource-1',
+      } as never);
+      ingestQueue.add.mockResolvedValue({} as never);
+
+      await service.enqueueWebsiteCrawl(
+        'chat-1',
+        'https://docs.example.com/guide',
+        { unlimited: true },
+      );
+
+      expect(ingestQueue.add).toHaveBeenCalledWith(
+        'crawl',
+        expect.objectContaining({
+          maxDepth: CRAWL_SAFETY_MAX_DEPTH,
+          maxPages: CRAWL_SAFETY_MAX_PAGES,
+        }),
+        { jobId: ingestJobId('resource-1') },
+      );
     });
 
     it('rejects when the URL is already added', async () => {
@@ -294,6 +354,7 @@ describe('DocumentsService', () => {
       resourceId: 'resource-1',
       chatId: 'chat-1',
       url: 'https://docs.example.com/guide',
+      crawlId: 'crawl-1',
       seedUrl: 'https://docs.example.com/guide',
       depth: 0,
       maxDepth: CRAWL_MAX_DEPTH,
@@ -354,14 +415,22 @@ describe('DocumentsService', () => {
         seedUrl: crawlJob.seedUrl,
       });
       expect(documentsRepository.create).toHaveBeenCalledTimes(2);
+      expect(documentsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          crawlId: 'crawl-1',
+          data: 'https://docs.example.com/guide/a',
+        }),
+      );
       expect(ingestQueue.add).toHaveBeenCalledWith(
         'crawl',
         expect.objectContaining({
           resourceId: 'child-a',
+          crawlId: 'crawl-1',
           url: 'https://docs.example.com/guide/a',
           depth: 1,
           seedUrl: crawlJob.seedUrl,
         }),
+        { jobId: ingestJobId('child-a') },
       );
       expect(ingestQueue.add).toHaveBeenCalledWith(
         'crawl',
@@ -370,6 +439,20 @@ describe('DocumentsService', () => {
           url: 'https://docs.example.com/guide/b',
           depth: 1,
         }),
+        { jobId: ingestJobId('child-b') },
+      );
+    });
+
+    it('does not fan out when the crawl is cancelled', async () => {
+      mockSuccessfulIngest();
+      redisClient.get.mockResolvedValue('1');
+
+      await service.processCrawl(crawlJob);
+
+      expect(crawlerService.nextUrls).not.toHaveBeenCalled();
+      expect(ingestQueue.add).not.toHaveBeenCalled();
+      expect(redisClient.get).toHaveBeenCalledWith(
+        crawlCancelledKey('crawl-1'),
       );
     });
 
@@ -526,6 +609,8 @@ describe('DocumentsService', () => {
         id: 'resource-1',
         chatId: 'chat-1',
         type: 'text',
+        status: ResourceStatus.ready,
+        crawlId: null,
         embeddingIds: ['emb-1', 'emb-2'],
       };
       documentsRepository.findById.mockResolvedValue(resource as never);
@@ -549,6 +634,8 @@ describe('DocumentsService', () => {
         id: 'resource-1',
         chatId: 'chat-1',
         type: 'website',
+        status: ResourceStatus.ready,
+        crawlId: null,
         embeddingIds: ['emb-1'],
       };
       documentsRepository.findById.mockResolvedValue(resource as never);
@@ -559,10 +646,82 @@ describe('DocumentsService', () => {
       expect(objectStorage.deleteFile).not.toHaveBeenCalled();
       expect(documentsRepository.delete).toHaveBeenCalledWith('resource-1');
     });
+
+    it('removes the ingest job when deleting a pending single-page resource', async () => {
+      const resource = {
+        id: 'resource-1',
+        chatId: 'chat-1',
+        type: 'website',
+        status: ResourceStatus.pending,
+        crawlId: null,
+        embeddingIds: [],
+      };
+      const job = { remove: jest.fn().mockResolvedValue(undefined) };
+      documentsRepository.findById.mockResolvedValue(resource as never);
+      documentsRepository.delete.mockResolvedValue(resource as never);
+      ingestQueue.getJob.mockResolvedValue(job as never);
+
+      await service.deleteWithEmbeddings('resource-1');
+
+      expect(ingestQueue.getJob).toHaveBeenCalledWith(
+        ingestJobId('resource-1'),
+      );
+      expect(job.remove).toHaveBeenCalled();
+      expect(documentsRepository.delete).toHaveBeenCalledWith('resource-1');
+      expect(redisClient.set).not.toHaveBeenCalled();
+    });
+
+    it('cancels the crawl campaign for an inflight crawl page', async () => {
+      const clicked = {
+        id: 'pending-1',
+        chatId: 'chat-1',
+        type: 'website',
+        status: ResourceStatus.pending,
+        crawlId: 'crawl-1',
+        embeddingIds: [],
+      };
+      const sibling = {
+        id: 'pending-2',
+        chatId: 'chat-1',
+        type: 'website',
+        status: ResourceStatus.processing,
+        crawlId: 'crawl-1',
+        embeddingIds: [],
+      };
+      const job1 = { remove: jest.fn().mockResolvedValue(undefined) };
+      const job2 = { remove: jest.fn().mockResolvedValue(undefined) };
+      documentsRepository.findById.mockResolvedValue(clicked as never);
+      documentsRepository.findByCrawlIdAndStatuses.mockResolvedValue([
+        clicked,
+        sibling,
+      ] as never);
+      documentsRepository.delete.mockResolvedValue({} as never);
+      ingestQueue.getJob
+        .mockResolvedValueOnce(job1 as never)
+        .mockResolvedValueOnce(job2 as never);
+
+      await expect(service.deleteWithEmbeddings('pending-1')).resolves.toEqual(
+        clicked,
+      );
+
+      expect(redisClient.set).toHaveBeenCalledWith(
+        crawlCancelledKey('crawl-1'),
+        '1',
+        { EX: expect.any(Number) },
+      );
+      expect(documentsRepository.findByCrawlIdAndStatuses).toHaveBeenCalledWith(
+        'crawl-1',
+        [ResourceStatus.pending, ResourceStatus.processing],
+      );
+      expect(job1.remove).toHaveBeenCalled();
+      expect(job2.remove).toHaveBeenCalled();
+      expect(documentsRepository.delete).toHaveBeenCalledWith('pending-1');
+      expect(documentsRepository.delete).toHaveBeenCalledWith('pending-2');
+    });
   });
 
   describe('deleteChatNamespace', () => {
-    it('deletes text objects then the chat embedding namespace', async () => {
+    it('removes ingest jobs, deletes text objects, then the chat embedding namespace', async () => {
       documentsRepository.findByChatId.mockResolvedValue([
         { id: 'text-1', type: 'text' },
         { id: 'web-1', type: 'website' },
@@ -571,9 +730,14 @@ describe('DocumentsService', () => {
       vectorStoreService.deleteDocumentsByNamespace.mockResolvedValue(
         undefined as never,
       );
+      const job = { remove: jest.fn().mockResolvedValue(undefined) };
+      ingestQueue.getJob.mockResolvedValue(job as never);
 
       await service.deleteChatNamespace('chat-1');
 
+      expect(ingestQueue.getJob).toHaveBeenCalledWith(ingestJobId('text-1'));
+      expect(ingestQueue.getJob).toHaveBeenCalledWith(ingestJobId('web-1'));
+      expect(job.remove).toHaveBeenCalledTimes(2);
       expect(objectStorage.deleteFile).toHaveBeenCalledWith(
         'resources/chat-1/text-1.md',
       );

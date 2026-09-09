@@ -32,6 +32,7 @@ describe('DocumentsProcessor', () => {
       resourceId: 'resource-1',
       chatId: 'chat-1',
       url: 'https://docs.example.com',
+      crawlId: 'crawl-1',
       seedUrl: 'https://docs.example.com',
       depth: 0,
       maxDepth: 4,

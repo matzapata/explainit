@@ -1,4 +1,10 @@
-import { IsString, IsUrl, Length } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+} from 'class-validator';
 export class PostWebResourceDto {
   @IsString({ each: true })
   urls: string[];
@@ -7,6 +13,10 @@ export class PostWebResourceDto {
 export class PostWebCrawlDto {
   @IsUrl()
   url: string;
+
+  @IsOptional()
+  @IsBoolean()
+  unlimited?: boolean;
 }
 
 export class PostTextResourceDto {
