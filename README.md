@@ -1,16 +1,23 @@
 # Explainit
 
-Explainit helps teams create shareable AI chats powered by their own documentation. It combines a web client, an API, and document ingestion so developers can ask questions and get grounded answers quickly.
+Explainit is a self-hosted Owner dashboard and Host-site Ask AI widget for documentation Q&A. Teams create Chats, crawl or paste their docs, then embed a launcher on any allowlisted origin so visitors get grounded answers from that corpus.
 
-Watch a short demo of Explainit in action [here](https://www.loom.com/share/4f5aac7836f44e27a3cdd1854b566d46).
+| Chats | Overview | Resources | Settings |
+| --- | --- | --- | --- |
+| ![Chats list](docs/assets/chats-list.png) | ![Overview](docs/assets/overview.png) | ![Resources](docs/assets/resources.png) | ![Settings](docs/assets/settings.png) |
+
+| Setup | Preview | Host launcher |
+| --- | --- | --- |
+| ![Setup](docs/assets/setup.png) | ![Preview answer](docs/assets/preview-answer.png) | ![Host Ask AI](docs/assets/launcher-host.png) |
 
 ## Features
 
-- Ingest documentation content and make it searchable through chat
-- Share chat experiences for internal or public use cases
-- Run locally with Docker for full-stack development
-- Self-host with a production Docker Compose stack
-- Run client and server separately for faster local iteration
+- Owner dashboard for Chats, resources, settings, and setup
+- Website crawl / single-page ingest plus pasted text resources
+- Host launcher (`explainit({ chatId, apiUrl, button, theme })`) that mounts Host Chat in a ShadowRoot
+- Origin allowlist for visitor API access
+- Local Docker Compose for full-stack development
+- Production Compose stack for self-hosting on one machine
 
 ## Running your own Explainit instance
 
@@ -32,6 +39,8 @@ Images: `ghcr.io/matzapata/explainit-server` and `ghcr.io/matzapata/explainit-cl
 - [Architecture](docs/architecture.md)
 - [Docker deployment (self-host)](docs/docker-deployment.md)
 - [Contributing and local workflows](CONTRIBUTING.md)
+
+To regenerate README stills: run the root Compose stack, serve `packages/launcher/example` on `:8080`, then capture the Owner tabs + Preview + Host widget with Playwright (one-shot; not a committed test suite).
 
 ## Contributing
 

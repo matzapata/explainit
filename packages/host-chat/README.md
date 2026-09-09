@@ -14,6 +14,8 @@ npm run build
 
 Compose uploads `dist/widget.js` and `dist/widget.css` next to `launcher.js` on Floci (`http://localhost:4566/explainit-cdn/…`).
 
+Self-host Compose serves them from `/cdn` on the public origin. Optional S3 + CloudFront publish remains for a dedicated CDN hostname.
+
 ## Production (S3 + CloudFront)
 
 GitHub Actions: workflow `Publish launcher` builds the launcher and this package, then uploads `launcher.js`, `widget.js`, and `widget.css`.

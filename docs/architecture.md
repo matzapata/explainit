@@ -23,14 +23,19 @@ External providers supply language model inference, embedding generation, and op
 
 ```mermaid
 flowchart LR
-  User[User] --> Client[Vite React Client]
+  Owner[Owner] --> Client[Vite Owner dashboard]
+  HostPage[Host site] --> Launcher[Launcher IIFE]
+  Launcher --> HostChat[Host Chat widget]
   Client --> API[NestJS API]
+  HostChat --> API
+  VisitorUI[Custom visitor UI] --> API
   API --> DB[(Postgres + pgvector)]
   API --> Redis[(Redis / BullMQ)]
   Worker[Ingest worker] --> Redis
   Worker --> DB
-  Worker --> Crawler[Crawler / embeddings]
+  Worker --> Scrape[Scraper + embeddings]
   API --> Providers[External Providers]
+  API --> ObjectStore[(Object storage)]
 ```
 
 ## Server infrastructure layer
@@ -51,7 +56,7 @@ Current infrastructure folders and responsibilities:
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
 - `vector-store`: vector add/search/delete over Postgres + pgvector (`PgVectorProvider`)
-- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in Compose, real S3/MinIO in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `host-chat` one-shots upload `launcher.js` and `widget.js`/`widget.css`. Text resources upload public markdown under `resources/{chatId}/{id}.md`.
+- `object-storage`: object storage and image resize (`S3StorageProvider`; Floci in the root Compose stack, MinIO in [`deploy/compose`](../deploy/compose), real S3 in production). Compose `floci-init` creates the document bucket and `explainit-cdn`; the `launcher` and `host-chat` one-shots upload `launcher.js` and `widget.js`/`widget.css`. Text resources upload public markdown under `resources/{chatId}/{id}.md`.
 - `redis`: shared ioredis client. BullMQ keeps its own Redis connection.
 - `rate-limiter`: Redis-backed `consume()` used by HTTP inbound limits (and later outbound providers)
 
@@ -82,22 +87,23 @@ Current infrastructure folders and responsibilities:
 
 ```mermaid
 sequenceDiagram
-  participant U as User
-  participant C as Client
+  participant U as Visitor or Owner
+  participant UI as Preview or Host Chat
   participant A as API
   participant D as Postgres/pgvector
   participant M as Model Provider
 
-  U->>C: Ask question
-  C->>A: POST /chat message (SSE)
-  A->>D: Load chat/workspace scope
+  U->>UI: Ask question
+  UI->>A: POST /api/chats/:id/messages (SSE)
+  Note over A: Owner Preview sends auth; visitors need Origin in Chat.hostOrigins (or dashboard CORS_ORIGIN)
+  A->>D: Load chat scope
   A->>D: Vector search for relevant chunks
   D-->>A: Ranked context candidates
   A->>A: Apply filters, rank, trim to token budget
   A->>M: Stream prompt + grounded context
   M-->>A: Token deltas
-  A-->>C: Tokens, then citations
-  C-->>U: Render answer incrementally
+  A-->>UI: Tokens, then citations
+  UI-->>U: Render answer incrementally
 ```
 
 ## Ingestion lifecycle (indexing path)
@@ -187,7 +193,7 @@ An embedding is a dense numeric representation where semantically related text i
 ## Data model notes
 
 - **User**: `id` UUID, unique `email`, optional `name`
-- **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, points; `hostOrigins` for visitor Origin allowlisting
+- **Chat**: belongs to a user (`ownerId`); metadata, conversation starters, published flag, `points` (per-message usage counter, not a product “points” feature); `hostOrigins` for visitor Origin allowlisting
 - **ChatResource**: belongs to a chat; stores source type/data, `status` (`pending` / `processing` / `ready` / `failed`), optional `error`, optional `crawlId` (shared across pages from one crawl campaign), and `embeddingIds` for the chunks it produced
 - **Embedding**: chunk `content`, `namespace` (chat id), JSON `metadata` (source URL/title), `vector(1536)`
 
