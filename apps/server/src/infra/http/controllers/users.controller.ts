@@ -3,8 +3,8 @@ import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
 import type { AuthUser } from '@src/modules/user/auth-user';
-import type { UsersService } from '@src/modules/user/users.service';
-import type { UpdateUserDto } from './dto/update-user.dto';
+import { UsersService } from '@src/modules/user/users.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserDto } from './dto/user.dto';
 
 @Controller('api/users')

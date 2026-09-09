@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import type { PrismaService } from '@src/infra/database/prisma.service';
-import type { EmbeddingsService } from '@src/infra/llm/embeddings.service';
+import { PrismaService } from '@src/infra/database/prisma.service';
+import { EmbeddingsService } from '@src/infra/llm/embeddings.service';
 import type {
   EmbeddingHit,
   VectorStoreProvider,

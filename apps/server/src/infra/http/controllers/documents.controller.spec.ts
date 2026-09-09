@@ -1,7 +1,6 @@
 import { TestBed } from '@automock/jest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ResourceStatus } from '@prisma/client';
-import { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { ChatsService } from '@src/modules/chat/chat.service';
 import { DocumentsService } from '@src/modules/documents/documents.service';
@@ -11,7 +10,6 @@ describe('DocumentsController', () => {
   let documentsController: DocumentsController;
   let chatsService: jest.Mocked<ChatsService>;
   let documentsService: jest.Mocked<DocumentsService>;
-  let crawlerService: jest.Mocked<CrawlerService>;
 
   const authUser = { id: 'ownerId', email: 'email', isAdmin: false };
   const chat = {
@@ -34,7 +32,6 @@ describe('DocumentsController', () => {
     documentsController = unit;
     chatsService = unitRef.get(ChatsService);
     documentsService = unitRef.get(DocumentsService);
-    crawlerService = unitRef.get(CrawlerService);
   });
 
   beforeEach(() => {
@@ -45,8 +42,8 @@ describe('DocumentsController', () => {
   it('requires authentication on mutating routes', () => {
     for (const handler of [
       DocumentsController.prototype.loadWebResource,
+      DocumentsController.prototype.crawlWebResource,
       DocumentsController.prototype.loadTextResource,
-      DocumentsController.prototype.inspectWebResource,
       DocumentsController.prototype.deleteResourcesFromChat,
     ]) {
       const guards = Reflect.getMetadata('__guards__', handler);
@@ -109,6 +106,36 @@ describe('DocumentsController', () => {
     });
   });
 
+  describe('crawlWebResource', () => {
+    it('enqueues a crawl after checking ownership', async () => {
+      const pending = {
+        id: 'resource-1',
+        type: 'website',
+        data: 'https://docs.example.com/guide',
+        title: null,
+        status: ResourceStatus.pending,
+        error: null,
+        embeddingIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        chatId: chat.id,
+      };
+      documentsService.enqueueWebsiteCrawl.mockResolvedValue(pending);
+
+      const result = await documentsController.crawlWebResource(
+        authUser,
+        { url: 'https://docs.example.com/guide' },
+        chat.id,
+      );
+
+      expect(documentsService.enqueueWebsiteCrawl).toHaveBeenCalledWith(
+        chat.id,
+        'https://docs.example.com/guide',
+      );
+      expect(result).toEqual([pending]);
+    });
+  });
+
   describe('loadTextResource', () => {
     it('creates a text resource after checking ownership', async () => {
       const created = {
@@ -136,29 +163,6 @@ describe('DocumentsController', () => {
         { text: 'hello', title: 'Notes' },
       );
       expect(result).toEqual([created]);
-    });
-  });
-
-  describe('inspectWebResource', () => {
-    it('returns in-domain urls that are not already ingested', async () => {
-      crawlerService.inspect.mockResolvedValue([
-        'https://docs.example.com/a',
-        'https://docs.example.com/b',
-      ]);
-      documentsService.findByChatId.mockResolvedValue([
-        { data: 'https://docs.example.com/a' } as never,
-      ]);
-
-      const result = await documentsController.inspectWebResource(
-        authUser,
-        { url: 'https://docs.example.com' },
-        chat.id,
-      );
-
-      expect(crawlerService.inspect).toHaveBeenCalledWith({
-        url: 'https://docs.example.com',
-      });
-      expect(result).toEqual({ urls: ['https://docs.example.com/b'] });
     });
   });
 

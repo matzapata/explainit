@@ -44,13 +44,8 @@ const addTextFormSchema = z.object({
     .min(1000, { message: 'Please provide at least 1000 characters' }),
   title: z.string().min(5, { message: 'Please provide a title' }),
 });
-const inspectFormSchema = z.object({
-  url: z.string().url({ message: 'Invalid URL' }),
-});
 const addWebFormSchema = z.object({
-  urls: z
-    .string()
-    .min(10, { message: 'Please provide at least one URL to add' }),
+  url: z.string().url({ message: 'Invalid URL' }),
 });
 
 function stringIsAValidUrl(s: string): boolean {
@@ -86,7 +81,7 @@ function ResourceSourceLabel(props: { resource: ChatResource }) {
         href={props.resource.data}
         target="_blank"
         rel="noreferrer"
-        className="text-blue-600 hover:underline dark:text-blue-400"
+        className="block truncate text-blue-600 hover:underline dark:text-blue-400"
       >
         {label}
       </a>
@@ -139,8 +134,8 @@ export default function ResourcesTable(props: {
         mutationProps.id,
       );
     },
-    onSuccess: (id) => {
-      setResources((r) => r.filter((s) => s.id !== id));
+    onSuccess: (_data, variables) => {
+      setResources((r) => r.filter((s) => s.id !== variables.id));
       toast({ description: 'Successfully removed.' });
     },
     onError: () => {
@@ -174,28 +169,28 @@ export default function ResourcesTable(props: {
           No resources yet.
         </p>
       ) : (
-        <Table>
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead>Source</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="w-8 pr-0" />
+              <TableHead className="w-28">Status</TableHead>
+              <TableHead className="w-24">Updated</TableHead>
+              <TableHead className="w-12 pr-0" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {resources.map((s) => (
               <TableRow key={s.id}>
-                <TableCell className="font-medium">
+                <TableCell className="min-w-0 truncate font-medium">
                   <ResourceSourceLabel resource={s} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="w-28 truncate">
                   <ResourceStatusLabel resource={s} />
                 </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
+                <TableCell className="w-24 whitespace-nowrap text-gray-500 dark:text-gray-400">
                   {formatResourceDate(s.updatedAt)}
                 </TableCell>
-                <TableCell className="pr-0 text-right">
+                <TableCell className="w-12 pr-0 text-right">
                   <Button
                     onClick={() => onDeleteClick(s.id)}
                     variant="ghost"
@@ -243,51 +238,23 @@ function AddNewWebResource(props: {
 }) {
   const accessTokenRaw = useAccessToken();
   const [open, setOpen] = useState<boolean>(false);
-  const [urls, setUrls] = useState<string[]>([]);
-  const inspectForm = useForm<z.infer<typeof inspectFormSchema>>({
-    resolver: zodResolver(inspectFormSchema),
-    defaultValues: {
-      url: '',
-    },
-  });
-  const addForm = useForm<z.infer<typeof addWebFormSchema>>({
+  const form = useForm<z.infer<typeof addWebFormSchema>>({
     resolver: zodResolver(addWebFormSchema),
     defaultValues: {
-      urls: '',
+      url: props.initialUrl ?? '',
     },
   });
 
-  const inspectResourceMutation = useMutation({
-    mutationFn: async (mutationProps: { url: string }) => {
+  const addPageMutation = useMutation({
+    mutationFn: async (url: string) => {
       if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.inspectResource(
-        accessTokenRaw,
-        props.chatId,
-        mutationProps.url,
-      );
-    },
-    onSuccess: (data) => {
-      setUrls(data.urls);
-      addForm.setValue('urls', data.urls.join('\n'));
-    },
-    onError: () => {
-      toast({ description: `Sorry, something went wrong. Please try again.` });
-    },
-  });
-
-  const addResourcesMutation = useMutation({
-    mutationFn: (mutationProps: { urls: string[] }) => {
-      if (!accessTokenRaw) throw new Error('No access token');
-      return chatService.addWebResource(
-        accessTokenRaw,
-        props.chatId,
-        mutationProps.urls,
-      );
+      return chatService.addWebResource(accessTokenRaw, props.chatId, [url]);
     },
     onSuccess: (data) => {
       props.setResources((r: any) => [...r, ...data]);
       toast({ description: 'Queued for indexing.' });
       setOpen(false);
+      form.reset({ url: '' });
     },
     onError: (error) => {
       toast({
@@ -297,33 +264,36 @@ function AddNewWebResource(props: {
     },
   });
 
-  function onAddSubmit(values: z.infer<typeof addWebFormSchema>) {
-    const urls = values.urls.split('\n').filter((u) => !!u);
-    for (const u of urls) {
-      if (!stringIsAValidUrl(u)) {
-        addForm.setError('urls', {
-          type: 'manual',
-          message: `Invalid URL ${u}`,
-        });
-        return;
-      }
-    }
+  const crawlSiteMutation = useMutation({
+    mutationFn: async (url: string) => {
+      if (!accessTokenRaw) throw new Error('No access token');
+      return chatService.crawlWebResource(accessTokenRaw, props.chatId, url);
+    },
+    onSuccess: (data) => {
+      props.setResources((r: any) => [...r, ...data]);
+      toast({
+        description:
+          'Crawl queued. Linked pages will appear as they are found.',
+      });
+      setOpen(false);
+      form.reset({ url: '' });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        description: `Sorry, something went wrong. Please try again. ${error?.message}`,
+      });
+    },
+  });
 
-    addResourcesMutation.mutate({ urls: urls });
-  }
-
-  function onInspectSubmit(values: z.infer<typeof inspectFormSchema>) {
-    inspectResourceMutation.mutate(values);
-  }
+  const isLoading = addPageMutation.isPending || crawlSiteMutation.isPending;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => {
         if (!o) {
-          inspectForm.reset();
-          addForm.reset();
-          setUrls([]);
+          form.reset({ url: props.initialUrl ?? '' });
         }
         setOpen(o);
       }}
@@ -335,87 +305,56 @@ function AddNewWebResource(props: {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>Add a new web resources</DialogTitle>
+          <DialogTitle>Add a website</DialogTitle>
           <DialogDescription>
-            Add more knowledge sources to your chatbot. The more you give the
-            better responses you can get. Give us a starter url, we'll see what
-            we can find and start from there.
+            Index just this page, or crawl linked pages from the same site under
+            this URL (up to 50 pages, depth 4).
           </DialogDescription>
         </DialogHeader>
 
-        {/* Inspect form */}
-        <Form {...inspectForm}>
-          <form
-            onSubmit={inspectForm.handleSubmit(onInspectSubmit)}
-            className="space-y-4"
-          >
+        <Form {...form}>
+          <form className="space-y-4">
             <FormField
-              control={inspectForm.control}
+              control={form.control}
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Your documentation base url</FormLabel>
+                  <FormLabel>Website URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://docs.lorem..." {...field} />
+                    <Input
+                      placeholder="https://docs.example.com/guide"
+                      {...field}
+                    />
                   </FormControl>
-
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {!urls.length && (
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  isLoading={inspectResourceMutation.isPending}
-                >
-                  Add
-                </Button>
-              </DialogFooter>
-            )}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                isLoading={addPageMutation.isPending}
+                disabled={isLoading}
+                onClick={form.handleSubmit((values) =>
+                  addPageMutation.mutate(values.url),
+                )}
+              >
+                Add this page
+              </Button>
+              <Button
+                type="button"
+                isLoading={crawlSiteMutation.isPending}
+                disabled={isLoading}
+                onClick={form.handleSubmit((values) =>
+                  crawlSiteMutation.mutate(values.url),
+                )}
+              >
+                Crawl this site
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
-
-        {/* Add form */}
-        {!urls.length ? null : (
-          <Form {...addForm}>
-            <form
-              onSubmit={addForm.handleSubmit(onAddSubmit)}
-              className="space-y-4"
-            >
-              <FormField
-                control={addForm.control}
-                name="urls"
-                render={({ field }) => (
-                  <FormItem>
-                    <p className="text-gray-300 mb-2 text-sm">
-                      Please cleanup the urls you don't want to add. Try to keep
-                      only content users may want to know for better
-                      performance. Also new urls if any is missing.
-                    </p>
-                    <FormControl>
-                      <Textarea
-                        rows={10}
-                        placeholder="Type your message here."
-                        {...field}
-                      />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  isLoading={addResourcesMutation.isPending}
-                >
-                  Add all
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        )}
       </DialogContent>
     </Dialog>
   );

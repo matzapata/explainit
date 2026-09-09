@@ -10,26 +10,24 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import type { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { CurrentUser } from '@src/infra/http/decorators/current-user.decorator';
 import { AuthGuard } from '@src/infra/http/guards/auth.guard';
 import { Serialize } from '@src/infra/http/interceptors/serialize.interceptor';
-import type { ChatsService } from '@src/modules/chat/chat.service';
-import type { DocumentsService } from '@src/modules/documents/documents.service';
+import { ChatsService } from '@src/modules/chat/chat.service';
+import { DocumentsService } from '@src/modules/documents/documents.service';
 import type { AuthUser } from '@src/modules/user/auth-user';
 import { GetResourceDto } from './dto/get-resource.dto';
-import type {
+import {
   PostTextResourceDto,
+  PostWebCrawlDto,
   PostWebResourceDto,
 } from './dto/post-resource.dto';
-import type { PostResourceInspectDto } from './dto/post-resource-inspect.dto';
 
 @Controller('api/chats')
 export class DocumentsController {
   constructor(
     private readonly chatsService: ChatsService,
     private readonly documentsService: DocumentsService,
-    private readonly crawlerService: CrawlerService,
   ) {}
 
   @Post('/:id/resources/web')
@@ -41,14 +39,25 @@ export class DocumentsController {
     @Body() resource: PostWebResourceDto,
     @Param('id') id: string,
   ) {
-    const chat = await this.chatsService.findFirstById(id);
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    } else if (chat.ownerId !== user.id) {
-      throw new BadRequestException('Chat not owned by user');
-    }
-
+    const chat = await this.requireOwnedChat(user, id);
     return this.documentsService.enqueueWebsiteUrls(chat.id, resource.urls);
+  }
+
+  @Post('/:id/resources/web/crawl')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Serialize(GetResourceDto)
+  async crawlWebResource(
+    @CurrentUser() user: AuthUser,
+    @Body() resource: PostWebCrawlDto,
+    @Param('id') id: string,
+  ) {
+    const chat = await this.requireOwnedChat(user, id);
+    const created = await this.documentsService.enqueueWebsiteCrawl(
+      chat.id,
+      resource.url,
+    );
+    return [created];
   }
 
   @Post('/:id/resources/text')
@@ -59,42 +68,13 @@ export class DocumentsController {
     @Body() resource: PostTextResourceDto,
     @Param('id') id: string,
   ) {
-    const chat = await this.chatsService.findFirstById(id);
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    } else if (chat.ownerId !== user.id) {
-      throw new BadRequestException('Chat not owned by user');
-    }
-
+    const chat = await this.requireOwnedChat(user, id);
     const created = await this.documentsService.createTextResource(chat.id, {
       text: resource.text,
       title: resource.title,
     });
 
     return [created];
-  }
-
-  @Post('/:id/resources/web/inspect')
-  @UseGuards(AuthGuard)
-  async inspectWebResource(
-    @CurrentUser() user: AuthUser,
-    @Body() data: PostResourceInspectDto,
-    @Param('id') id: string,
-  ) {
-    const chat = await this.chatsService.findFirstById(id);
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    } else if (chat.ownerId !== user.id) {
-      throw new BadRequestException('Chat not owned by user');
-    }
-
-    const crawledUrls = await this.crawlerService.inspect({
-      url: data.url,
-    });
-
-    const resources = await this.documentsService.findByChatId(chat.id);
-    const urls = resources.map((r) => r.data);
-    return { urls: crawledUrls.filter((r) => !urls.includes(r)) };
   }
 
   @Delete('/:id/resources/:resource_id')
@@ -105,12 +85,7 @@ export class DocumentsController {
     @Param('id') id: string,
     @Param('resource_id') resource_id: string,
   ) {
-    const chat = await this.chatsService.findFirstById(id);
-    if (!chat) {
-      throw new NotFoundException('Chat not found');
-    } else if (chat.ownerId !== user.id) {
-      throw new BadRequestException('Chat not owned by user');
-    }
+    const chat = await this.requireOwnedChat(user, id);
 
     const resource = await this.documentsService.findById(resource_id);
     if (!resource || resource.chatId !== chat.id) {
@@ -124,5 +99,16 @@ export class DocumentsController {
     }
 
     return deleted;
+  }
+
+  private async requireOwnedChat(user: AuthUser, id: string) {
+    const chat = await this.chatsService.findFirstById(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+    if (chat.ownerId !== user.id) {
+      throw new BadRequestException('Chat not owned by user');
+    }
+    return chat;
   }
 }

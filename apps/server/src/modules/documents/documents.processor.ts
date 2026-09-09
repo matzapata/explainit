@@ -2,12 +2,11 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import {
-  type DocumentsService,
+  DocumentsService,
   errorMessage,
   PermanentIngestError,
 } from './documents.service';
-import { INGEST_QUEUE, type IngestJob } from './ingest-job';
-
+import { type CrawlJob, INGEST_QUEUE, type ScrapeJob } from './ingest-job';
 @Processor(INGEST_QUEUE, {
   concurrency: 1,
   lockDuration: 5 * 60 * 1000,
@@ -19,9 +18,13 @@ export class DocumentsProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<IngestJob>): Promise<void> {
+  async process(job: Job<ScrapeJob | CrawlJob>): Promise<void> {
     try {
-      await this.documentsService.process(job.data);
+      if (job.name === 'crawl') {
+        await this.documentsService.processCrawl(job.data as CrawlJob);
+      } else {
+        await this.documentsService.process(job.data);
+      }
     } catch (error) {
       if (isPermanent(error)) {
         await this.documentsService.markFailed(

@@ -5,7 +5,7 @@ export class PostMessageDto {
   @IsString()
   question: string;
 
-  // TODO: Add validation for agent
+  // TODO: Add validation for agent. Remove, we should load from db/cache
   @IsArray()
   chatHistory: { message: string; agent: MessageAgent }[];
 

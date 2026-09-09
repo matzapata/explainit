@@ -8,10 +8,9 @@ import {
   type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import type { EnvService } from '@src/infra/env/env.service';
+import { EnvService } from '@src/infra/env/env.service';
 import sharp from 'sharp';
 import type { ObjectStorageProvider } from './object-storage.provider';
-
 export const S3_CLIENT = 'S3_CLIENT';
 
 @Injectable()

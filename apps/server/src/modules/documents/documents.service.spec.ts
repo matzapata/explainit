@@ -5,14 +5,15 @@ import { ResourceStatus } from '@prisma/client';
 import { ChunkingService } from '@src/infra/chunking/chunking.service';
 import { CrawlerService } from '@src/infra/crawler/crawler.service';
 import { ObjectStorageService } from '@src/infra/object-storage/object-storage.service';
+import { ScraperService } from '@src/infra/scraper/scraper.service';
 import { VectorStoreService } from '@src/infra/vector-store/vector-store.service';
 import type { Queue } from 'bullmq';
 import { DocumentsRepository } from './documents.repository';
 import { DocumentsService, PermanentIngestError } from './documents.service';
-import { INGEST_QUEUE } from './ingest-job';
+import { CRAWL_MAX_DEPTH, CRAWL_MAX_PAGES, INGEST_QUEUE } from './ingest-job';
 
-jest.mock('crypto', () => ({
-  ...jest.requireActual('crypto'),
+jest.mock('node:crypto', () => ({
+  ...jest.requireActual('node:crypto'),
   randomUUID: () => 'resource-1',
 }));
 
@@ -20,6 +21,7 @@ describe('DocumentsService', () => {
   let service: DocumentsService;
   let documentsRepository: jest.Mocked<DocumentsRepository>;
   let ingestQueue: jest.Mocked<Queue>;
+  let scraperService: jest.Mocked<ScraperService>;
   let crawlerService: jest.Mocked<CrawlerService>;
   let chunkingService: jest.Mocked<ChunkingService>;
   let vectorStoreService: jest.Mocked<VectorStoreService>;
@@ -30,6 +32,7 @@ describe('DocumentsService', () => {
     service = unit;
     documentsRepository = unitRef.get(DocumentsRepository);
     ingestQueue = unitRef.get(getQueueToken(INGEST_QUEUE));
+    scraperService = unitRef.get(ScraperService);
     crawlerService = unitRef.get(CrawlerService);
     chunkingService = unitRef.get(ChunkingService);
     vectorStoreService = unitRef.get(VectorStoreService);
@@ -112,8 +115,49 @@ describe('DocumentsService', () => {
     });
   });
 
+  describe('enqueueWebsiteCrawl', () => {
+    it('creates a pending seed and enqueues a crawl job', async () => {
+      documentsRepository.findByUrl.mockResolvedValue(null);
+      documentsRepository.findByChatId.mockResolvedValue([]);
+      documentsRepository.create.mockResolvedValue({
+        id: 'resource-1',
+        data: 'https://docs.example.com/guide',
+        type: 'website',
+        status: ResourceStatus.pending,
+      } as never);
+      ingestQueue.add.mockResolvedValue({} as never);
+
+      const result = await service.enqueueWebsiteCrawl(
+        'chat-1',
+        'https://docs.example.com/guide',
+      );
+
+      expect(ingestQueue.add).toHaveBeenCalledWith('crawl', {
+        resourceId: 'resource-1',
+        chatId: 'chat-1',
+        url: 'https://docs.example.com/guide',
+        seedUrl: 'https://docs.example.com/guide',
+        depth: 0,
+        maxDepth: CRAWL_MAX_DEPTH,
+        maxPages: CRAWL_MAX_PAGES,
+      });
+      expect(result.id).toBe('resource-1');
+    });
+
+    it('rejects when the URL is already added', async () => {
+      documentsRepository.findByUrl.mockResolvedValue({
+        id: 'existing',
+      } as never);
+
+      await expect(
+        service.enqueueWebsiteCrawl('chat-1', 'https://docs.example.com'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(ingestQueue.add).not.toHaveBeenCalled();
+    });
+  });
+
   describe('process', () => {
-    it('scrapes, embeds, and marks the resource ready', async () => {
+    it('scrapes, embeds, and marks the resource ready with title', async () => {
       documentsRepository.findById
         .mockResolvedValueOnce({
           id: 'resource-1',
@@ -122,14 +166,13 @@ describe('DocumentsService', () => {
         .mockResolvedValueOnce({
           id: 'resource-1',
           status: ResourceStatus.processing,
+          title: null,
         } as never);
-      crawlerService.scrape.mockResolvedValue([
-        {
-          url: 'https://docs.example.com',
-          title: 'Docs',
-          html: '<p>hello</p>',
-        },
-      ]);
+      scraperService.scrape.mockResolvedValue({
+        url: 'https://docs.example.com',
+        title: 'Docs',
+        html: '<p>hello</p>',
+      });
       chunkingService.generateDocsFromHtml.mockResolvedValue([
         { content: 'hello', namespace: 'chat-1', metadata: {} },
       ]);
@@ -141,13 +184,15 @@ describe('DocumentsService', () => {
         url: 'https://docs.example.com',
       });
 
-      expect(crawlerService.scrape).toHaveBeenCalledWith({
-        urls: ['https://docs.example.com'],
+      expect(scraperService.scrape).toHaveBeenCalledWith({
+        url: 'https://docs.example.com',
       });
+      expect(crawlerService.nextUrls).not.toHaveBeenCalled();
       expect(documentsRepository.update).toHaveBeenLastCalledWith(
         'resource-1',
         {
           status: ResourceStatus.ready,
+          title: 'Docs',
           embeddingIds: ['emb-1'],
           error: null,
         },
@@ -161,7 +206,7 @@ describe('DocumentsService', () => {
         chatId: 'chat-1',
         url: 'https://docs.example.com',
       });
-      expect(crawlerService.scrape).not.toHaveBeenCalled();
+      expect(scraperService.scrape).not.toHaveBeenCalled();
 
       documentsRepository.findById.mockResolvedValueOnce({
         id: 'resource-1',
@@ -172,7 +217,7 @@ describe('DocumentsService', () => {
         chatId: 'chat-1',
         url: 'https://docs.example.com',
       });
-      expect(crawlerService.scrape).not.toHaveBeenCalled();
+      expect(scraperService.scrape).not.toHaveBeenCalled();
     });
 
     it('treats empty scrapes as permanent failures', async () => {
@@ -180,7 +225,11 @@ describe('DocumentsService', () => {
         id: 'resource-1',
         status: ResourceStatus.pending,
       } as never);
-      crawlerService.scrape.mockResolvedValue([]);
+      scraperService.scrape.mockResolvedValue({
+        url: 'https://docs.example.com',
+        title: '',
+        html: '',
+      });
 
       await expect(
         service.process({
@@ -204,7 +253,7 @@ describe('DocumentsService', () => {
           url: 'not a url',
         }),
       ).rejects.toBeInstanceOf(PermanentIngestError);
-      expect(crawlerService.scrape).not.toHaveBeenCalled();
+      expect(scraperService.scrape).not.toHaveBeenCalled();
     });
 
     it('deletes embeddings when the resource is removed mid-ingest', async () => {
@@ -214,13 +263,11 @@ describe('DocumentsService', () => {
           status: ResourceStatus.pending,
         } as never)
         .mockResolvedValueOnce(null);
-      crawlerService.scrape.mockResolvedValue([
-        {
-          url: 'https://docs.example.com',
-          title: 'Docs',
-          html: '<p>hello</p>',
-        },
-      ]);
+      scraperService.scrape.mockResolvedValue({
+        url: 'https://docs.example.com',
+        title: 'Docs',
+        html: '<p>hello</p>',
+      });
       chunkingService.generateDocsFromHtml.mockResolvedValue([
         { content: 'hello', namespace: 'chat-1', metadata: {} },
       ]);
@@ -239,6 +286,155 @@ describe('DocumentsService', () => {
         'resource-1',
         expect.objectContaining({ status: ResourceStatus.ready }),
       );
+    });
+  });
+
+  describe('processCrawl', () => {
+    const crawlJob = {
+      resourceId: 'resource-1',
+      chatId: 'chat-1',
+      url: 'https://docs.example.com/guide',
+      seedUrl: 'https://docs.example.com/guide',
+      depth: 0,
+      maxDepth: CRAWL_MAX_DEPTH,
+      maxPages: CRAWL_MAX_PAGES,
+    };
+
+    function mockSuccessfulIngest() {
+      documentsRepository.findById
+        .mockResolvedValueOnce({
+          id: 'resource-1',
+          status: ResourceStatus.pending,
+        } as never)
+        .mockResolvedValueOnce({
+          id: 'resource-1',
+          status: ResourceStatus.processing,
+          title: null,
+        } as never);
+      scraperService.scrape.mockResolvedValue({
+        url: crawlJob.url,
+        title: 'Guide',
+        html: '<a href="/guide/a">a</a>',
+      });
+      chunkingService.generateDocsFromHtml.mockResolvedValue([
+        { content: 'hello', namespace: 'chat-1', metadata: {} },
+      ]);
+      vectorStoreService.addDocuments.mockResolvedValue(['emb-1']);
+    }
+
+    it('indexes the page then enqueues child crawl jobs', async () => {
+      mockSuccessfulIngest();
+      crawlerService.nextUrls.mockReturnValue([
+        'https://docs.example.com/guide/a',
+        'https://docs.example.com/guide/b',
+      ]);
+      documentsRepository.findByChatId.mockResolvedValue([
+        {
+          id: 'resource-1',
+          type: 'website',
+          data: crawlJob.url,
+        },
+      ] as never);
+      documentsRepository.create
+        .mockResolvedValueOnce({
+          id: 'child-a',
+          data: 'https://docs.example.com/guide/a',
+        } as never)
+        .mockResolvedValueOnce({
+          id: 'child-b',
+          data: 'https://docs.example.com/guide/b',
+        } as never);
+      ingestQueue.add.mockResolvedValue({} as never);
+
+      await service.processCrawl(crawlJob);
+
+      expect(crawlerService.nextUrls).toHaveBeenCalledWith({
+        html: '<a href="/guide/a">a</a>',
+        pageUrl: crawlJob.url,
+        seedUrl: crawlJob.seedUrl,
+      });
+      expect(documentsRepository.create).toHaveBeenCalledTimes(2);
+      expect(ingestQueue.add).toHaveBeenCalledWith(
+        'crawl',
+        expect.objectContaining({
+          resourceId: 'child-a',
+          url: 'https://docs.example.com/guide/a',
+          depth: 1,
+          seedUrl: crawlJob.seedUrl,
+        }),
+      );
+      expect(ingestQueue.add).toHaveBeenCalledWith(
+        'crawl',
+        expect.objectContaining({
+          resourceId: 'child-b',
+          url: 'https://docs.example.com/guide/b',
+          depth: 1,
+        }),
+      );
+    });
+
+    it('does not fan out when depth is at max', async () => {
+      mockSuccessfulIngest();
+
+      await service.processCrawl({ ...crawlJob, depth: CRAWL_MAX_DEPTH });
+
+      expect(crawlerService.nextUrls).not.toHaveBeenCalled();
+      expect(ingestQueue.add).not.toHaveBeenCalled();
+    });
+
+    it('skips existing URLs and respects maxPages', async () => {
+      mockSuccessfulIngest();
+      crawlerService.nextUrls.mockReturnValue([
+        'https://docs.example.com/guide/existing',
+        'https://docs.example.com/guide/new',
+        'https://docs.example.com/guide/overflow',
+      ]);
+      documentsRepository.findByChatId.mockResolvedValue([
+        { id: 'resource-1', type: 'website', data: crawlJob.url },
+        {
+          id: 'existing',
+          type: 'website',
+          data: 'https://docs.example.com/guide/existing',
+        },
+        ...Array.from({ length: CRAWL_MAX_PAGES - 3 }, (_, i) => ({
+          id: `filler-${i}`,
+          type: 'website',
+          data: `https://docs.example.com/page-${i}`,
+        })),
+      ] as never);
+      documentsRepository.create.mockResolvedValue({
+        id: 'child-new',
+        data: 'https://docs.example.com/guide/new',
+      } as never);
+      ingestQueue.add.mockResolvedValue({} as never);
+
+      await service.processCrawl(crawlJob);
+
+      expect(documentsRepository.create).toHaveBeenCalledTimes(1);
+      expect(documentsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: 'https://docs.example.com/guide/new',
+        }),
+      );
+      expect(ingestQueue.add).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not fan out when scrape fails', async () => {
+      documentsRepository.findById.mockResolvedValue({
+        id: 'resource-1',
+        status: ResourceStatus.pending,
+      } as never);
+      scraperService.scrape.mockResolvedValue({
+        url: crawlJob.url,
+        title: '',
+        html: '',
+      });
+
+      await expect(service.processCrawl(crawlJob)).rejects.toBeInstanceOf(
+        PermanentIngestError,
+      );
+      expect(crawlerService.nextUrls).not.toHaveBeenCalled();
+      expect(ingestQueue.add).not.toHaveBeenCalled();
     });
   });
 
