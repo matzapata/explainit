@@ -29,8 +29,12 @@ The API enqueues website jobs; the worker process scrapes and embeds. Text inges
 
 ## Run with Docker
 
-- From repo root: `docker-compose up --build`
+**Local development** (bind mounts, Jaeger, Grafana, Floci):
+
+- From repo root: `docker compose up --build`
 - Compose starts Postgres, Redis, Floci (S3), the API, the ingest worker, and the client.
+
+**Self-host / production-like:** use [`deploy/compose`](deploy/compose) and [docs/docker-deployment.md](docs/docker-deployment.md). Do not use the root Compose file for production.
 
 ## Common commands
 
@@ -39,16 +43,18 @@ The API enqueues website jobs; the worker process scrapes and embeds. Text inges
 - Frontend tests: `cd apps/client && npm test`
 - Host Chat tests: `cd packages/host-chat && npm test`
 
-## Deployment basics
+## Deployment
 
-Use this as a lightweight release checklist for production-like environments.
+For self-hosting on a single VM, follow [docs/docker-deployment.md](docs/docker-deployment.md).
+
+For a custom environment (without the Compose stack):
 
 1. Provision a Postgres database with pgvector support.
 2. Provision Redis for BullMQ (`REDIS_HOST` / `REDIS_PORT`).
 3. Configure all required environment variables for server and client.
-4. Build and deploy the API (`node dist/infra/main`) and ingest worker (`node dist/infra/worker`).
-5. Build and deploy the web client.
-6. Run database migrations before serving traffic.
+4. Build and deploy the API (`node dist/infra/main`) and ingest worker (`node dist/infra/main-worker`).
+5. Build and deploy the web client (and host `launcher.js` / widget assets).
+6. Run database migrations before serving traffic (API image does this on start).
 7. Verify auth, ingestion, and chat flows after deployment.
 
 Keep secrets in your platform secret manager instead of repository files.
