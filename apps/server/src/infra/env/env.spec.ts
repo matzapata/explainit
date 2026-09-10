@@ -79,4 +79,39 @@ describe('envSchema', () => {
         .S3_FORCE_PATH_STYLE,
     ).toBe(false);
   });
+
+  it('defaults the scraper to puppeteer', () => {
+    const parsed = envSchema.parse(base);
+    expect(parsed.SCRAPER_PROVIDER).toBe('puppeteer');
+    expect(parsed.FIRECRAWL_API_URL).toBe('https://api.firecrawl.dev/v2');
+  });
+
+  it('rejects firecrawl without an API key', () => {
+    const result = envSchema.safeParse({
+      ...base,
+      SCRAPER_PROVIDER: 'firecrawl',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].path).toEqual(['FIRECRAWL_API_KEY']);
+    }
+  });
+
+  it('accepts firecrawl when an API key is set', () => {
+    const parsed = envSchema.parse({
+      ...base,
+      SCRAPER_PROVIDER: 'firecrawl',
+      FIRECRAWL_API_KEY: 'fc-test',
+    });
+    expect(parsed.SCRAPER_PROVIDER).toBe('firecrawl');
+    expect(parsed.FIRECRAWL_API_KEY).toBe('fc-test');
+  });
+
+  it('rejects an unknown scraper provider', () => {
+    const result = envSchema.safeParse({
+      ...base,
+      SCRAPER_PROVIDER: 'obscura',
+    });
+    expect(result.success).toBe(false);
+  });
 });

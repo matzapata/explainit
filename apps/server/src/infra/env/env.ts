@@ -61,6 +61,14 @@ export const envSchema = z
     HTTP_AUTH_PASSWORD: optionalNonEmpty,
     AUTH_SECRET: optionalNonEmpty,
 
+    SCRAPER_PROVIDER: z.enum(['puppeteer', 'firecrawl']).default('puppeteer'),
+    FIRECRAWL_API_KEY: optionalNonEmpty,
+    FIRECRAWL_API_URL: z.preprocess(
+      (value) =>
+        typeof value === 'string' && value.trim() === '' ? undefined : value,
+      z.string().url().default('https://api.firecrawl.dev/v2'),
+    ),
+
     DATABASE_URL: z.string().min(1),
 
     OTEL_SERVICE_NAME: z.string().default('explainit'),
@@ -70,16 +78,25 @@ export const envSchema = z
       .default('http://localhost:4318/v1/traces'),
   })
   .superRefine((env, ctx) => {
-    if (!passwordAuthEnabled(env)) {
-      return;
-    }
-
-    if (env.AUTH_SECRET && env.AUTH_SECRET.length < 16) {
+    if (
+      passwordAuthEnabled(env) &&
+      env.AUTH_SECRET &&
+      env.AUTH_SECRET.length < 16
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['AUTH_SECRET'],
         message:
           'AUTH_SECRET must be at least 16 characters when password auth is enabled',
+      });
+    }
+
+    if (env.SCRAPER_PROVIDER === 'firecrawl' && !env.FIRECRAWL_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['FIRECRAWL_API_KEY'],
+        message:
+          'FIRECRAWL_API_KEY is required when SCRAPER_PROVIDER is firecrawl',
       });
     }
   });

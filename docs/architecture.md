@@ -43,7 +43,7 @@ flowchart LR
 `apps/server/src/infra` follows a provider-selection pattern:
 
 - Each domain has a `<domain>.module.ts` Nest module.
-- A `<domain>.service.ts` file re-exports the active provider implementation.
+- A `<domain>.service.ts` file re-exports the active provider implementation, or the abstract contract when the module selects an adapter from env (`auth`, `scraper`).
 - `providers/` contains abstract contracts and one or more concrete adapters.
 
 HTTP controllers live in `infra/http/controllers` with request/response DTOs in `controllers/dto`. Use-cases live in `modules/{chat,documents,user}` (chat and documents: service + repository at the module root; user: a singleton Owner service). Environment is validated with Zod (`infra/env`).
@@ -51,7 +51,7 @@ HTTP controllers live in `infra/http/controllers` with request/response DTOs in 
 Current infrastructure folders and responsibilities:
 
 - `auth`: password login when `HTTP_AUTH_USERNAME` and `HTTP_AUTH_PASSWORD` are set (`PasswordProvider` issues/verifies a local HS256 JWT); otherwise `NoneProvider` bootstraps an unsecured local owner
-- `scraper`: fetch one URL to HTML (`PuppeteerScraperProvider`; swappable later for Firecrawl etc.)
+- `scraper`: fetch one URL to HTML. `SCRAPER_PROVIDER=puppeteer` (default) or `firecrawl`. Both return `{ url, title, html }` so crawl can extract links.
 - `crawler`: pure link policy — `nextUrls({ html, pageUrl, seedUrl })` with no HTTP
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
@@ -147,7 +147,7 @@ Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across t
 
 ### Scraper and crawler infrastructure
 
-- **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. Active adapter is Puppeteer; a future Firecrawl (or similar) adapter should keep the same HTML contract so crawl can extract links.
+- **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. `ScraperModule` selects `PuppeteerScraperProvider` or `FirecrawlScraperProvider` from `SCRAPER_PROVIDER`. Firecrawl requests `rawHtml` (not markdown) so crawl fan-out still sees page links.
 - **Crawler** (`apps/server/src/infra/crawler`): pure policy, no HTTP. `CrawlerService.nextUrls({ html, pageUrl, seedUrl })` resolves links, keeps same-host / seed-path URLs, strips hashes, skips assets, and dedupes.
 - Documents orchestrates both: scrape jobs ignore links; crawl jobs call `nextUrls` after a successful ingest and fan out within budget (and only while the crawl is not cancelled).
 

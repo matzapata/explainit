@@ -1,9 +1,15 @@
 # Production API + ingest worker (same image, different command).
 # Build context: apps/server
 
-FROM --platform=linux/amd64 node:20 AS build
+FROM --platform=linux/amd64 node:20-bookworm-slim AS build
+
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 COPY src/infra/database ./src/infra/database
@@ -15,17 +21,14 @@ COPY . .
 RUN npm run build \
   && npm prune --omit=dev
 
-FROM --platform=linux/amd64 node:20 AS runtime
+FROM --platform=linux/amd64 node:20-bookworm-slim AS runtime
 
+# Chrome's apt repo often hash-mismatches (CDN lag). Install the .deb instead.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends wget gnupg \
-  && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub \
-    | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
-  && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] https://dl-ssl.google.com/linux/chrome/deb/ stable main" \
-    > /etc/apt/sources.list.d/google.list \
-  && apt-get update \
   && apt-get install -y --no-install-recommends \
-    google-chrome-stable \
+    ca-certificates \
+    openssl \
+    wget \
     fonts-ipafont-gothic \
     fonts-wqy-zenhei \
     fonts-thai-tlwg \
@@ -35,6 +38,12 @@ RUN apt-get update \
     libxss1 \
     dbus \
     dbus-x11 \
+  && wget -q -O /tmp/google-chrome-stable_current_amd64.deb \
+    https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+  && apt-get install -y --no-install-recommends /tmp/google-chrome-stable_current_amd64.deb \
+  && rm -f /tmp/google-chrome-stable_current_amd64.deb \
+    /etc/apt/sources.list.d/google-chrome.list \
+    /etc/apt/sources.list.d/google.list \
   && rm -rf /var/lib/apt/lists/* \
   && groupadd -r pptruser \
   && useradd -rm -g pptruser -G audio,video pptruser

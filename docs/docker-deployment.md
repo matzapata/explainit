@@ -19,6 +19,9 @@ cp .env.example .env
 | --- | --- | --- |
 | `PUBLIC_URL` | yes | Public origin (no trailing slash), e.g. `http://localhost` or `https://explainit.example.com` |
 | `OPENROUTER_API_KEY` | yes | OpenRouter key for chat + embeddings |
+| `SCRAPER_PROVIDER` | no | `puppeteer` (default, bundled Chrome) or `firecrawl` |
+| `FIRECRAWL_API_KEY` | if firecrawl | Required when `SCRAPER_PROVIDER=firecrawl` |
+| `FIRECRAWL_API_URL` | no | Firecrawl API base. Default `https://api.firecrawl.dev/v2` (self-hosted override) |
 | `HTTP_AUTH_USERNAME` / `HTTP_AUTH_PASSWORD` | recommended | Dashboard login. If either is empty, the dashboard is open (no sign-in). |
 | `AUTH_SECRET` | recommended | JWT signing secret. Generate with `openssl rand -hex 32`. |
 
