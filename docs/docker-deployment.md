@@ -19,7 +19,7 @@ cp .env.example .env
 | --- | --- | --- |
 | `PUBLIC_URL` | yes | Public origin (no trailing slash), e.g. `http://localhost` or `https://explainit.example.com` |
 | `OPENROUTER_API_KEY` | yes | OpenRouter key for chat + embeddings |
-| `SCRAPER_PROVIDER` | no | `puppeteer` (default, bundled Chrome) or `firecrawl` |
+| `SCRAPER_PROVIDER` | no | `http` (default, plain GET) or `firecrawl` (JS-rendered / anti-bot pages) |
 | `FIRECRAWL_API_KEY` | if firecrawl | Required when `SCRAPER_PROVIDER=firecrawl` |
 | `FIRECRAWL_API_URL` | no | Firecrawl API base. Default `https://api.firecrawl.dev/v2` (self-hosted override) |
 | `HTTP_AUTH_USERNAME` / `HTTP_AUTH_PASSWORD` | recommended | Dashboard login. If either is empty, the dashboard is open (no sign-in). |
@@ -43,7 +43,7 @@ Visitor Ask AI on Host sites calls the same origin (`apiUrl` in the snippet). Ad
 | --- | --- |
 | `caddy` | Port 80: `/api` + `/health` → API, `/explainit/*` → MinIO, everything else → dashboard + `/cdn` |
 | `api` | Nest API (runs Prisma migrations on start) |
-| `worker` | BullMQ ingest (Chromium scrape, `concurrency: 1`, `shm_size: 1gb`) |
+| `worker` | BullMQ ingest (HTTP scrape by default, `concurrency: 1`) |
 | `client` | nginx SPA + `launcher.js` / `widget.js` / `widget.css` under `/cdn` |
 | `postgres` | Postgres 16 + pgvector |
 | `redis` | BullMQ + rate limits |
@@ -89,8 +89,8 @@ docker compose up -d --build
 
 ## Operations notes
 
-- **Ingest is serial.** The worker runs one Chromium job at a time. Large crawls take wall-clock time; give the VM enough RAM (2 GB+ recommended; 4 GB if you crawl often).
-- **Shared memory.** The worker sets `shm_size: 1gb` for Chrome. Do not remove it.
+- **Ingest is serial.** The worker runs one scrape+embed job at a time. Large crawls take wall-clock time.
+- **SPA / JS-rendered docs.** Default `http` only fetches the initial HTML. Set `SCRAPER_PROVIDER=firecrawl` and `FIRECRAWL_API_KEY` when pages need a JS renderer.
 - **Disk.** Postgres + MinIO volumes grow with resources and embeddings.
 - **Health.** `GET /health` on the public origin should return `OK`.
 - **Observability.** Tracing defaults to `http://127.0.0.1:4318` inside the container (no Jaeger in this stack). Point `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` at your collector if you have one.
@@ -100,4 +100,5 @@ docker compose up -d --build
 - **Dashboard open with no login:** set both `HTTP_AUTH_*` values and recreate the API/worker containers.
 - **Widget / snippet points at the wrong host:** set `PUBLIC_URL` to the origin you open in the browser, then recreate `api` / `worker` (CORS + `S3_PUBLIC_ENDPOINT`). The client image uses same-origin fallbacks when built without `VITE_*`.
 - **Host site cannot call the API:** add the Host page’s origin (scheme + host + port) under Chat Settings → Host origins.
-- **Ingest stuck / Chrome crashes:** check worker logs and free memory; confirm `shm_size` is present on `worker`.
+- **Empty or junk website ingest:** the site may be SPA-only; switch to `SCRAPER_PROVIDER=firecrawl` with a valid `FIRECRAWL_API_KEY`.
+- **Ingest stuck / failures:** check worker logs and OpenRouter rate limits.

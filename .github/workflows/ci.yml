@@ -67,7 +67,7 @@ jobs:
         working-directory: ${{ matrix.path }}
         run: npm ci
         env:
-          PUPPETEER_SKIP_DOWNLOAD: 'true'
+          HUSKY: '0'
 
       - name: Test
         working-directory: ${{ matrix.path }}

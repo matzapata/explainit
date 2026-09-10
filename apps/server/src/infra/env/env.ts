@@ -61,7 +61,7 @@ export const envSchema = z
     HTTP_AUTH_PASSWORD: optionalNonEmpty,
     AUTH_SECRET: optionalNonEmpty,
 
-    SCRAPER_PROVIDER: z.enum(['puppeteer', 'firecrawl']).default('puppeteer'),
+    SCRAPER_PROVIDER: z.enum(['http', 'firecrawl']).default('http'),
     FIRECRAWL_API_KEY: optionalNonEmpty,
     FIRECRAWL_API_URL: z.preprocess(
       (value) =>

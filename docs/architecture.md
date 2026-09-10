@@ -51,7 +51,7 @@ HTTP controllers live in `infra/http/controllers` with request/response DTOs in 
 Current infrastructure folders and responsibilities:
 
 - `auth`: password login when `HTTP_AUTH_USERNAME` and `HTTP_AUTH_PASSWORD` are set (`PasswordProvider` issues/verifies a local HS256 JWT); otherwise `NoneProvider` bootstraps an unsecured local owner
-- `scraper`: fetch one URL to HTML. `SCRAPER_PROVIDER=puppeteer` (default) or `firecrawl`. Both return `{ url, title, html }` so crawl can extract links.
+- `scraper`: fetch one URL to HTML. `SCRAPER_PROVIDER=http` (default) or `firecrawl`. Both return `{ url, title, html }` so crawl can extract links.
 - `crawler`: pure link policy — `nextUrls({ html, pageUrl, seedUrl })` with no HTTP
 - `worker`: BullMQ processor(s) — the queue-transport counterpart to `infra/http` controllers, wired only into the worker process
 - `llm`: chat model and embeddings via OpenRouter (`OpenRouterLlmProvider` uses LangChain `ChatOpenRouter`; `OpenRouterEmbeddingsProvider` calls OpenRouter `/embeddings`)
@@ -129,10 +129,10 @@ Ingestion is intentionally decoupled from chat-time generation so indexing failu
 - `POST /api/chats/:id/resources/web` enqueues one scrape job per URL (`name: website`) and returns `202` with `pending` resources.
 - `POST /api/chats/:id/resources/web/crawl` creates a seed pending resource (with a shared `crawlId`) and enqueues a crawl job (`name: crawl`, depth 0). After indexing, the worker may create more pending resources and enqueue further crawl jobs (same host, path prefix of the seed). Default budget is max depth 4 / max 50 website resources per Chat. Optional `unlimited: true` raises the budget to a hidden safety ceiling (depth 16 / 500 pages).
 - Every ingest job uses a stable BullMQ `jobId` of `ingest-{resourceId}` so delete can remove waiting work without scanning the queue. BullMQ forbids `:` in custom job ids.
-- `DELETE /api/chats/:id/resources/:resource_id` cancels work: a single-page pending/processing row removes that job then deletes the row; an inflight crawl row sets `ingest:cancelled:{crawlId}` (24h TTL), removes jobs and deletes all pending/processing siblings with that `crawlId`, and leaves ready/failed pages. An already-running Chromium job is cooperative — it finishes or hits the existing “resource gone” checks and discards embeddings.
+- `DELETE /api/chats/:id/resources/:resource_id` cancels work: a single-page pending/processing row removes that job then deletes the row; an inflight crawl row sets `ingest:cancelled:{crawlId}` (24h TTL), removes jobs and deletes all pending/processing siblings with that `crawlId`, and leaves ready/failed pages. An already-running scrape job is cooperative — it finishes or hits the existing “resource gone” checks and discards embeddings.
 - Deleting a chat also removes ingest jobs for its resources before clearing the embedding namespace.
 
-`DocumentsProcessor` (`modules/documents/documents.processor.ts`) scrapes, chunks, embeds, and marks the row `ready` or `failed`. The API never launches Chromium. Text resources are still ingested inline.
+`DocumentsProcessor` (`modules/documents/documents.processor.ts`) scrapes, chunks, embeds, and marks the row `ready` or `failed`. The API never runs website scrape; that stays in the worker. Text resources are still ingested inline.
 
 ### Queue infrastructure
 
@@ -141,13 +141,13 @@ Queue wiring follows the NestJS BullMQ sample (`@nestjs/bullmq`), split across t
 - `AppModule` and `WorkerModule` each call `BullModule.forRootAsync` with the same Redis connection config (`REDIS_HOST` / `REDIS_PORT`).
 - `modules/documents/ingest-job.ts` owns the queue contract (`INGEST_QUEUE` name + `ScrapeJob` / `CrawlJob` payloads + job id / cancel-key helpers), since it's part of the ingestion use case, not generic infra. `DocumentsModule` calls `BullModule.registerQueue({ name: INGEST_QUEUE, defaultJobOptions: … })`.
 - `DocumentsService` (producer) injects `Queue` with `@InjectQueue(INGEST_QUEUE)` and calls `add`/`addBulk` with `jobId: ingest-{resourceId}`. Payload is `{ resourceId, chatId, url }` (plus crawl budget fields and `crawlId`) — never HTML.
-- `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so Chromium ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`. Crawl fan-out checks the cancel key before creating children.
+- `modules/documents/documents.processor.ts` (`@Processor(INGEST_QUEUE)`) is the queue-transport adapter — the consumer-side equivalent of an HTTP controller. It is declared only in `WorkerModule.providers`, never in the shared `ChatModule`, so website ingest cannot run inside the API process. `name: crawl` → `processCrawl`; otherwise → `process`. Crawl fan-out checks the cancel key before creating children.
 - Jobs retry 3 times with exponential backoff (`defaultJobOptions`). Permanent failures (`PermanentIngestError`) are marked `failed` and not retried. `ChatResource.status` remains the idempotency key.
-- Compose runs Redis. `infra/main-worker.ts` is a separate Nest application context. Concurrency is 1 (one Chromium session). Lock duration is 5 minutes to cover scrape + embed.
+- Compose runs Redis. `infra/main-worker.ts` is a separate Nest application context. Concurrency is 1. Lock duration is 5 minutes to cover scrape + embed.
 
 ### Scraper and crawler infrastructure
 
-- **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. `ScraperModule` selects `PuppeteerScraperProvider` or `FirecrawlScraperProvider` from `SCRAPER_PROVIDER`. Firecrawl requests `rawHtml` (not markdown) so crawl fan-out still sees page links.
+- **Scraper** (`apps/server/src/infra/scraper`): `ScraperProvider.scrape({ url })` returns `{ url, title, html }`. `ScraperModule` selects `HttpScraperProvider` (default) or `FirecrawlScraperProvider` from `SCRAPER_PROVIDER`. HTTP is a plain GET (good for SSG/SSR docs). Firecrawl requests `rawHtml` (not markdown) so crawl fan-out still sees page links — use it for SPA / JS-rendered sites.
 - **Crawler** (`apps/server/src/infra/crawler`): pure policy, no HTTP. `CrawlerService.nextUrls({ html, pageUrl, seedUrl })` resolves links, keeps same-host / seed-path URLs, strips hashes, skips assets, and dedupes.
 - Documents orchestrates both: scrape jobs ignore links; crawl jobs call `nextUrls` after a successful ingest and fan out within budget (and only while the crawl is not cancelled).
 

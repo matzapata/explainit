@@ -80,9 +80,9 @@ describe('envSchema', () => {
     ).toBe(false);
   });
 
-  it('defaults the scraper to puppeteer', () => {
+  it('defaults the scraper to http', () => {
     const parsed = envSchema.parse(base);
-    expect(parsed.SCRAPER_PROVIDER).toBe('puppeteer');
+    expect(parsed.SCRAPER_PROVIDER).toBe('http');
     expect(parsed.FIRECRAWL_API_URL).toBe('https://api.firecrawl.dev/v2');
   });
 
@@ -107,11 +107,13 @@ describe('envSchema', () => {
     expect(parsed.FIRECRAWL_API_KEY).toBe('fc-test');
   });
 
-  it('rejects an unknown scraper provider', () => {
-    const result = envSchema.safeParse({
-      ...base,
-      SCRAPER_PROVIDER: 'obscura',
-    });
-    expect(result.success).toBe(false);
+  it('rejects unknown scraper providers', () => {
+    for (const provider of ['obscura', 'puppeteer']) {
+      const result = envSchema.safeParse({
+        ...base,
+        SCRAPER_PROVIDER: provider,
+      });
+      expect(result.success).toBe(false);
+    }
   });
 });
