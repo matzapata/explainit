@@ -42,6 +42,9 @@ services:
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-4o-mini}
       OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-ada-002}
+      SCRAPER_PROVIDER: ${SCRAPER_PROVIDER:-http}
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+      FIRECRAWL_API_URL: ${FIRECRAWL_API_URL:-https://api.firecrawl.dev/v2}
       HTTP_AUTH_USERNAME: ${HTTP_AUTH_USERNAME:-}
       HTTP_AUTH_PASSWORD: ${HTTP_AUTH_PASSWORD:-}
       AUTH_SECRET: ${AUTH_SECRET:-}
@@ -54,7 +57,6 @@ services:
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-explainitsecret}
       OTEL_SERVICE_NAME: explainit
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://127.0.0.1:4318/v1/traces}
-      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,7 +84,6 @@ services:
       dockerfile: ../docker/server.Dockerfile
     restart: unless-stopped
     command: ['node', 'dist/infra/main-worker.js']
-    shm_size: '1gb'
     environment:
       <<: *server-env
       OTEL_SERVICE_NAME: explainit-worker

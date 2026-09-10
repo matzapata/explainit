@@ -1,7 +1,21 @@
 import { Module } from '@nestjs/common';
+import { EnvService } from '@src/infra/env/env.service';
+import { FirecrawlScraperProvider } from './providers/firecrawl.provider';
+import { HttpScraperProvider } from './providers/http.provider';
 import { ScraperService } from './scraper.service';
+
 @Module({
-  providers: [ScraperService],
+  providers: [
+    {
+      provide: ScraperService,
+      useFactory: (env: EnvService) => {
+        return env.get('SCRAPER_PROVIDER') === 'firecrawl'
+          ? new FirecrawlScraperProvider(env)
+          : new HttpScraperProvider();
+      },
+      inject: [EnvService],
+    },
+  ],
   exports: [ScraperService],
 })
 export class ScraperModule {}
